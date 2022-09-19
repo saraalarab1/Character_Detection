@@ -20,12 +20,32 @@ for image_name in images:
     found = False
     for i in range(len(image_array)-1, 0, -1):
         for j in range(len(image_array[i])):
-            if tuple(image_array[i][j]) != (255, 255, 255):
+            if tuple(image_array[i][j]) != (255, 255, 255): # black pixel found 
                 for k in range(len(image_array[i])):
                     image_array[i][k] = (0, 255, 0)
                 found = True
                 break
         if found: 
-            break          
+            break
+found = False
+for i in range(0, len(image_array[i])):
+    for j in range(len(image_array)):
+        if tuple(image_array[i][j]) != (255, 255, 255): # black pixel found 
+            for k in range(len(image_array)):
+                image_array[k][j] = (0, 255, 0)
+            found = True
+            break
+    if found: 
+        break
+found = False
+for i in range(0, len(image_array[i])):
+    for j in range(len(image_array)-1,0,-1):
+        if tuple(image_array[i][j]) != (255, 255, 255): # black pixel found 
+            for k in range(len(image_array)):
+                image_array[k][j] = (0, 255, 0)
+            found = True
+            break
+    if found: 
+        break           
     cv.imwrite('new_image.png', image_array)
     break
