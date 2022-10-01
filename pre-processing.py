@@ -8,6 +8,7 @@ from numpy import array, asarray
 WIDTH = 32
 HEIGHT = 32
 training_dataset = dict()
+
 def read_csv():
     from csv import reader
     # open file in read mode
@@ -19,8 +20,7 @@ def read_csv():
             # row variable is a list that represents a row in csv
             training_dataset[row[0]] = {"label": row[1]}
 
-
-def get_error():
+def pre_process_images():
     images_dir = os.listdir('Img')
     for i in range(len(images_dir)):
         image_name = images_dir[i]
@@ -45,25 +45,42 @@ def get_error():
             img = img[current_variables[1]:current_variables[3], current_variables[0]:current_variables[2]] 
             # resize image
             img = cv.resize(img, dim, interpolation = cv.INTER_AREA)
-            image_left = img[:,:int(WIDTH/2)]
-            image_right = cv.flip(img[:, int(WIDTH/2):],1)
-            diff = cv.subtract(image_left, image_right)
-            err = np.sum(diff**2)
-            mse = err/(float(HEIGHT*WIDTH))
-            img= image_left + image_right
-            image_info = training_dataset[image_name]
-            image_info["feature_vertical_split"] = mse
-            training_dataset[image_name] = image_info
-        
+            # Feature 1
+            get_vertical_feature(img, image_name)
+            # Feature 2
+            get_horizontal_feature(img, image_name)
 
+def get_vertical_feature(img, image_name):
+    image_left = img[:,:int(WIDTH/2)]
+    image_right = cv.flip(img[:, int(WIDTH/2):],1)
+    # cv.imshow('Left', image_left)
+    # cv.imshow('Right', image_right)
+    # cv.waitKey(0)
+    diff = cv.subtract(image_left, image_right)
+    err = np.sum(diff**2)
+    mse = err/(float(HEIGHT*WIDTH))
+    image_info = training_dataset[image_name]
+    image_info["feature_vertical_split"] = mse
+    training_dataset[image_name] = image_info
+
+def get_horizontal_feature(img, image_name):
+    image_top = img[: int(WIDTH/2), :]
+    image_bottom =  cv.flip(img[ int(WIDTH/2):, :],0)
+    #cv.imshow('Top', image_top)
+    #cv.imshow('Bottom', image_bottom)
+    #cv.waitKey(0)
+    diff = cv.subtract(image_top, image_bottom)
+    err = np.sum(diff**2)
+    mse = err/(float(HEIGHT*WIDTH))
+    image_info = training_dataset[image_name]
+    image_info["feature_horizontal_split"] = mse
+    training_dataset[image_name] = image_info
+
+        
 def create_json():
     import json
     with open('data.json', 'w', encoding='utf-8') as f:
         json.dump(training_dataset, f, ensure_ascii=False, indent=4)
-# read_csv()
-# get_error()
-# create_json()
-# print (training_dataset)
 
 def assign_random_colors():
     label_color = dict()
@@ -76,9 +93,7 @@ def assign_random_colors():
         with open('data_with_colors.json', 'w') as output:
             json.dump(data, output, ensure_ascii=False, indent = 4)
 
-# assign_random_colors()
-
-def draw():
+def plot():
     with open('data_with_colors.json', 'r') as f:
         data = json.load(f)
         import matplotlib.pyplot as plt
@@ -87,6 +102,11 @@ def draw():
             index = index + 1
             if index == 100:
                 break
-            plt.scatter(data[i]["feature_vertical_split"], random.randint(0,50), c= data[i]["color"], s= 5)
+            plt.scatter(data[i]["feature_horizontal_split"], random.randint(0,50), c= data[i]["color"], s= 5)
         plt.show()
-draw()
+
+read_csv()
+pre_process_images()
+create_json()
+assign_random_colors()
+plot()
