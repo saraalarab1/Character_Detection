@@ -22,6 +22,7 @@ def read_csv():
 
 def pre_process_images():
     images_dir = os.listdir('Img')
+    i=0
     for i in range(len(images_dir)):
         image_name = images_dir[i]
         image_path = os.path.join('Img', image_name)
@@ -55,6 +56,10 @@ def pre_process_images():
             get_vertical_percentage_feature(img,image_name)
             # Feature 4
             get_horizontal_percentage_feature(img, image_name)
+        i=i+1
+        if i==500:
+            print(i)
+            break
 
 
 def get_vertical_symmetry_feature(img, image_name):
@@ -89,8 +94,8 @@ def get_vertical_percentage_feature(img, image_name):
     # cv.imshow('Left', image_left)
     # cv.imshow('Right', image_right)
     # cv.waitKey(0)
-    total_pixel_left = image_left.total()
-    total_pixel_right = image_right.total()
+    total_pixel_left = np.count_nonzero(np.all(image_left == [0,0,0], axis = 2))
+    total_pixel_right = np.count_nonzero(np.all(image_right == [0,0,0], axis = 2))
     ratio_percentage = total_pixel_left/total_pixel_right
     image_info = training_dataset[image_name]
     image_info["feature_vertical_ratio"] = ratio_percentage
@@ -102,8 +107,8 @@ def get_horizontal_percentage_feature(img, image_name):
     #cv.imshow('Top', image_top)
     #cv.imshow('Bottom', image_bottom)
     #cv.waitKey(0)
-    total_pixel_top = image_top.total()
-    total_pixel_bottom = image_bottom.total()
+    total_pixel_top = np.count_nonzero(np.all(image_top == [0,0,0], axis = 2))
+    total_pixel_bottom = np.count_nonzero(np.all(image_bottom == [0,0,0], axis = 2))
     ratio_percentage = total_pixel_top/total_pixel_bottom
     image_info = training_dataset[image_name]
     image_info["feature_horizontal_ratio"] = ratio_percentage
@@ -139,13 +144,13 @@ def plot():
         index = 0
         for i in data.keys():
             index = index + 1
-            if index == 100:
+            if index == 500:
                 break
-            plt.scatter(data[i]["feature_horizontal_split"], random.randint(0,50), c= data[i]["color"], s= 5)
+            plt.scatter(data[i]["feature_horizontal_ratio"], data[i]["feature_vertical_ratio"], c= data[i]["color"], s= 5)
         plt.show()
 
 read_csv()
 pre_process_images()
 # create_json()
 # assign_random_colors()
-# plot()
+plot()
