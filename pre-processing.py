@@ -43,6 +43,8 @@ def pre_process_images():
         if current_variables != (0,0,0,0):
             # change image dimensions to minimum bounding rectangle
             img = img[current_variables[1]:current_variables[3], current_variables[0]:current_variables[2]] 
+            #get_aspect_ratio
+            get_aspect_ratio(img, image_name)
             # resize image
             img = cv.resize(img, dim, interpolation = cv.INTER_AREA)
             # Feature 1
@@ -107,7 +109,13 @@ def get_horizontal_percentage_feature(img, image_name):
     image_info["feature_horizontal_ratio"] = ratio_percentage
     training_dataset[image_name] = image_info
 
-        
+
+def get_aspect_ratio(image, image_name):
+    image_info = training_dataset[image_name]
+    image_info["aspect_ratio"] =  float(image.shape[1]) / image.shape[0]
+    training_dataset[image_name] = image_info
+
+# get_aspect_ratio('Img_2\img062-052.png')
 def create_json():
     import json
     with open('data.json', 'w', encoding='utf-8') as f:
@@ -138,6 +146,6 @@ def plot():
 
 read_csv()
 pre_process_images()
-create_json()
-assign_random_colors()
-plot()
+# create_json()
+# assign_random_colors()
+# plot()
