@@ -46,11 +46,16 @@ def pre_process_images():
             # resize image
             img = cv.resize(img, dim, interpolation = cv.INTER_AREA)
             # Feature 1
-            get_vertical_feature(img, image_name)
+            get_vertical_symmetry_feature(img, image_name)
             # Feature 2
-            get_horizontal_feature(img, image_name)
+            get_horizontal_symmetry_feature(img, image_name)
+            # Feature 3
+            get_vertical_percentage_feature(img,image_name)
+            # Feature 4
+            get_horizontal_percentage_feature(img, image_name)
 
-def get_vertical_feature(img, image_name):
+
+def get_vertical_symmetry_feature(img, image_name):
     image_left = img[:,:int(WIDTH/2)]
     image_right = cv.flip(img[:, int(WIDTH/2):],1)
     # cv.imshow('Left', image_left)
@@ -60,10 +65,10 @@ def get_vertical_feature(img, image_name):
     err = np.sum(diff**2)
     mse = err/(float(HEIGHT*WIDTH))
     image_info = training_dataset[image_name]
-    image_info["feature_vertical_split"] = mse
+    image_info["feature_vertical_symmetry"] = mse
     training_dataset[image_name] = image_info
 
-def get_horizontal_feature(img, image_name):
+def get_horizontal_symmetry_feature(img, image_name):
     image_top = img[: int(WIDTH/2), :]
     image_bottom =  cv.flip(img[ int(WIDTH/2):, :],0)
     #cv.imshow('Top', image_top)
@@ -73,7 +78,33 @@ def get_horizontal_feature(img, image_name):
     err = np.sum(diff**2)
     mse = err/(float(HEIGHT*WIDTH))
     image_info = training_dataset[image_name]
-    image_info["feature_horizontal_split"] = mse
+    image_info["feature_horizontal_symmetry"] = mse
+    training_dataset[image_name] = image_info
+
+def get_vertical_percentage_feature(img, image_name):
+    image_left = img[:,:int(WIDTH/2)]
+    image_right = cv.flip(img[:, int(WIDTH/2):],1)
+    # cv.imshow('Left', image_left)
+    # cv.imshow('Right', image_right)
+    # cv.waitKey(0)
+    total_pixel_left = image_left.total()
+    total_pixel_right = image_right.total()
+    ratio_percentage = total_pixel_left/total_pixel_right
+    image_info = training_dataset[image_name]
+    image_info["feature_vertical_ratio"] = ratio_percentage
+    training_dataset[image_name] = image_info
+
+def get_horizontal_percentage_feature(img, image_name):
+    image_top = img[: int(WIDTH/2), :]
+    image_bottom =  cv.flip(img[ int(WIDTH/2):, :],0)
+    #cv.imshow('Top', image_top)
+    #cv.imshow('Bottom', image_bottom)
+    #cv.waitKey(0)
+    total_pixel_top = image_top.total()
+    total_pixel_bottom = image_bottom.total()
+    ratio_percentage = total_pixel_top/total_pixel_bottom
+    image_info = training_dataset[image_name]
+    image_info["feature_horizontal_ratio"] = ratio_percentage
     training_dataset[image_name] = image_info
 
         
