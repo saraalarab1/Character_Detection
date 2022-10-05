@@ -22,7 +22,6 @@ def read_csv():
 
 def pre_process_images():
     images_dir = os.listdir('Img')
-    i=0
     for i in range(len(images_dir)):
         image_name = images_dir[i]
         image_path = os.path.join('Img', image_name)
@@ -56,10 +55,6 @@ def pre_process_images():
             get_vertical_percentage_feature(img,image_name)
             # Feature 4
             get_horizontal_percentage_feature(img, image_name)
-        i=i+1
-        if i==500:
-            print(i)
-            break
 
 
 def get_vertical_symmetry_feature(img, image_name):
@@ -120,7 +115,6 @@ def get_aspect_ratio(image, image_name):
     image_info["aspect_ratio"] =  float(image.shape[1]) / image.shape[0]
     training_dataset[image_name] = image_info
 
-# get_aspect_ratio('Img_2\img062-052.png')
 def create_json():
     import json
     with open('data.json', 'w', encoding='utf-8') as f:
@@ -163,6 +157,6 @@ def plot():
 
 read_csv()
 pre_process_images()
-# create_json()
-# assign_random_colors()
+create_json()
+assign_random_colors()
 plot()
