@@ -143,11 +143,11 @@ def plot():
         colors = []
         for i in data.keys():
             index = index + 1
-            if index == 500:
+            if index == 1000:
                 break
             zdata.append(data[i]["feature_horizontal_ratio"])
             ydata.append(data[i]["feature_vertical_ratio"])
-            xdata.append(data[i]["feature_vertical_symmetry"])
+            xdata.append(data[i]["aspect_ratio"])
             colors.append(data[i]['color'])
             # plt.scatter(data[i]["feature_horizontal_ratio"], data[i]["feature_vertical_ratio"], c= data[i]["color"], s= 5)
         # plt.show()
