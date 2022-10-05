@@ -4,7 +4,7 @@ import random
 import cv2 as cv
 import numpy as np
 from numpy import array, asarray
-
+import matplotlib.pyplot as plt
 WIDTH = 32
 HEIGHT = 32
 training_dataset = dict()
@@ -140,13 +140,25 @@ def assign_random_colors():
 def plot():
     with open('data_with_colors.json', 'r') as f:
         data = json.load(f)
-        import matplotlib.pyplot as plt
         index = 0
+        fig = plt.figure()
+        ax = plt.axes(projection = '3d')
+        zdata = []
+        ydata = []
+        xdata = []
+        colors = []
         for i in data.keys():
             index = index + 1
             if index == 500:
                 break
-            plt.scatter(data[i]["feature_horizontal_ratio"], data[i]["feature_vertical_ratio"], c= data[i]["color"], s= 5)
+            zdata.append(data[i]["feature_horizontal_ratio"])
+            ydata.append(data[i]["feature_vertical_ratio"])
+            xdata.append(data[i]["feature_vertical_symmetry"])
+            colors.append(data[i]['color'])
+            # plt.scatter(data[i]["feature_horizontal_ratio"], data[i]["feature_vertical_ratio"], c= data[i]["color"], s= 5)
+        # plt.show()
+        print(colors)
+        ax.scatter3D(xdata, ydata, zdata, c=colors)
         plt.show()
 
 read_csv()
