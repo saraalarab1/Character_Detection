@@ -1,4 +1,5 @@
 
+import json
 import numpy as np 
 import cv2
 import pandas as pd
@@ -23,10 +24,10 @@ def train(X, y, k_cross_validation_ratio, testing_size, optimal_k=True, max_rang
 
     X0_train, X_test, y0_train, y_test = train_test_split(X,y,test_size=testing_size, random_state=7)
     #Scaler is needed to scale all the inputs to a similar range
-    scaler = StandardScaler()
-    scaler = scaler.fit(X0_train)
-    X0_train = scaler.transform(X0_train)
-    X_test = scaler.transform(X_test)
+    # scaler = StandardScaler()
+    # scaler = scaler.fit(X0_train)
+    # X0_train = scaler.transform(X0_train)
+    # X_test = scaler.transform(X_test)
     #X_train, X_eval, y_train, y_eval = train_test_split(X0_train, y0_train, test_size= 100/k_cross_validation_ratio, random_state=7)
     
 
@@ -42,17 +43,18 @@ def train(X, y, k_cross_validation_ratio, testing_size, optimal_k=True, max_rang
     scores_list = []
 
     #finding the optimal nb of neighbors
+    print(k_range)
     for k in tqdm(k_range):
         knn = KNeighborsClassifier(n_neighbors=k)
         knn.fit(X0_train, y0_train)
         y_pred = knn.predict(X_test)
         scores[k] = metrics.accuracy_score(y_test, y_pred)
         scores_list.append(metrics.accuracy_score(y_test, y_pred))
-    
+    print(scores)
     k_optimal = scores_list.index(max(scores_list))
     model = KNeighborsClassifier(n_neighbors= k_optimal)
-
-
+    print(k_optimal)
+    return 
 
     eval_score_list = []
     #Evaluation using cross validation: lpo: leave p out
@@ -104,8 +106,16 @@ def test(X_train, y_train, X_test, y_test,pretrain_model=False):
     return test_score, classification_rep
 
 
-eval_accuracy, model, X_train, y_train, X_test, y_test = train(X, y, k_cross_validation_ratio=5, testing_size=0.2, max_range_k=100)
-test_score, conf_rep = test(X_train, y_train,X_test, y_test, pretrain_model=True)
-print("Evaluation Score: {}".format(eval_accuracy))
-print("Test Score: {}".format(test_score))
-print(conf_rep)
+with open('data_with_colors.json', 'r') as f: 
+    data = json.load(f)
+    x = []
+    y = []
+    for i in data.keys():
+        x.append([data[i]['feature_vertical_ratio'], data[i]['feature_horizontal_ratio'], data[i]['aspect_ratio'], data[i]['percentage_of_pixels_at_horizontal_center'], data[i]['percentage_of_pixels_at_vertical_center']])
+        y.append(data[i]['label'])
+
+eval_accuracy, model, X_train, y_train, X_test, y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.2, max_range_k=100)
+# test_score, conf_rep = test(X_train, y_train,X_test, y_test, pretrain_model=True)
+# print("Evaluation Score: {}".format(eval_accuracy))
+# print("Test Score: {}".format(test_score))
+# print(conf_rep)

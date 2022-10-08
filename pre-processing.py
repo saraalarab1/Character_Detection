@@ -55,6 +55,11 @@ def pre_process_images():
             get_vertical_percentage_feature(img,image_name)
             # Feature 4
             get_horizontal_percentage_feature(img, image_name)
+            #Feature 5
+            training_dataset[image_name]["percentage_of_pixels_at_horizontal_center"] = percentage_of_pixels_on_horizontal_center(img)
+            #Feature 6 
+            training_dataset[image_name]["percentage_of_pixels_at_vertical_center"] = percentage_of_pixels_on_vertical_center(img)
+
 
 
 def get_vertical_symmetry_feature(img, image_name):
@@ -131,6 +136,29 @@ def assign_random_colors():
         with open('data_with_colors.json', 'w') as output:
             json.dump(data, output, ensure_ascii=False, indent = 4)
 
+
+def percentage_of_pixels_on_horizontal_center(img):
+    """
+    This function returns the percentage of non-white pixels 
+    along the horizontal axis at the center of an image
+    """
+    total_nb_of_black_pixels = len(np.where((img[:, :, 0]==0) & (img[:, :, 1]==0) & (img[:, :, 2]==0))[0])
+    nb_of_black_pixels_at_horizontal = len([i for i in img[int(WIDTH/2)] if tuple(i) == (0, 0, 0)])
+    return nb_of_black_pixels_at_horizontal/total_nb_of_black_pixels 
+
+def percentage_of_pixels_on_vertical_center(img):
+    """
+    This function returns the percentage of non-white pixels
+    along the vertical axis at the center of an image"""
+    nb_of_pixels_at_vertical = 0
+    total_nb_of_black_pixels = len(np.where((img[:, :, 0]==0) & (img[:, :, 1]==0) & (img[:, :, 2]==0))[0])
+    for i in range(WIDTH):
+        if tuple(img[i][int(HEIGHT/2)]) == (0, 0, 0):
+            nb_of_pixels_at_vertical = nb_of_pixels_at_vertical + 1
+        img[i][int(HEIGHT/2)] = (255, 0, 0)
+    return nb_of_pixels_at_vertical/total_nb_of_black_pixels
+
+
 def plot():
     with open('data_with_colors.json', 'r') as f:
         data = json.load(f)
@@ -145,8 +173,8 @@ def plot():
             index = index + 1
             if index == 1000:
                 break
-            zdata.append(data[i]["feature_horizontal_ratio"])
-            ydata.append(data[i]["feature_vertical_ratio"])
+            zdata.append(data[i]["percentage_of_pixels_at_horizontal_center"])
+            ydata.append(data[i]["percentage_of_pixels_at_vertical_center"])
             xdata.append(data[i]["aspect_ratio"])
             colors.append(data[i]['color'])
             # plt.scatter(data[i]["feature_horizontal_ratio"], data[i]["feature_vertical_ratio"], c= data[i]["color"], s= 5)
@@ -155,8 +183,8 @@ def plot():
         ax.scatter3D(xdata, ydata, zdata, c=colors)
         plt.show()
 
-read_csv()
-pre_process_images()
-create_json()
-assign_random_colors()
+# read_csv()
+# pre_process_images()
+# create_json()
+# assign_random_colors()
 plot()
