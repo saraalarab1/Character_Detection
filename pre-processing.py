@@ -52,9 +52,9 @@ def pre_process_images():
             # # Feature 3
             training_dataset[image_name]["percentage_of_horizontal_symmetry"] = get_horizontal_symmetry_feature(image)
             # # Feature 4
-            training_dataset[image_name]["vertical_percentage"] = get_vertical_percentage_feature(image)
+            training_dataset[image_name]["vertical_ratio"] = get_vertical_percentage_feature(image)
             # # Feature 5
-            training_dataset[image_name]["horizontal_percentage"] = get_horizontal_percentage_feature(image)
+            training_dataset[image_name]["horizontal_ratio"] = get_horizontal_percentage_feature(image)
             #Feature 6
             training_dataset[image_name]["percentage_of_pixels_at_horizontal_center"] = percentage_of_pixels_on_horizontal_center(image)
             #Feature 7 
@@ -191,8 +191,8 @@ def plot():
             index = index + 1
             if index == 1000:
                 break
-            zdata.append(data[i]["percentage_of_pixels_at_horizontal_center"])
-            ydata.append(data[i]["percentage_of_pixels_at_vertical_center"])
+            zdata.append(data[i]["horizontal_line_intersection_count"])
+            ydata.append(data[i]["vertical_ratio"])
             xdata.append(data[i]["aspect_ratio"])
             colors.append(data[i]['color'])
             # plt.scatter(data[i]["feature_horizontal_ratio"], data[i]["feature_vertical_ratio"], c= data[i]["color"], s= 5)
@@ -201,8 +201,8 @@ def plot():
         ax.scatter3D(xdata, ydata, zdata, c=colors)
         plt.show()
 
-# read_csv()
-# pre_process_images()
-# create_json()
-# assign_random_colors()
+read_csv()
+pre_process_images()
+create_json()
+assign_random_colors()
 plot()
