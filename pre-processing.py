@@ -187,13 +187,13 @@ def get_vertical_lines_count(image):
                     temp1 = y
                     flag = True
                     while (flag):
-                        y += 1
                         value = image[y][x]
                         if (value != 255).all():
                             count1 += 1
                         else:
                             temp2 = y
                             flag = False
+                        y += 1
 
                 if (count1>length_thresh):
                     first_condition = True
