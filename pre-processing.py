@@ -63,6 +63,8 @@ def pre_process_images():
             training_dataset[image_name]["horizontal_line_intersection_count"] = get_horizontal_line_intersection(image)
             # Feature 9
             training_dataset[image_name]["vertical_line_intersection_count"] = get_vertical_line_intersection(image)
+            # Feature 10
+            training_dataset[image_name]["count_vertical_lines"] = get_vertical_lines_count(image)
 
 def get_vertical_symmetry_feature(image):
     image_left = image[:,:int(WIDTH/2)]
@@ -136,7 +138,68 @@ def get_vertical_line_intersection(image):
                 value = image[y][line]
             intersection_count+=1
     return intersection_count
+
+def get_vertical_lines_count(image):
+    w = image.shape[1]
+    h = image.shape[0]
+    #value of iterations through a single vertical line
+    count1 = 0
+    count2 = 0
+    #number of lines detected
+    line_count = 0
+    y=0
+
+    width_thresh = 15 #pixels
+    length_thresh = 150 #pixels
+    #placeholder for the reference points of our line
+    temp1 = 0
+    temp2 = 0
+    #flag signaling whether we are detecting or not
+    flag = False
+    #flag signaling whether we detected a single column vertical line
+    first_condition = False
     
+    #iterate through every column of the image
+    for x in range(0,w-1):
+        #iterate through every row of the column
+        while (y<h-1):
+
+            if(first_condition):
+                if(image[temp1][x] != 255).all():
+                    for i in range(temp1,temp2):
+                        if(image[i][x] == 255).all():
+                            first_condition = False
+                            count2 = 0
+                            break
+                    count2 += 1
+                    y = temp2
+
+            elif(count2>width_thresh):
+                line_count += 1
+                count2 = 0
+                first_condition = False
+
+            else:
+                y+=1
+                value = image[y][x]
+                # if value is different than white pixel
+                if (value != 255).all():
+                    temp1 = y
+                    flag = True
+                    while (flag):
+                        y += 1
+                        value = image[y][x]
+                        if (value != 255).all():
+                            count1 += 1
+                        else:
+                            temp2 = y
+                            flag = False
+
+                if (count1>length_thresh):
+                    first_condition = True
+                count1 = 0
+    
+    return line_count 
 
 def create_json():
     import json
