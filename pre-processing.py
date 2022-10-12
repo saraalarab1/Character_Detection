@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 WIDTH = 32
 HEIGHT = 32
 training_dataset = dict()
+MAX_COUNT_HORIZONTAL = 5
+MAX_COUNT_VERTICAL = 4
 
 def read_csv():
     from csv import reader
@@ -64,7 +66,11 @@ def pre_process_images():
             # Feature 9
             training_dataset[image_name]["vertical_line_intersection_count"] = get_vertical_line_intersection(image)
             # Feature 10
-            training_dataset[image_name]["count_vertical_lines"] = get_vertical_lines_count(image)
+            # training_dataset[image_name]["count_vertical_lines"] = get_vertical_lines_count(image)
+            # Feature 11
+            # training_dataset[image_name]["vertical_histogram_projection"] = get_vertical_histogram_projection(thresh_image)
+            # # Feature 12
+            # training_dataset[image_name]["horizontal_histogram_projection"] = get_horizontal_histogram_projection(thresh_image)
 
 def get_vertical_symmetry_feature(image):
     image_left = image[:,:int(WIDTH/2)]
@@ -119,7 +125,8 @@ def get_horizontal_line_intersection(image):
                 x+=1
                 value = image[line][x]
             intersection_count+=1
-    return intersection_count
+
+    return intersection_count/MAX_COUNT_HORIZONTAL
 
 def get_vertical_line_intersection(image):
     line = int(image.shape[1]/3)
@@ -137,7 +144,7 @@ def get_vertical_line_intersection(image):
                 y+=1
                 value = image[y][line]
             intersection_count+=1
-    return intersection_count
+    return intersection_count/MAX_COUNT_VERTICAL
 
 def get_vertical_lines_count(image):
     w = image.shape[1]
@@ -186,7 +193,7 @@ def get_vertical_lines_count(image):
                 if (value != 255).all():
                     temp1 = y
                     flag = True
-                    while (flag):
+                    while (flag and y<h-1):
                         value = image[y][x]
                         if (value != 255).all():
                             count1 += 1
@@ -199,7 +206,18 @@ def get_vertical_lines_count(image):
                     first_condition = True
                 count1 = 0
     
-    return line_count 
+    return line_count
+
+def get_vertical_histogram_projection(image):
+    vertical_pixel_sum = np.sum(image, axis=0)
+    
+    return vertical_pixel_sum
+
+def get_horizontal_histogram_projection(image):
+    horizontal_pixel_sum = np.sum(image, axis=1)
+    
+    return horizontal_pixel_sum
+
 
 def create_json():
     import json
@@ -254,8 +272,8 @@ def plot():
             index = index + 1
             if index == 1000:
                 break
-            zdata.append(data[i]["horizontal_line_intersection_count"])
-            ydata.append(data[i]["vertical_ratio"])
+            zdata.append(data[i]["horizontal_histogram_projection"])
+            ydata.append(data[i]["vertical_histogram_projection"])
             xdata.append(data[i]["aspect_ratio"])
             colors.append(data[i]['color'])
             # plt.scatter(data[i]["feature_horizontal_ratio"], data[i]["feature_vertical_ratio"], c= data[i]["color"], s= 5)
