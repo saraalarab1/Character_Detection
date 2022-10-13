@@ -10,6 +10,8 @@ from skeletonize import skeletonize_image
 WIDTH = 32
 HEIGHT = 32
 training_dataset = dict()
+MAX_COUNT_HORIZONTAL = 5
+MAX_COUNT_VERTICAL = 4
 
 def read_csv():
     from csv import reader
@@ -30,7 +32,6 @@ def pre_process_images():
         image_path = os.path.join('Img_2', image_name)
         image = cv.imread(image_path)
         skeletonize_image(image, image_name)
-        continue
         gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
         thresh_image = cv.threshold(gray_image, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
         contours = cv.findContours(thresh_image, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
@@ -54,20 +55,27 @@ def pre_process_images():
             image = cv.resize(image, dim, interpolation = cv.INTER_AREA)
             # Feature 2
             training_dataset[image_name]["percentage_of_vertical_symmetry"] = get_vertical_symmetry_feature(image)
-            # # Feature 3
+            # Feature 3
             training_dataset[image_name]["percentage_of_horizontal_symmetry"] = get_horizontal_symmetry_feature(image)
-            # # Feature 4
+            # Feature 4
             training_dataset[image_name]["vertical_ratio"] = get_vertical_percentage_feature(image)
-            # # Feature 5
+            # Feature 5
             training_dataset[image_name]["horizontal_ratio"] = get_horizontal_percentage_feature(image)
-            #Feature 6
+            # Feature 6
             training_dataset[image_name]["percentage_of_pixels_at_horizontal_center"] = percentage_of_pixels_on_horizontal_center(image)
-            #Feature 7 
+            # Feature 7 
             training_dataset[image_name]["percentage_of_pixels_at_vertical_center"] = percentage_of_pixels_on_vertical_center(image)
             # Feature 8
             training_dataset[image_name]["horizontal_line_intersection_count"] = get_horizontal_line_intersection(image)
             # Feature 9
             training_dataset[image_name]["vertical_line_intersection_count"] = get_vertical_line_intersection(image)
+            # Feature 10
+            # training_dataset[image_name]["count_vertical_lines"] = get_vertical_lines_count(image)
+            # Feature 11
+            training_dataset[image_name]["vertical_histogram_projection"] = get_vertical_histogram_projection(image)
+            # Feature 12
+            training_dataset[image_name]["horizontal_histogram_projection"] = get_horizontal_histogram_projection(image)
+
 
 def get_vertical_symmetry_feature(image):
     image_left = image[:,:int(WIDTH/2)]
@@ -122,7 +130,8 @@ def get_horizontal_line_intersection(image):
                 x+=1
                 value = image[line][x]
             intersection_count+=1
-    return intersection_count
+
+    return intersection_count/MAX_COUNT_HORIZONTAL
 
 def get_vertical_line_intersection(image):
     line = int(image.shape[1]/3)
@@ -140,8 +149,82 @@ def get_vertical_line_intersection(image):
                 y+=1
                 value = image[y][line]
             intersection_count+=1
-    return intersection_count
+    return intersection_count/MAX_COUNT_VERTICAL
+
+def get_vertical_lines_count(image):
+    w = image.shape[1]
+    h = image.shape[0]
+    #value of iterations through a single vertical line
+    count1 = 0
+    count2 = 0
+    #number of lines detected
+    line_count = 0
+    y=0
+
+    width_thresh = 15 #pixels
+    length_thresh = 150 #pixels
+    #placeholder for the reference points of our line
+    temp1 = 0
+    temp2 = 0
+    #flag signaling whether we are detecting or not
+    flag = False
+    #flag signaling whether we detected a single column vertical line
+    first_condition = False
     
+    #iterate through every column of the image
+    for x in range(0,w-1):
+        #iterate through every row of the column
+        while (y<h-1):
+
+            if(first_condition):
+                if(image[temp1][x] != 255).all():
+                    for i in range(temp1,temp2):
+                        if(image[i][x] == 255).all():
+                            first_condition = False
+                            count2 = 0
+                            break
+                    count2 += 1
+                    y = temp2
+
+            elif(count2>width_thresh):
+                line_count += 1
+                count2 = 0
+                first_condition = False
+
+            else:
+                y+=1
+                value = image[y][x]
+                # if value is different than white pixel
+                if (value != 255).all():
+                    temp1 = y
+                    flag = True
+                    while (flag and y<h-1):
+                        value = image[y][x]
+                        if (value != 255).all():
+                            count1 += 1
+                        else:
+                            temp2 = y
+                            flag = False
+                        y += 1
+
+                if (count1>length_thresh):
+                    first_condition = True
+                count1 = 0
+    
+    return line_count
+
+def get_vertical_histogram_projection(image):
+    gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+    thresh_image = cv.threshold(gray_image, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
+    vertical_pixel_sum = np.sum(thresh_image, axis=0)
+    return vertical_pixel_sum.tolist()
+
+def get_horizontal_histogram_projection(image):
+    gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+    thresh_image = cv.threshold(gray_image, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
+    horizontal_pixel_sum = np.sum(thresh_image, axis=1)
+    return horizontal_pixel_sum.tolist()
+
 
 def create_json():
     import json
@@ -243,8 +326,8 @@ def plot():
             index = index + 1
             if index == 1000:
                 break
-            zdata.append(data[i]["horizontal_line_intersection_count"])
-            ydata.append(data[i]["vertical_line_intersection_count"])
+            zdata.append(data[i]["percentage_of_horizontal_symmetry"])
+            ydata.append(data[i]["percentage_of_pixels_at_vertical_center"])
             xdata.append(data[i]["aspect_ratio"])
             colors.append(data[i]['color'])
             # plt.scatter(data[i]["feature_horizontal_ratio"], data[i]["feature_vertical_ratio"], c= data[i]["color"], s= 5)
@@ -254,7 +337,7 @@ def plot():
         plt.show()
 
 # read_csv()
-pre_process_images()
+# pre_process_images()
 # create_json()
 # assign_random_colors()
-# plot()
+plot()
