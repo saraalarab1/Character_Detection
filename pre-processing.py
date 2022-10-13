@@ -51,15 +51,15 @@ def pre_process_images():
             image = cv.resize(image, dim, interpolation = cv.INTER_AREA)
             # Feature 2
             training_dataset[image_name]["percentage_of_vertical_symmetry"] = get_vertical_symmetry_feature(image)
-            # # Feature 3
+            # Feature 3
             training_dataset[image_name]["percentage_of_horizontal_symmetry"] = get_horizontal_symmetry_feature(image)
-            # # Feature 4
+            # Feature 4
             training_dataset[image_name]["vertical_ratio"] = get_vertical_percentage_feature(image)
-            # # Feature 5
+            # Feature 5
             training_dataset[image_name]["horizontal_ratio"] = get_horizontal_percentage_feature(image)
-            #Feature 6
+            # Feature 6
             training_dataset[image_name]["percentage_of_pixels_at_horizontal_center"] = percentage_of_pixels_on_horizontal_center(image)
-            #Feature 7 
+            # Feature 7 
             training_dataset[image_name]["percentage_of_pixels_at_vertical_center"] = percentage_of_pixels_on_vertical_center(image)
             # Feature 8
             training_dataset[image_name]["horizontal_line_intersection_count"] = get_horizontal_line_intersection(image)
@@ -68,9 +68,10 @@ def pre_process_images():
             # Feature 10
             # training_dataset[image_name]["count_vertical_lines"] = get_vertical_lines_count(image)
             # Feature 11
-            # training_dataset[image_name]["vertical_histogram_projection"] = get_vertical_histogram_projection(thresh_image)
-            # # Feature 12
-            # training_dataset[image_name]["horizontal_histogram_projection"] = get_horizontal_histogram_projection(thresh_image)
+            training_dataset[image_name]["vertical_histogram_projection"] = get_vertical_histogram_projection(image)
+            # Feature 12
+            training_dataset[image_name]["horizontal_histogram_projection"] = get_horizontal_histogram_projection(image)
+
 
 def get_vertical_symmetry_feature(image):
     image_left = image[:,:int(WIDTH/2)]
@@ -209,14 +210,16 @@ def get_vertical_lines_count(image):
     return line_count
 
 def get_vertical_histogram_projection(image):
-    vertical_pixel_sum = np.sum(image, axis=0)
-    
-    return vertical_pixel_sum
+    gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+    thresh_image = cv.threshold(gray_image, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
+    vertical_pixel_sum = np.sum(thresh_image, axis=0)
+    return vertical_pixel_sum.tolist()
 
 def get_horizontal_histogram_projection(image):
-    horizontal_pixel_sum = np.sum(image, axis=1)
-    
-    return horizontal_pixel_sum
+    gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+    thresh_image = cv.threshold(gray_image, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
+    horizontal_pixel_sum = np.sum(thresh_image, axis=1)
+    return horizontal_pixel_sum.tolist()
 
 
 def create_json():
@@ -272,8 +275,8 @@ def plot():
             index = index + 1
             if index == 1000:
                 break
-            zdata.append(data[i]["horizontal_histogram_projection"])
-            ydata.append(data[i]["vertical_histogram_projection"])
+            zdata.append(data[i]["percentage_of_horizontal_symmetry"])
+            ydata.append(data[i]["percentage_of_pixels_at_vertical_center"])
             xdata.append(data[i]["aspect_ratio"])
             colors.append(data[i]['color'])
             # plt.scatter(data[i]["feature_horizontal_ratio"], data[i]["feature_vertical_ratio"], c= data[i]["color"], s= 5)
@@ -282,8 +285,8 @@ def plot():
         ax.scatter3D(xdata, ydata, zdata, c=colors)
         plt.show()
 
-read_csv()
-pre_process_images()
-create_json()
-assign_random_colors()
+# read_csv()
+# pre_process_images()
+# create_json()
+# assign_random_colors()
 plot()
