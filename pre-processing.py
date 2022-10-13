@@ -5,6 +5,8 @@ import cv2 as cv
 import numpy as np
 from numpy import array, asarray
 import matplotlib.pyplot as plt
+
+from skeletonize import skeletonize_image
 WIDTH = 32
 HEIGHT = 32
 training_dataset = dict()
@@ -23,9 +25,12 @@ def read_csv():
 def pre_process_images():
     images_dir = os.listdir('Img')
     for i in range(len(images_dir)):
+        print(i)
         image_name = images_dir[i]
-        image_path = os.path.join('Img', image_name)
+        image_path = os.path.join('Img_2', image_name)
         image = cv.imread(image_path)
+        skeletonize_image(image, image_name)
+        continue
         gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
         thresh_image = cv.threshold(gray_image, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
         contours = cv.findContours(thresh_image, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
@@ -176,7 +181,54 @@ def percentage_of_pixels_on_vertical_center(image):
         image[i][int(HEIGHT/2)] = (255, 0, 0)
     return nb_of_pixels_at_vertical/total_nb_of_black_pixels
 
+def post_skeletonization():
+    images_path = 'skeletonized_images'
+    images = os.listdir(images_path)
+    for image in images:
+        image_path = os.path.join(images_path, image)
+        current_image = cv.imread(image_path)
+        # print(current_image)
+        green_pixels = np.where(
+        (current_image[:, :, 0] == 0) & 
+        (current_image[:, :, 1] == 255) & 
+        (current_image[:, :, 2] == 0)
+        )
+        black_pixels = np.where(
+        (current_image[:, :, 0] == 0) & 
+        (current_image[:, :, 1] == 0) & 
+        (current_image[:, :, 2] == 0)
+        )
+        current_image[green_pixels] = [0, 0, 0]
+        current_image[black_pixels] = [255, 255, 255]
+        gray_image = cv.cvtColor(current_image, cv.COLOR_BGR2GRAY)
+        thresh_image = cv.threshold(gray_image, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
+        contours = cv.findContours(thresh_image, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+        contours = contours[0] if len(contours) == 2 else contours[1]
 
+        max_area = 0
+        current_variables =  (0,0,0,0)
+        dim = (40, 40)
+        # choose bounding rectangle for character with biggest area
+        for countour in contours:
+            x,y,w,h = cv.boundingRect(countour)
+            if w*h > max_area:
+                max_area = w*h
+                current_variables = (x,y,x+w,y+h)
+        if current_variables != (0,0,0,0):
+            # change image dimensions to minimum bounding rectangle
+            current_image = current_image[current_variables[1]:current_variables[3], current_variables[0]:current_variables[2]] 
+        current_image = cv.resize(current_image, dim, interpolation = cv.INTER_AREA)
+        not_white_pixels = np.where(
+        (current_image[:, :, 0] != 255) & 
+        (current_image[:, :, 1] != 255) & 
+        (current_image[:, :, 2] != 255)
+        )
+        current_image[not_white_pixels] = [0, 0, 0]
+        # cv.imshow('image', current_image)
+        # cv.waitKey(0)
+        cv.imwrite('skeletonized_cropped/'+image, current_image)
+        # break
+# post_skeletonization()
 def plot():
     with open('data_with_colors.json', 'r') as f:
         data = json.load(f)
@@ -192,7 +244,7 @@ def plot():
             if index == 1000:
                 break
             zdata.append(data[i]["horizontal_line_intersection_count"])
-            ydata.append(data[i]["vertical_ratio"])
+            ydata.append(data[i]["vertical_line_intersection_count"])
             xdata.append(data[i]["aspect_ratio"])
             colors.append(data[i]['color'])
             # plt.scatter(data[i]["feature_horizontal_ratio"], data[i]["feature_vertical_ratio"], c= data[i]["color"], s= 5)
@@ -201,8 +253,8 @@ def plot():
         ax.scatter3D(xdata, ydata, zdata, c=colors)
         plt.show()
 
-read_csv()
+# read_csv()
 pre_process_images()
-create_json()
-assign_random_colors()
-plot()
+# create_json()
+# assign_random_colors()
+# plot()
