@@ -9,7 +9,7 @@ def skeletonize_image(image, image_name):
     """
     # image = cv2.imread('Img_2/img006-001.png')
     # get (i, j) positions of all RGB pixels that are black (i.e. [0, 0, 0])
-    image = cv2.resize(image, (40, 40), interpolation = cv2.INTER_AREA)
+    # image = cv2.resize(image, (200, 200), interpolation = cv2.INTER_AREA)
     black_pixels = np.where(
         (image[:, :, 0] == 0) & 
         (image[:, :, 1] == 0) & 
@@ -54,6 +54,7 @@ def skeletonize_image(image, image_name):
 
     # fig.tight_layout()
     # plt.show()
+    return image
     cv2.imwrite('skeletonized_images_2/'+image_name, image)
 
 # skeletonize_image('image', 'sldkfjdl')

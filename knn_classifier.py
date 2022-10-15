@@ -18,7 +18,10 @@ from sklearn import model_selection
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import LeavePOut #for P-cross validation
 from sklearn.metrics import classification_report, accuracy_score
-
+from sklearn.preprocessing import StandardScaler
+sc = StandardScaler()
+from sklearn.svm import SVC
+classifier = SVC(kernel = 'rbf', random_state = 0)
 
 def train(X, y, k_cross_validation_ratio, testing_size, optimal_k=True, max_range_k=0 ):
 
@@ -30,7 +33,8 @@ def train(X, y, k_cross_validation_ratio, testing_size, optimal_k=True, max_rang
     # X_test = scaler.transform(X_test)
     #X_train, X_eval, y_train, y_eval = train_test_split(X0_train, y0_train, test_size= 100/k_cross_validation_ratio, random_state=7)
     
-
+    X_train = X0_train
+    X_test = X_test
     #finding the range for the optimal value of k either within the specified range (user input) 
     # or by our default range
     if optimal_k and max_range_k>1:
@@ -46,10 +50,15 @@ def train(X, y, k_cross_validation_ratio, testing_size, optimal_k=True, max_rang
     print(k_range)
     for k in tqdm(k_range):
         knn = KNeighborsClassifier(n_neighbors=k)
-        knn.fit(X0_train, y0_train)
-        y_pred = knn.predict(X_test)
+        # knn.fit(X_train, y0_train)
+        classifier.fit(X_train, y0_train)
+        # y_pred = knn.predict(X_test)
+        y_pred = classifier.predict(X_test)
+        print(y_pred)
+        print(y_test)
         scores[k] = metrics.accuracy_score(y_test, y_pred)
         scores_list.append(metrics.accuracy_score(y_test, y_pred))
+        break
     print(scores)
     k_optimal = scores_list.index(max(scores_list))
     model = KNeighborsClassifier(n_neighbors= k_optimal)
@@ -111,9 +120,12 @@ with open('data_with_colors.json', 'r') as f:
     x = []
     y = []
     for i in data.keys():
-        x.append([data[i]['vertical_ratio'], data[i]['horizontal_ratio'], data[i]['aspect_ratio'], data[i]['percentage_of_pixels_at_horizontal_center'], data[i]['percentage_of_pixels_at_vertical_center'], data[i]['horizontal_line_intersection_count'], data[i]['vertical_line_intersection_count']])
+        features = data[i]['pixels_per_segment']
+        features = np.array(features)
+        features = [features,data[i]['horizontal_ratio'], data[i]["vertical_ratio"], data[i]["horizontal_line_intersection_count"], data[i]["vertical_line_intersection_count"]]
+        x.append(features)
         y.append(data[i]['label'])
-
+print(len(x))
 eval_accuracy, model, X_train, y_train, X_test, y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.2, max_range_k=100)
 # test_score, conf_rep = test(X_train, y_train,X_test, y_test, pretrain_model=True)
 # print("Evaluation Score: {}".format(eval_accuracy))
