@@ -120,10 +120,10 @@ with open('data_with_colors.json', 'r') as f:
     x = []
     y = []
     for i in data.keys():
-        features = data[i]['pixels_per_segment']
-        features = np.array(features)
-        features = [features,data[i]['horizontal_ratio'], data[i]["vertical_ratio"], data[i]["horizontal_line_intersection_count"], data[i]["vertical_line_intersection_count"]]
-        x.append(features)
+        arr_2 = [data[i]['aspect_ratio']]
+        arr_1 = data[i]['vertical_histogram_projection']
+        arr_2.extend(arr_1)
+        x.append(arr_2)
         y.append(data[i]['label'])
 print(len(x))
 eval_accuracy, model, X_train, y_train, X_test, y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.2, max_range_k=100)

@@ -11,6 +11,8 @@ from skeletonize import skeletonize_image
 WIDTH = 40
 HEIGHT = 40
 training_dataset = dict()
+MAX_COUNT_HORIZONTAL = 5
+MAX_COUNT_VERTICAL = 4
 
 def read_csv():
     from csv import reader
@@ -30,21 +32,21 @@ def pre_process_images():
         image_path = os.path.join('skeletonized_new', image_name)
         aspect_ratio_image = cv.imread('Img/' + image_name)
         image = cv.imread(image_path)
+        skeletonize_image(image, image_name)
         gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
         thresh_image = cv.threshold(gray_image, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
-        # contours = cv.findContours(thresh_image, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-        # contours = contours[0] if len(contours) == 2 else contours[1]
-
-        # max_area = 0
-        # current_variables =  (0,0,0,0)
-        # dim = (WIDTH, HEIGHT)
-        # # choose bounding rectangle for character with biggest area
-        # for countour in contours:
-        #     x,y,w,h = cv.boundingRect(countour)
-        #     if w*h > max_area:
-        #         max_area = w*h
-        #         current_variables = (x,y,x+w,y+h)
-        # if current_variables != (0,0,0,0):
+        contours = cv.findContours(thresh_image, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+        contours = contours[0] if len(contours) == 2 else contours[1]
+        max_area = 0
+        current_variables =  (0,0,0,0)
+        dim = (WIDTH, HEIGHT)
+        # choose bounding rectangle for character with biggest area
+        for countour in contours:
+            x,y,w,h = cv.boundingRect(countour)
+            if w*h > max_area:
+                max_area = w*h
+                current_variables = (x,y,x+w,y+h)
+        if current_variables != (0,0,0,0):
             # change image dimensions to minimum bounding rectangle
             # image = image[current_variables[1]:current_variables[3], current_variables[0]:current_variables[2]] 
             # Feature 1
@@ -56,19 +58,19 @@ def pre_process_images():
             # # # Feature 3
             # training_dataset[image_name]["percentage_of_horizontal_symmetry"] = get_horizontal_symmetry_feature(image)
             # # Feature 4
-        training_dataset[image_name]["vertical_ratio"] = get_vertical_percentage_feature(image)
-        # # Feature 5
-        training_dataset[image_name]["horizontal_ratio"] = get_horizontal_percentage_feature(image)
-        #Feature 6
-        training_dataset[image_name]["percentage_of_pixels_at_horizontal_center"] = percentage_of_pixels_on_horizontal_center(image)
-        #Feature 7 
-        training_dataset[image_name]["percentage_of_pixels_at_vertical_center"] = percentage_of_pixels_on_vertical_center(image)
-        # Feature 8
-        training_dataset[image_name]["horizontal_line_intersection_count"] = get_horizontal_line_intersection(image)
-        # Feature 9
-        training_dataset[image_name]["vertical_line_intersection_count"] = get_vertical_line_intersection(image)
-        # Feature 10
-        training_dataset[image_name]["pixels_per_segment"] = get_nb_of_pixels_per_segment(image)
+            # training_dataset[image_name]["vertical_ratio"] = get_vertical_percentage_feature(image)
+            # # # Feature 5
+            # training_dataset[image_name]["horizontal_ratio"] = get_horizontal_percentage_feature(image)
+            #Feature 6
+            training_dataset[image_name]["percentage_of_pixels_at_horizontal_center"] = percentage_of_pixels_on_horizontal_center(image)
+            #Feature 7 
+            training_dataset[image_name]["percentage_of_pixels_at_vertical_center"] = percentage_of_pixels_on_vertical_center(image)
+            # Feature 8
+            training_dataset[image_name]["horizontal_line_intersection_count"] = get_horizontal_line_intersection(image)
+            # Feature 9
+            training_dataset[image_name]["vertical_line_intersection_count"] = get_vertical_line_intersection(image)
+            # Feature 10
+            training_dataset[image_name]["pixels_per_segment"] = get_nb_of_pixels_per_segment(image)
 
 def get_nb_of_pixels_per_segment(image):
     pixels_per_segment = []
@@ -82,56 +84,53 @@ def get_nb_of_pixels_per_segment(image):
             pixels_per_segment.append(total_pixels)
     return pixels_per_segment
 
+def get_aspect_ratio(image):
+    """
+    Add definition
+    """
+    return  round(float(image.shape[1]) / image.shape[0],4)
 
+def get_vertical_ratio(image):
+    """
+    Add definition
+    """
+    image_left = image[:,:int(WIDTH/2)]
+    image_right = image[:, int(WIDTH/2):]
+    total_pixel_left = np.sum(image_left == 0)
+    total_pixel_right =  np.sum(image_right == 0)
+    return round(total_pixel_left/total_pixel_right,4)
 
+def get_horizontal_ratio(image):
+    """
+    Add definition
+    """
+    image_top = image[:int(HEIGHT/2), :]
+    image_bottom =  image[int(HEIGHT/2):, :]
+    total_pixel_top = np.sum(image_top == 0)
+    total_pixel_bottom = np.sum(image_bottom == 0)
+    return round(total_pixel_top/total_pixel_bottom,4)
 
-
-
-
-
-
-
-
-
-
-
-
-def get_vertical_symmetry_feature(image):
+def get_vertical_symmetry(image):
+    """
+    Add definition
+    """
     image_left = image[:,:int(WIDTH/2)]
     image_right = cv.flip(image[:, int(WIDTH/2):],1)
     diff = cv.subtract(image_left, image_right)
-    err = np.sum(diff**2)
-    mse = err/(float(HEIGHT*WIDTH))
-    return mse
+    white_pixels = np.sum(diff == 255)
+    black_pixels = np.sum(diff == 0)
+    return round(white_pixels/(black_pixels+white_pixels),4)
 
-def get_horizontal_symmetry_feature(image):
-    image_top = image[: int(WIDTH/2), :]
-    image_bottom =  cv.flip(image[ int(WIDTH/2):, :],0)
+def get_horizontal_symmetry(image):
+    """
+    Add definition
+    """
+    image_top = image[: int(HEIGHT/2), :]
+    image_bottom =  cv.flip(image[ int(HEIGHT/2):, :],0)
     diff = cv.subtract(image_top, image_bottom)
-    err = np.sum(diff**2)
-    mse = err/(float(HEIGHT*WIDTH))
-    return mse
-
-def get_vertical_percentage_feature(image):
-    image_left = image[:,:int(WIDTH/2)]
-    image_right = cv.flip(image[:, int(WIDTH/2):],1)
-    total_pixel_left = np.count_nonzero(np.all(image_left == [0,0,0], axis = 2))
-    total_pixel_right = np.count_nonzero(np.all(image_right == [0,0,0], axis = 2))
-    ratio_percentage = total_pixel_left/(total_pixel_right if total_pixel_right >0 else 0.1)
-    return ratio_percentage
-
-def get_horizontal_percentage_feature(image):
-    image_top = image[: int(WIDTH/2), :]
-    image_bottom =  cv.flip(image[ int(WIDTH/2):, :],0)
-    total_pixel_top = np.count_nonzero(np.all(image_top == [0,0,0], axis = 2))
-    total_pixel_bottom = np.count_nonzero(np.all(image_bottom == [0,0,0], axis = 2))
-    ratio_percentage = total_pixel_top/(total_pixel_bottom if total_pixel_bottom >0 else 0.1)
-    return ratio_percentage
-
-
-def get_aspect_ratio(image):
-    return  float(image.shape[1]) / image.shape[0]
-    
+    white_pixels = np.sum(diff == 255)
+    black_pixels = np.sum(diff == 0)
+    return round(white_pixels/(black_pixels+white_pixels),4)
 
 def get_horizontal_line_intersection(image):
     line = int(image.shape[0]/3)
@@ -149,7 +148,8 @@ def get_horizontal_line_intersection(image):
                 x+=1
                 value = image[line][x]
             intersection_count+=1
-    return intersection_count
+
+    return intersection_count/MAX_COUNT_HORIZONTAL
 
 def get_vertical_line_intersection(image):
     line = int(image.shape[1]/3)
@@ -167,8 +167,20 @@ def get_vertical_line_intersection(image):
                 y+=1
                 value = image[y][line]
             intersection_count+=1
-    return intersection_count
-    
+    return intersection_count/MAX_COUNT_VERTICAL
+
+def get_vertical_histogram_projection(image):
+    gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+    thresh_image = cv.threshold(gray_image, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
+    vertical_pixel_sum = np.sum(thresh_image, axis=0)
+    return vertical_pixel_sum.tolist()
+
+def get_horizontal_histogram_projection(image):
+    gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+    thresh_image = cv.threshold(gray_image, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
+    horizontal_pixel_sum = np.sum(thresh_image, axis=1)
+    return horizontal_pixel_sum.tolist()
+
 
 def create_json():
     import json
@@ -270,14 +282,12 @@ def plot():
         colors = []
         for i in data.keys():
             index = index + 1
-            # if index == 1000:
-            #     break
-            zdata.append(data[i]["horizontal_line_intersection_count"])
-            ydata.append(data[i]["vertical_line_intersection_count"])
+            if index == 1000:
+                break
+            zdata.append(data[i]["horizontal_symmetry"])
+            ydata.append(data[i]["vertical_ratio"])
             xdata.append(data[i]["aspect_ratio"])
             colors.append(data[i]['color'])
-            # plt.scatter(data[i]["feature_horizontal_ratio"], data[i]["feature_vertical_ratio"], c= data[i]["color"], s= 5)
-        # plt.show()
         ax.scatter3D(xdata, ydata, zdata, c=colors)
         plt.show()
 
