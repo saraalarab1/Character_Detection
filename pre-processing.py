@@ -56,9 +56,9 @@ def pre_process_images():
             # Feature 3
             training_dataset[image_name]["horizontal_ratio"] = get_horizontal_ratio(image)
             # Feature 4
-            training_dataset[image_name]["percentage_of_vertical_symmetry"] = get_vertical_symmetry(image)
+            training_dataset[image_name]["vertical_symmetry"] = get_vertical_symmetry(image)
             # Feature 5
-            training_dataset[image_name]["percentage_of_horizontal_symmetry"] = get_horizontal_symmetry(image)
+            training_dataset[image_name]["horizontal_symmetry"] = get_horizontal_symmetry(image)
             # Feature 6
             training_dataset[image_name]["percentage_of_pixels_at_horizontal_center"] = percentage_of_pixels_on_horizontal_center(image)
             # Feature 7 
@@ -71,11 +71,17 @@ def pre_process_images():
             training_dataset[image_name]["vertical_histogram_projection"] = get_vertical_histogram_projection(image)
             # Feature 11
             training_dataset[image_name]["horizontal_histogram_projection"] = get_horizontal_histogram_projection(image)
-            
+
 def get_aspect_ratio(image):
+    """
+    Add definition
+    """
     return  float(image.shape[1]) / image.shape[0]
 
 def get_vertical_ratio(image):
+    """
+    Add definition
+    """
     image_left = image[:,:int(WIDTH/2)]
     image_right = image[:, int(WIDTH/2):]
     total_pixel_left = np.sum(image_left == 0)
@@ -83,6 +89,9 @@ def get_vertical_ratio(image):
     return total_pixel_left/total_pixel_right
 
 def get_horizontal_ratio(image):
+    """
+    Add definition
+    """
     image_top = image[:int(HEIGHT/2), :]
     image_bottom =  image[int(HEIGHT/2):, :]
     total_pixel_top = np.sum(image_top == 0)
@@ -90,6 +99,9 @@ def get_horizontal_ratio(image):
     return total_pixel_top/total_pixel_bottom
 
 def get_vertical_symmetry(image):
+    """
+    Add definition
+    """
     image_left = image[:,:int(WIDTH/2)]
     image_right = cv.flip(image[:, int(WIDTH/2):],1)
     diff = cv.subtract(image_left, image_right)
@@ -98,6 +110,9 @@ def get_vertical_symmetry(image):
     return white_pixels/(black_pixels+white_pixels)
 
 def get_horizontal_symmetry(image):
+    """
+    Add definition
+    """
     image_top = image[: int(HEIGHT/2), :]
     image_bottom =  cv.flip(image[ int(HEIGHT/2):, :],0)
     diff = cv.subtract(image_top, image_bottom)
@@ -255,13 +270,10 @@ def plot():
             index = index + 1
             if index == 1000:
                 break
-            zdata.append(data[i]["horizontal_ratio"])
+            zdata.append(data[i]["horizontal_symmetry"])
             ydata.append(data[i]["vertical_ratio"])
             xdata.append(data[i]["aspect_ratio"])
             colors.append(data[i]['color'])
-            # plt.scatter(data[i]["feature_horizontal_ratio"], data[i]["feature_vertical_ratio"], c= data[i]["color"], s= 5)
-        # plt.show()
-        print(colors)
         ax.scatter3D(xdata, ydata, zdata, c=colors)
         plt.show()
 
