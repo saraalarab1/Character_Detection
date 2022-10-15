@@ -56,27 +56,28 @@ def pre_process_images():
             # Feature 3
             training_dataset[image_name]["horizontal_ratio"] = get_horizontal_ratio(image)
             # Feature 4
-            training_dataset[image_name]["vertical_symmetry"] = get_vertical_symmetry(image)
-            # Feature 5
-            training_dataset[image_name]["horizontal_symmetry"] = get_horizontal_symmetry(image)
-            # Feature 6
-            training_dataset[image_name]["percentage_of_pixels_at_horizontal_center"] = percentage_of_pixels_on_horizontal_center(image)
-            # Feature 7 
-            training_dataset[image_name]["percentage_of_pixels_at_vertical_center"] = percentage_of_pixels_on_vertical_center(image)
-            # Feature 8
-            training_dataset[image_name]["horizontal_line_intersection_count"] = get_horizontal_line_intersection(image)
-            # Feature 9
-            training_dataset[image_name]["vertical_line_intersection_count"] = get_vertical_line_intersection(image)
-            # Feature 10
             training_dataset[image_name]["vertical_histogram_projection"] = get_vertical_histogram_projection(image)
-            # Feature 11
+            # Feature 5
             training_dataset[image_name]["horizontal_histogram_projection"] = get_horizontal_histogram_projection(image)
+            # Feature 6
+            training_dataset[image_name]["vertical_symmetry"] = get_vertical_symmetry(image)
+            # Feature 7
+            training_dataset[image_name]["horizontal_symmetry"] = get_horizontal_symmetry(image)
+            # Feature 8
+            training_dataset[image_name]["percentage_of_pixels_at_horizontal_center"] = percentage_of_pixels_on_horizontal_center(image)
+            # Feature 9 
+            training_dataset[image_name]["percentage_of_pixels_at_vertical_center"] = percentage_of_pixels_on_vertical_center(image)
+            # Feature 10
+            training_dataset[image_name]["horizontal_line_intersection_count"] = get_horizontal_line_intersection(image)
+            # Feature 11
+            training_dataset[image_name]["vertical_line_intersection_count"] = get_vertical_line_intersection(image)
+
 
 def get_aspect_ratio(image):
     """
     Add definition
     """
-    return  float(image.shape[1]) / image.shape[0]
+    return  round(float(image.shape[1]) / image.shape[0],4)
 
 def get_vertical_ratio(image):
     """
@@ -86,7 +87,7 @@ def get_vertical_ratio(image):
     image_right = image[:, int(WIDTH/2):]
     total_pixel_left = np.sum(image_left == 0)
     total_pixel_right =  np.sum(image_right == 0)
-    return total_pixel_left/total_pixel_right
+    return round(total_pixel_left/total_pixel_right,4)
 
 def get_horizontal_ratio(image):
     """
@@ -96,7 +97,7 @@ def get_horizontal_ratio(image):
     image_bottom =  image[int(HEIGHT/2):, :]
     total_pixel_top = np.sum(image_top == 0)
     total_pixel_bottom = np.sum(image_bottom == 0)
-    return total_pixel_top/total_pixel_bottom
+    return round(total_pixel_top/total_pixel_bottom,4)
 
 def get_vertical_symmetry(image):
     """
@@ -107,7 +108,7 @@ def get_vertical_symmetry(image):
     diff = cv.subtract(image_left, image_right)
     white_pixels = np.sum(diff == 255)
     black_pixels = np.sum(diff == 0)
-    return white_pixels/(black_pixels+white_pixels)
+    return round(white_pixels/(black_pixels+white_pixels),4)
 
 def get_horizontal_symmetry(image):
     """
@@ -118,7 +119,7 @@ def get_horizontal_symmetry(image):
     diff = cv.subtract(image_top, image_bottom)
     white_pixels = np.sum(diff == 255)
     black_pixels = np.sum(diff == 0)
-    return white_pixels/(black_pixels+white_pixels)
+    return round(white_pixels/(black_pixels+white_pixels),4)
 
 def get_horizontal_line_intersection(image):
     line = int(image.shape[0]/3)

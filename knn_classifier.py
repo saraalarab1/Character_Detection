@@ -111,7 +111,10 @@ with open('data_with_colors.json', 'r') as f:
     x = []
     y = []
     for i in data.keys():
-        x.append([data[i]['aspect_ratio'],data[i]['vertical_symmetry'],data[i]['horizontal_symmetry'],data[i]['vertical_ratio'],data[i]['horizontal_ratio']])
+        arr_2 = [data[i]['aspect_ratio']]
+        arr_1 = data[i]['vertical_histogram_projection']
+        arr_2.extend(arr_1)
+        x.append(arr_2)
         y.append(data[i]['label'])
 
 eval_accuracy, model, X_train, y_train, X_test, y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.2, max_range_k=100)
