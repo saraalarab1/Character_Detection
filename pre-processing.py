@@ -5,6 +5,8 @@ import cv2 as cv
 import numpy as np
 from numpy import array, asarray
 import matplotlib.pyplot as plt
+import statistics
+from mpl_toolkits.mplot3d import Axes3D
 
 from skeletonize import skeletonize_image
 WIDTH = 32
@@ -71,8 +73,7 @@ def pre_process_images():
             training_dataset[image_name]["horizontal_line_intersection_count"] = get_horizontal_line_intersection(image)
             # Feature 11
             training_dataset[image_name]["vertical_line_intersection_count"] = get_vertical_line_intersection(image)
-
-
+        
 def get_aspect_ratio(image):
     """
     Add definition
@@ -162,13 +163,33 @@ def get_vertical_histogram_projection(image):
     gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
     thresh_image = cv.threshold(gray_image, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
     vertical_pixel_sum = np.sum(thresh_image, axis=0)
-    return vertical_pixel_sum.tolist()
+    smaller_vector=[]
+    sum=0
+    for i in range(len(vertical_pixel_sum)):
+        sum+=vertical_pixel_sum[i]
+        if i%4==0:
+            smaller_vector.append(sum)
+            sum=0
+    median = statistics.median(smaller_vector)
+    stdev = statistics.stdev(smaller_vector)
+    mean = statistics.mean(smaller_vector)
+    return [median, mean, stdev]
 
 def get_horizontal_histogram_projection(image):
     gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
     thresh_image = cv.threshold(gray_image, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
     horizontal_pixel_sum = np.sum(thresh_image, axis=1)
-    return horizontal_pixel_sum.tolist()
+    smaller_vector=[]
+    sum=0
+    for i in range(len(horizontal_pixel_sum)):
+        sum+=horizontal_pixel_sum[i]
+        if i%4==0:
+            smaller_vector.append(sum)
+            sum=0
+    median = statistics.median(smaller_vector)
+    stdev = statistics.stdev(smaller_vector)
+    mean = statistics.mean(smaller_vector)
+    return [median, mean, stdev]
 
 
 def create_json():
@@ -271,8 +292,8 @@ def plot():
             index = index + 1
             if index == 1000:
                 break
-            zdata.append(data[i]["horizontal_symmetry"])
-            ydata.append(data[i]["vertical_ratio"])
+            zdata.append(data[i]["horizontal_histogram_projection"])
+            ydata.append(data[i]["vertical_histogram_projection"])
             xdata.append(data[i]["aspect_ratio"])
             colors.append(data[i]['color'])
         ax.scatter3D(xdata, ydata, zdata, c=colors)
@@ -282,4 +303,4 @@ read_csv()
 pre_process_images()
 create_json()
 assign_random_colors()
-plot()
+# plot()

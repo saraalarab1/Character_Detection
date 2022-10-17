@@ -51,6 +51,7 @@ def train(X, y, k_cross_validation_ratio, testing_size, optimal_k=True, max_rang
         scores[k] = metrics.accuracy_score(y_test, y_pred)
         scores_list.append(metrics.accuracy_score(y_test, y_pred))
     print(scores)
+    print(max((scores_list)))
     k_optimal = scores_list.index(max(scores_list))
     model = KNeighborsClassifier(n_neighbors= k_optimal)
     print(k_optimal)
@@ -111,10 +112,19 @@ with open('data_with_colors.json', 'r') as f:
     x = []
     y = []
     for i in data.keys():
-        arr_2 = [data[i]['aspect_ratio']]
-        arr_1 = data[i]['vertical_histogram_projection']
-        arr_2.extend(arr_1)
-        x.append(arr_2)
+        arr_1 = data[i]['aspect_ratio']
+        arr_2 = data[i]['vertical_histogram_projection']
+        arr_3 = data[i]['horizontal_histogram_projection']
+        arr_4 = data[i]['horizontal_ratio']
+        arr_5 = data[i]['vertical_ratio']
+        arr_6 = data[i]['vertical_symmetry']
+        arr_7 = data[i]['horizontal_symmetry']
+        arr_8 = data[i]['percentage_of_pixels_at_horizontal_center']
+        arr_9 = data[i]['percentage_of_pixels_at_vertical_center']
+        arr_10 = data[i]['horizontal_line_intersection_count']
+        arr_11 = data[i]['vertical_line_intersection_count']
+
+        x.append([arr_2[0],arr_2[1],arr_2[2], arr_3[0], arr_3[1], arr_3[2],arr_4,arr_5,arr_6])
         y.append(data[i]['label'])
 
 eval_accuracy, model, X_train, y_train, X_test, y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.2, max_range_k=100)
