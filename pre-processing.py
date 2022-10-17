@@ -29,8 +29,9 @@ def pre_process_images():
     images_dir = os.listdir('Img')
     for i in range(len(images_dir)):
         image_name = images_dir[i]
+        print(image_name)
         image_path = os.path.join('skeletonized_new', image_name)
-        aspect_ratio_image = cv.imread('Img/' + image_name)
+        aspect_ratio_image = cv.imread('skeletonized_new/' + image_name)
         image = cv.imread(image_path)
         skeletonize_image(image, image_name)
         gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
@@ -46,39 +47,43 @@ def pre_process_images():
             if w*h > max_area:
                 max_area = w*h
                 current_variables = (x,y,x+w,y+h)
-        if current_variables != (0,0,0,0):
+        # if current_variables != (0,0,0,0):
             # change image dimensions to minimum bounding rectangle
-            # image = image[current_variables[1]:current_variables[3], current_variables[0]:current_variables[2]] 
-            # Feature 1
-            # training_dataset[image_name]["aspect_ratio"] = get_aspect_ratio(aspect_ratio_image)
-            # resize image
-            # image = cv.resize(image, dim, interpolation = cv.INTER_AREA)
-            # Feature 2
-            # training_dataset[image_name]["percentage_of_vertical_symmetry"] = get_vertical_symmetry_feature(image)
-            # # # Feature 3
-            # training_dataset[image_name]["percentage_of_horizontal_symmetry"] = get_horizontal_symmetry_feature(image)
-            # # Feature 4
-            # training_dataset[image_name]["vertical_ratio"] = get_vertical_percentage_feature(image)
-            # # # Feature 5
-            # training_dataset[image_name]["horizontal_ratio"] = get_horizontal_percentage_feature(image)
-            #Feature 6
-            training_dataset[image_name]["percentage_of_pixels_at_horizontal_center"] = percentage_of_pixels_on_horizontal_center(image)
-            #Feature 7 
-            training_dataset[image_name]["percentage_of_pixels_at_vertical_center"] = percentage_of_pixels_on_vertical_center(image)
-            # Feature 8
-            training_dataset[image_name]["horizontal_line_intersection_count"] = get_horizontal_line_intersection(image)
-            # Feature 9
-            training_dataset[image_name]["vertical_line_intersection_count"] = get_vertical_line_intersection(image)
-            # Feature 10
-            training_dataset[image_name]["pixels_per_segment"] = get_nb_of_pixels_per_segment(image)
+        # image = image[current_variables[1]:current_variables[3], current_variables[0]:current_variables[2]] 
+        # Feature 1
+        # training_dataset[image_name]["aspect_ratio"] = get_aspect_ratio(aspect_ratio_image)
+        # # resize image
+        # image = cv.resize(image, dim, interpolation = cv.INTER_AREA)
+        # Feature 2
+        # training_dataset[image_name]["percentage_of_vertical_symmetry"] = get_vertical_symmetry_feature(image)
+        # # # Feature 3
+        # training_dataset[image_name]["percentage_of_horizontal_symmetry"] = get_horizontal_symmetry_feature(image)
+        # # Feature 4
+        # training_dataset[image_name]["vertical_ratio"] = get_vertical_percentage_feature(image)
+        # # # Feature 5
+        # training_dataset[image_name]["horizontal_ratio"] = get_horizontal_percentage_feature(image)
+        #Feature 6
+        # training_dataset[image_name]["percentage_of_pixels_at_horizontal_center"] = percentage_of_pixels_on_horizontal_center(image)
+        # #Feature 7 
+        # training_dataset[image_name]["percentage_of_pixels_at_vertical_center"] = percentage_of_pixels_on_vertical_center(image)
+        # # Feature 8
+        # training_dataset[image_name]["horizontal_line_intersection_count"] = get_horizontal_line_intersection(image)
+        # # Feature 9
+        # training_dataset[image_name]["vertical_line_intersection_count"] = get_vertical_line_intersection(image)
+        # Feature 10
+        for i in range(2,8):
+            training_dataset[image_name][f"pixels_per_segment_{i}"] = get_nb_of_pixels_per_segment(image, i)
+        # training_dataset[image_name]["horizontal_histogram_projection"] = get_horizontal_histogram_projection(image)
+        # training_dataset[image_name]["vertical_histogram_projection"] = get_vertical_histogram_projection(image)
 
-def get_nb_of_pixels_per_segment(image):
+
+def get_nb_of_pixels_per_segment(image, index):
     pixels_per_segment = []
-    for i in range(0, 40, 5):
-        for j in range(0, 40, 5):
+    for i in range(0, 40, index):
+        for j in range(0, 40, index):
             total_pixels = 0
-            for k in range(0, 5):
-                for l in range(0, 5):
+            for k in range(0, min(40-i,index)):
+                for l in range(0, min(40-j,index)):
                     if tuple(image[i+k][j+l])!=(255, 255, 255):
                         total_pixels = total_pixels + 1
             pixels_per_segment.append(total_pixels)
@@ -206,20 +211,19 @@ def percentage_of_pixels_on_horizontal_center(image):
     """
     total_nb_of_black_pixels = len(np.where((image[:, :, 0]==0) & (image[:, :, 1]==0) & (image[:, :, 2]==0))[0])
     nb_of_black_pixels_at_horizontal = len([i for i in image[int(WIDTH/2)] if tuple(i) == (0, 0, 0)])
-    return nb_of_black_pixels_at_horizontal/total_nb_of_black_pixels 
+    return nb_of_black_pixels_at_horizontal/(total_nb_of_black_pixels if total_nb_of_black_pixels > 0 else 0.1)
 
 def percentage_of_pixels_on_vertical_center(image):
     """
     This function returns the percentage of non-white pixels
     along the vertical axis at the center of an image"""
     nb_of_pixels_at_vertical = 0
-    print(image.shape)
     total_nb_of_black_pixels = len(np.where((image[:, :, 0]==0) & (image[:, :, 1]==0) & (image[:, :, 2]==0))[0])
     for i in range(WIDTH):
         if tuple(image[i][int(HEIGHT/2)]) == (0, 0, 0):
             nb_of_pixels_at_vertical = nb_of_pixels_at_vertical + 1
         image[i][int(HEIGHT/2)] = (255, 0, 0)
-    return nb_of_pixels_at_vertical/total_nb_of_black_pixels
+    return nb_of_pixels_at_vertical/(total_nb_of_black_pixels if total_nb_of_black_pixels > 0 else 0.1)
 
 def post_skeletonization():
     images_path = 'skeletonized_images'

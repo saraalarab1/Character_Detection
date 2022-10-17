@@ -1,4 +1,6 @@
+import os
 import cv2 as cv
+import numpy as np
 
 from skeletonize import skeletonize_image 
 
@@ -26,3 +28,17 @@ def resize(image, image_name):
     cv.imwrite('skeletonized_new/'+image_name, image)
 # cv.imshow('image', image)
 # cv.waitKey(0)
+
+
+def gray_to_black():
+    for image_name in os.listdir('skeletonized_new'):
+        image = cv.imread(os.path.join('skeletonized_new', image_name))
+        not_white_pixels = np.where(
+        (image[:, :, 0] != 255) & 
+        (image[:, :, 1] != 255) & 
+        (image[:, :, 2] != 255)
+        )
+        image[not_white_pixels] = [0, 0, 0]
+        cv.imwrite(os.path.join('skeletonized_new', image_name), image)
+
+gray_to_black()

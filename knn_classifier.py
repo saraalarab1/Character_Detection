@@ -11,7 +11,7 @@ import glob
 import pickle
 
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV, KFold, train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn import metrics
 from sklearn import model_selection
@@ -21,16 +21,16 @@ from sklearn.metrics import classification_report, accuracy_score
 from sklearn.preprocessing import StandardScaler
 sc = StandardScaler()
 from sklearn.svm import SVC
-classifier = SVC(kernel = 'rbf', random_state = 0)
+classifier = SVC(kernel = 'rbf', random_state = 0, C=100, gamma= 0.01)
 
-def train(X, y, k_cross_validation_ratio, testing_size, optimal_k=True, max_range_k=0 ):
+def train(X, y, k_cross_validation_ratio, testing_size, optimal_k=True, max_range_k=0):
 
     X0_train, X_test, y0_train, y_test = train_test_split(X,y,test_size=testing_size, random_state=7)
     #Scaler is needed to scale all the inputs to a similar range
-    # scaler = StandardScaler()
-    # scaler = scaler.fit(X0_train)
-    # X0_train = scaler.transform(X0_train)
-    # X_test = scaler.transform(X_test)
+    scaler = StandardScaler()
+    scaler = scaler.fit(X0_train)
+    X0_train = scaler.transform(X0_train)
+    X_test = scaler.transform(X_test)
     #X_train, X_eval, y_train, y_eval = train_test_split(X0_train, y0_train, test_size= 100/k_cross_validation_ratio, random_state=7)
     
     X_train = X0_train
@@ -42,27 +42,43 @@ def train(X, y, k_cross_validation_ratio, testing_size, optimal_k=True, max_rang
     else:
         k_range=range(1,50)
     
-
     scores = {}
     scores_list = []
+    # creating a KFold object with 5 splits 
+    folds = KFold(n_splits = 5, shuffle = True, random_state = 101)
 
+    # specify range of hyperparameters
+    # Set the parameters by cross-validation
+    hyper_params = [ {'gamma': [1e-2, 1e-3, 1e-4],
+                        'C': [1, 10, 100, 1000]}]
+    model = GridSearchCV(
+        estimator= classifier, 
+        param_grid= hyper_params,
+        scoring= 'accuracy',
+        cv = folds, 
+        verbose= 1,
+        return_train_score= True)
+
+    # print(X_train)
+    # model.fit(X_train, y0_train)
+    # print(model.best_params_)
     #finding the optimal nb of neighbors
-    print(k_range)
-    for k in tqdm(k_range):
-        knn = KNeighborsClassifier(n_neighbors=k)
-        # knn.fit(X_train, y0_train)
-        classifier.fit(X_train, y0_train)
-        # y_pred = knn.predict(X_test)
-        y_pred = classifier.predict(X_test)
-        print(y_pred)
-        print(y_test)
-        scores[k] = metrics.accuracy_score(y_test, y_pred)
-        scores_list.append(metrics.accuracy_score(y_test, y_pred))
-        break
-    print(scores)
-    k_optimal = scores_list.index(max(scores_list))
-    model = KNeighborsClassifier(n_neighbors= k_optimal)
-    print(k_optimal)
+    # print(k_range)
+    # for k in tqdm(k_range):
+    #     knn = KNeighborsClassifier(n_neighbors=k)
+    #     # knn.fit(X_train, y0_train)
+    #     classifier.fit(X_train, y0_train)
+    #     # y_pred = knn.predict(X_test)
+    #     y_pred = classifier.predict(X_test)
+    #     # print(y_pred)
+    #     # print(y_test)
+    #     scores[k] = metrics.accuracy_score(y_test, y_pred)
+    #     scores_list.append(metrics.accuracy_score(y_test, y_pred))
+    #     break
+    # print(scores)
+    # k_optimal = scores_list.index(max(scores_list))
+    # model = KNeighborsClassifier(n_neighbors= k_optimal)
+    # print(k_optimal)
     return 
 
     eval_score_list = []
@@ -120,13 +136,14 @@ with open('data_with_colors.json', 'r') as f:
     x = []
     y = []
     for i in data.keys():
-        arr_2 = [data[i]['aspect_ratio']]
-        arr_1 = data[i]['vertical_histogram_projection']
-        arr_2.extend(arr_1)
-        x.append(arr_2)
+        arr_2 = []
+        # arr_1 = data[i]['vertical_histogram_projection']
+        # arr_2.append(arr_1)
+        # arr_2.append(data[i]['horizontal_histogram_projection'])
+        # arr_2.append(data[i]['pixels_per_segment'])
+        x.append(data[i]['pixels_per_segment_7'])
         y.append(data[i]['label'])
-print(len(x))
-eval_accuracy, model, X_train, y_train, X_test, y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.2, max_range_k=100)
+train(x, y, k_cross_validation_ratio=5, testing_size=0.2, max_range_k=100)
 # test_score, conf_rep = test(X_train, y_train,X_test, y_test, pretrain_model=True)
 # print("Evaluation Score: {}".format(eval_accuracy))
 # print("Test Score: {}".format(test_score))
