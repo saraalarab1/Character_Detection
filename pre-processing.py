@@ -189,7 +189,8 @@ def get_vertical_histogram_projection(image):
     median = statistics.median(smaller_vector)
     stdev = statistics.stdev(smaller_vector)
     mean = statistics.mean(smaller_vector)
-    return [median, mean, stdev]
+    # return [median, mean, stdev]
+    return smaller_vector
 
 def get_horizontal_histogram_projection(image):
     gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
@@ -205,7 +206,8 @@ def get_horizontal_histogram_projection(image):
     median = statistics.median(smaller_vector)
     stdev = statistics.stdev(smaller_vector)
     mean = statistics.mean(smaller_vector)
-    return [median, mean, stdev]
+    # return [median, mean, stdev]
+    return smaller_vector
 
 
 def create_json():
