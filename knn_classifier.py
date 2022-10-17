@@ -124,7 +124,7 @@ with open('data_with_colors.json', 'r') as f:
         arr_10 = data[i]['horizontal_line_intersection_count']
         arr_11 = data[i]['vertical_line_intersection_count']
 
-        x.append([arr_2[0],arr_2[1],arr_2[2], arr_3[0], arr_3[1], arr_3[2],arr_4,arr_5,arr_6])
+        x.append([arr_2[0],arr_2[1],arr_2[2],arr_2[3],arr_2[4],arr_2[5],arr_2[6],arr_2[7], arr_3[0], arr_3[1], arr_3[2],arr_3[3], arr_3[4], arr_3[5],arr_3[6], arr_3[7]])
         y.append(data[i]['label'])
 
 eval_accuracy, model, X_train, y_train, X_test, y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.2, max_range_k=100)
