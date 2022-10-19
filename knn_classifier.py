@@ -124,24 +124,28 @@ def test(X_train, Y_train, X_test, Y_test,pretrain_model=False):
     return test_score, classification_rep
 
 
-with open('data_with_colors.json', 'r') as f: 
+with open('data.json', 'r') as f: 
     data = json.load(f)
     x = []
     y = []
     for i in data.keys():
-        arr_1 = data[i]['aspect_ratio']
+        # arr_1 = data[i]['aspect_ratio']
         arr_2 = data[i]['vertical_histogram_projection']
         arr_3 = data[i]['horizontal_histogram_projection']
-        arr_4 = data[i]['horizontal_ratio']
+        arr_4 = data[i]['nb_of_pixels_per_segment']
         arr_5 = data[i]['vertical_ratio']
         arr_6 = data[i]['vertical_symmetry']
         arr_7 = data[i]['horizontal_symmetry']
-        arr_8 = data[i]['percentage_of_pixels_at_horizontal_center']
-        arr_9 = data[i]['percentage_of_pixels_at_vertical_center']
-        arr_10 = data[i]['horizontal_line_intersection_count']
-        arr_11 = data[i]['vertical_line_intersection_count']
-
-        x.append([arr_2[0],arr_2[1],arr_2[2],arr_2[3],arr_2[4],arr_2[5],arr_2[6],arr_2[7], arr_3[0], arr_3[1], arr_3[2],arr_3[3], arr_3[4], arr_3[5],arr_3[6],arr_3[7],])
+        # arr_8 = data[i]['percentage_of_pixels_at_horizontal_center']
+        # arr_9 = data[i]['percentage_of_pixels_at_vertical_center']
+        arr_10 = data[i]['horizontal_line_intersection']
+        arr_11 = data[i]['vertical_line_intersection']
+        array = arr_4
+        # array.extend(arr_3)
+        # array.extend(arr_2)
+        # array.append(arr_10)
+        # array.append(arr_11)
+        x.append(arr_4[::2])
         y.append(data[i]['label'])
 
 eval_accuracy, model, X_train, Y_train, X_test, Y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.2, max_range_k=100)
