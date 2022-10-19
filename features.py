@@ -115,7 +115,7 @@ def get_vertical_histogram_projection(image):
     for i in range(len(vertical_pixel_sum)):
         sum+=vertical_pixel_sum[i]
         if i%4==0:
-            smaller_vector.append(sum)
+            smaller_vector.append(int(sum))
             sum=0
     median = statistics.median(smaller_vector)
     stdev = statistics.stdev(smaller_vector)
@@ -132,7 +132,7 @@ def get_horizontal_histogram_projection(image):
     for i in range(len(horizontal_pixel_sum)):
         sum+=horizontal_pixel_sum[i]
         if i%4==0:
-            smaller_vector.append(sum)
+            smaller_vector.append(int(sum))
             sum=0
     median = statistics.median(smaller_vector)
     stdev = statistics.stdev(smaller_vector)
