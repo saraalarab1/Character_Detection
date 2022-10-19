@@ -45,7 +45,7 @@ def train(X, Y, k_cross_validation_ratio, testing_size):
     # X_test = scaler.transform(X_test)
     #X_train, X_eval, Y_train, y_eval = train_test_split(X0_train, Y0_train, test_size= 100/k_cross_validation_ratio, random_state=7)
     
-    model = SVC(kernel = 'rbf', random_state = 0, C=100, gamma= 0.01)
+    model = SVC(kernel = 'rbf', random_state = 0)
 
     #eval_score_list = []
     #Evaluation using cross validation: lpo: leave p out
@@ -109,7 +109,7 @@ with open('data.json', 'r') as f:
         arr_6 = data[i]['vertical_symmetry']
         arr_7 = data[i]['horizontal_symmetry']
 
-        x.append([arr_2[0],arr_2[1],arr_2[2],arr_2[3],arr_2[4],arr_2[5],arr_2[6],arr_2[7], arr_3[0], arr_3[1], arr_3[2],arr_3[3], arr_3[4], arr_3[5],arr_3[6],arr_3[7],])
+        x.append(data[i]["nb_of_pixels_per_segment"])
         y.append(data[i]['label'])
 
 eval_accuracy, model, X_train, Y_train, X_test, Y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.2)
