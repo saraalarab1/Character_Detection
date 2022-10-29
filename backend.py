@@ -15,7 +15,11 @@ app = Flask(__name__)
 
 @app.route('/', methods = ['GET'])
 def get_available_models():
-    return 'hello'
+    """
+    This function searches for all models 
+    and returns its characterstics
+    """
+    return ''
 
 @app.route('/train_new_model', methods= ['POST'])
 def train_new_model():
