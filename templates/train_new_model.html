@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<body>
+      <form action = "/train_new_model" method = "post">
+
+        <label for="features">Choose Feature(s):</label>
+        <select name="features" id="features" multiple>
+        <option value="nb_of_pixels_per_segment">Number of Pixels Per Segment</option>
+        <option value="aspect_ratio">Aspect Ratio</option>
+        <option value="vertical_ratio">Vertical Ratio</option>
+        <option value="horizontal_ratio">Horizontal Ratio</option>
+        <option value="vertical_symmetry">Verticsl Symmetry</option>
+        <option value="horizontal_symmetry">Horizontal Symmetry</option>
+        <option value="horizontal_line_intersection">Horizontal Line Intersection</option>
+        <option value="vertical_line_intersection">Vertical Line Intersection</option>
+        <option value="vertical_histogram_projection">Vertical Histogram Projection</option>
+        <option value="horizontal_histogram_projection">Horizontal Histogram Projection</option>
+        <option value="percentage_of_pixels_on_horizontal_center">Percentage of Pixels on Horizontal Center</option>
+        <option value="percentage_of_pixels_on_vertical_center">Percentage of Pixels on Vertical Center</option>
+        </select>
+        <br><br>
+         <label for="model_version">Choose Model(s):</label>
+
+         <select name="model_version" id="models" multiple>
+         <option value="knn">KNN Model</option>
+         <option value="svm">SVM Model</option>
+         <option value="dt">Decision Tree Model</option>
+         </select>
+         <br><br>
+         <input type="submit" value="Submit">
+      </form>   
+   </body>
+</html>

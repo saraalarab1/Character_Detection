@@ -35,7 +35,7 @@ def get_gamma_and_C(model):
 
 
 
-def train(X, Y, k_cross_validation_ratio, testing_size):
+def train(X, Y, k_cross_validation_ratio, testing_size, model_version=None, features=None):
 
     X0_train, X_test, Y0_train, Y_test = train_test_split(X,Y,test_size=testing_size, random_state=7)
     #Scaler is needed to scale all the inputs to a similar range
@@ -73,7 +73,10 @@ def train(X, Y, k_cross_validation_ratio, testing_size):
 
     #save the pretrained model:
     model_name='pretrained_dtree_model'
-    pickle.dump(model, open(model_name, 'wb'))
+    if model_version:
+        pickle.dump(model, open(f"models/{model_version}/{model_name}", 'wb'))
+    else:
+        pickle.dump(model, open(f"models/dt/{model_name}", 'wb'))
 
     return eval_accuracy, model, X0_train, Y0_train, X_test, Y_test
 
@@ -81,7 +84,7 @@ def train(X, Y, k_cross_validation_ratio, testing_size):
 def test(X_train, Y_train, X_test, Y_test,pretrain_model=False):
 
     if pretrain_model:
-        model = pickle.load(open('pretrained_dtree_model', 'rb' ))
+        model = pickle.load(open('models/pretrained_dtree_model', 'rb' ))
         
     else:
         eval_score, model, X_train, Y_train, X_test, Y_test = train(X_test, Y_test, pretrained_model=False)
@@ -96,27 +99,26 @@ def test(X_train, Y_train, X_test, Y_test,pretrain_model=False):
 
     return test_score, classification_rep
 
+def train_dt(features, model_version):
+    print('training')
+    x,y = get_input_output_labels(features)
+    train(x, y, k_cross_validation_ratio=5, testing_size=0.05, max_range_k=100, model_version = model_version, features = features)
 
-with open('data.json', 'r') as f: 
-    data = json.load(f)
-    x = []
-    y = []
-    for i in data.keys():
-        arr_2 = data[i]['vertical_histogram_projection']
-        arr_3 = data[i]['horizontal_histogram_projection']
-        arr_4 = data[i]['horizontal_ratio']
-        arr_5 = data[i]['vertical_ratio']
-        arr_6 = data[i]['vertical_symmetry']
-        arr_7 = data[i]['horizontal_symmetry']
-        array = data[i]['nb_of_pixels_per_segment']
-        # array.extend(arr_2)
-        # array.extend(arr_3)
-        # array.extend([arr_4,arr_5,arr_6,arr_7])
-        x.append(arr_2)
-        y.append(data[i]['label'])
+def get_input_output_labels(features):
+    with open('data.json', 'r') as f: 
+        data = json.load(f)
+        x = []
+        y = []
+        for i in data.keys():
+            for feature in features:
+                print(feature)
+                x.append(data[i][feature])
+            y.append(data[i]['label'])
+    return (x,y)
 
-eval_accuracy, model, X_train, Y_train, X_test, Y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.2)
-test_score, conf_rep = test(X_train, Y_train, X_test, Y_test, pretrain_model=True)
-print("Evaluation Score: {}".format(eval_accuracy))
-print("Test Score: {}".format(test_score))
-print(conf_rep)
+# x,y = get_input_output_labels(['nb_of_pixels_per_segment'])
+# eval_accuracy, model, X_train, Y_train, X_test, Y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.2)
+# test_score, conf_rep = test(X_train, Y_train, X_test, Y_test, pretrain_model=True)
+# print("Evaluation Score: {}".format(eval_accuracy))
+# print("Test Score: {}".format(test_score))
+# print(conf_rep)

@@ -1,5 +1,6 @@
 
 import json
+
 import numpy as np 
 import cv2
 import pandas as pd
@@ -9,7 +10,6 @@ import os
 from tqdm import tqdm
 import glob
 import pickle
-
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import GridSearchCV, KFold, train_test_split
 from sklearn.neighbors import KNeighborsClassifier
@@ -20,11 +20,9 @@ from sklearn.model_selection import LeavePOut #for P-cross validation
 from sklearn.metrics import classification_report, accuracy_score
 from sklearn.preprocessing import StandardScaler
 sc = StandardScaler()
-from sklearn.svm import SVC
-classifier = SVC(kernel = 'rbf', random_state = 0, C=100, gamma= 0.01)
 
 
-def train(X, Y, k_cross_validation_ratio, testing_size, optimal_k=True, max_range_k=100):
+def train(X, Y, k_cross_validation_ratio, testing_size, optimal_k=True, max_range_k=100, model_version=None, features=None):
 
     X0_train, X_test, Y0_train, Y_test = train_test_split(X,Y,test_size=testing_size, random_state=7)
     #Scaler is needed to scale all the inputs to a similar range
@@ -90,7 +88,10 @@ def train(X, Y, k_cross_validation_ratio, testing_size, optimal_k=True, max_rang
 
     #save the pretrained model:
     model_name='pretrained_knn_model.pkl'
-    pickle.dump(model, open(model_name, 'wb'))
+    if model_version:
+        pickle.dump(model, open(f"models/{model_version}/{model_name}", 'wb'))
+    else:
+        pickle.dump(model, open(f"models/knn/{model_name}", 'wb'))
 
     return 'eval_accuracy', 'model', X0_train, Y0_train, X_test, Y_test
 
@@ -98,7 +99,7 @@ def train(X, Y, k_cross_validation_ratio, testing_size, optimal_k=True, max_rang
 def test(X_train, Y_train, X_test, Y_test,pretrain_model=False):
 
     if pretrain_model:
-        model = pickle.load(open('pretrained_knn_model', 'rb' ))
+        model = pickle.load(open('models/knn/pretrained_knn_model', 'rb' ))
         
     else:
         eval_score, model, X_train, Y_train, X_test, Y_test = train(X_test, Y_test, pretrained_model=False)
@@ -113,29 +114,24 @@ def test(X_train, Y_train, X_test, Y_test,pretrain_model=False):
 
     return test_score, classification_rep
 
-
-def predict(character, model_name):
-    model = pickle.load(open(model_name, 'rb' ))
-    prediction = model.predict(character)
-    return prediction
-
 def train_knn(features, model_version):
     print('training')
-with open('data.json', 'r') as f: 
-    data = json.load(f)
-    x = []
-    y = []
-    for i in data.keys():
-        # arr_1 = data[i]['aspect_ratio']
-        arr_2 = data[i]['vertical_histogram_projection']
-        arr_3 = data[i]['horizontal_histogram_projection']
-        arr_4 = data[i]['nb_of_pixels_per_segment']
-        predict([arr_4])
-        break
-        x.append(arr_4)
-        y.append(data[i]['label'])
+    x,y = get_input_output_labels(features)
+    train(x, y, k_cross_validation_ratio=5, testing_size=0.05, max_range_k=100, model_version = model_version, features = features)
+    
+def get_input_output_labels(features):
+    with open('data.json', 'r') as f: 
+        data = json.load(f)
+        x = []
+        y = []
+        for i in data.keys():
+            for feature in features:
+                print(feature)
+                x.append(data[i][feature])
+            y.append(data[i]['label'])
+    return (x,y)
 
-
+# x,y = get_input_output_labels(['nb_of_pixels_per_segment'])
 # eval_accuracy, model, X_train, Y_train, X_test, Y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.05, max_range_k=100)
 # test_score, conf_rep = test(X_train, Y_train, X_test, Y_test, pretrain_model=True)
 # # print("Evaluation Score: {}".format(eval_accuracy))

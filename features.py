@@ -9,7 +9,10 @@ MAX_COUNT_VERTICAL = 4
 WIDTH = 40
 HEIGHT = 40
 
-def get_nb_of_pixels_per_segment(image, index):
+def nb_of_pixels_per_segment(image, index):
+    """
+    Add definition
+    """
     pixels_per_segment = []
     for i in range(0, 40, index):
         for j in range(0, 40, index):
@@ -21,13 +24,13 @@ def get_nb_of_pixels_per_segment(image, index):
             pixels_per_segment.append(total_pixels)
     return pixels_per_segment
 
-def get_aspect_ratio(image):
+def aspect_ratio(image):
     """
     Add definition
     """
     return  round(float(image.shape[1]) / image.shape[0],4)
 
-def get_vertical_ratio(image):
+def vertical_ratio(image):
     """
     Add definition
     """
@@ -37,7 +40,7 @@ def get_vertical_ratio(image):
     total_pixel_right =  np.sum(image_right == 0)
     return round(total_pixel_left/total_pixel_right,4)
 
-def get_horizontal_ratio(image):
+def horizontal_ratio(image):
     """
     Add definition
     """
@@ -47,7 +50,7 @@ def get_horizontal_ratio(image):
     total_pixel_bottom = np.sum(image_bottom == 0)
     return round(total_pixel_top/total_pixel_bottom,4)
 
-def get_vertical_symmetry(image):
+def vertical_symmetry(image):
     """
     Add definition
     """
@@ -58,7 +61,7 @@ def get_vertical_symmetry(image):
     black_pixels = np.sum(diff == 0)
     return round(white_pixels/(black_pixels+white_pixels),4)
 
-def get_horizontal_symmetry(image):
+def horizontal_symmetry(image):
     """
     Add definition
     """
@@ -69,7 +72,7 @@ def get_horizontal_symmetry(image):
     black_pixels = np.sum(diff == 0)
     return round(white_pixels/(black_pixels+white_pixels),4)
 
-def get_horizontal_line_intersection(image):
+def horizontal_line_intersection(image):
     line = int(image.shape[0]/3)
     w = image.shape[1]
     intersection_count =0
@@ -88,7 +91,7 @@ def get_horizontal_line_intersection(image):
 
     return intersection_count/MAX_COUNT_HORIZONTAL
 
-def get_vertical_line_intersection(image):
+def vertical_line_intersection(image):
     line = int(image.shape[1]/3)
     h = image.shape[0]
     intersection_count =0
@@ -106,7 +109,7 @@ def get_vertical_line_intersection(image):
             intersection_count+=1
     return intersection_count/MAX_COUNT_VERTICAL
 
-def get_vertical_histogram_projection(image):
+def vertical_histogram_projection(image):
     gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
     thresh_image = cv.threshold(gray_image, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
     vertical_pixel_sum = np.sum(thresh_image, axis=0)
@@ -123,7 +126,7 @@ def get_vertical_histogram_projection(image):
     # return [median, mean, stdev]
     return smaller_vector
 
-def get_horizontal_histogram_projection(image):
+def horizontal_histogram_projection(image):
     gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
     thresh_image = cv.threshold(gray_image, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
     horizontal_pixel_sum = np.sum(thresh_image, axis=1)
@@ -180,4 +183,34 @@ def get_character_features(features, character):
     """
     This function gets required features of a certain character
     """
-    return ''
+    features_data = []
+    for feature in features:
+        if feature == 'nb_of_pixels_per_segment':
+            features_data.append(nb_of_pixels_per_segment(character))
+        elif feature == 'aspect_ratio':
+            features_data.append(aspect_ratio(character))
+        elif feature == 'vertical_ratio':
+            features_data.append(vertical_ratio(character))
+        elif feature == 'horizontal_ratio':
+            features_data.append(horizontal_ratio(character))
+        elif feature == 'vertical_symmetry':
+            features_data.append(vertical_symmetry(character))
+        elif feature == 'horizontal_symmetry':
+            features_data.append(horizontal_symmetry(character))
+        elif feature == 'horizontal_line_intersection':
+            features_data.append(horizontal_line_intersection(character))
+        elif feature == 'vertical_line_intersection':
+            features_data.append(vertical_line_intersection(character))
+        elif feature == 'vertical_histogram_projection':
+            features_data.append(vertical_histogram_projection(character))
+        elif feature == 'horizontal_histogram_projection':
+            features_data.append(horizontal_histogram_projection(character))
+        elif feature == 'percentage_of_pixels_on_horizontal_center':
+            features_data.append(percentage_of_pixels_on_horizontal_center(character))
+        elif feature == 'percentage_of_pixels_on_vertical_center':
+            features_data.append(percentage_of_pixels_on_vertical_center(character))
+
+    return features_data
+
+
+    

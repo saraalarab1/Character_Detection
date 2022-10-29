@@ -1,0 +1,4 @@
+prediction_model: pretrained_knn_model
+features:
+  - vertical_histogram_projection
+  # - horizontal_histogram_projection

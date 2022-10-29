@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<body>
+      <form action = "/predict" method = "post">
+         <label for="model_version">Choose Model(s):</label>
+
+         <select name="model_version" id="models" multiple>
+         <option value="knn">KNN Model</option>
+         <option value="svm">SVM Model</option>
+         <option value="dt">Decision Tree Model</option>
+         </select>
+         <br><br>
+         <input type="submit" value="Submit">
+      </form>   
+   </body>
+</html>
