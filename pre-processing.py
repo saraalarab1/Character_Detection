@@ -85,9 +85,9 @@ def extract_features_for_training_data():
            json.dump(data, output, ensure_ascii=False, indent = 4)
 
 # pre_process_images()
-convert_csv_to_json()
+# convert_csv_to_json()
 
-extract_features_for_training_data()
+# extract_features_for_training_data()
 # post_skeletonization()
 
 # create_json()

@@ -24,7 +24,7 @@ from sklearn.svm import SVC
 classifier = SVC(kernel = 'rbf', random_state = 0, C=100, gamma= 0.01)
 
 
-def train(X, Y, k_cross_validation_ratio, testing_size, optimal_k=True, max_range_k=0):
+def train(X, Y, k_cross_validation_ratio, testing_size, optimal_k=True, max_range_k=100):
 
     X0_train, X_test, Y0_train, Y_test = train_test_split(X,Y,test_size=testing_size, random_state=7)
     #Scaler is needed to scale all the inputs to a similar range
@@ -47,17 +47,22 @@ def train(X, Y, k_cross_validation_ratio, testing_size, optimal_k=True, max_rang
     # Set the parameters by cross-validation
 
     #finding the optimal nb of neighbors
-    print(k_range)
+    # print(k_range)
     for k in tqdm(k_range):
         knn = KNeighborsClassifier(n_neighbors=k)
+        print('fitting')
         knn.fit(X0_train, Y0_train)
+        print('fitting done')
         y_pred = knn.predict(X_test)
+        print('predicting done')
         scores[k] = metrics.accuracy_score(Y_test, y_pred)
         scores_list.append(round(metrics.accuracy_score(Y_test, y_pred),3))
+        print('all done')
     print(scores_list)
     k_optimal = scores_list.index(max(scores_list)) +1
     model = KNeighborsClassifier(n_neighbors= k_optimal)
-    print(k_optimal)
+    model.fit(X0_train, Y0_train)
+    # print(k_optimal)
      
     #eval_score_list = []
     #Evaluation using cross validation: lpo: leave p out
@@ -65,29 +70,29 @@ def train(X, Y, k_cross_validation_ratio, testing_size, optimal_k=True, max_rang
     #lpo = LeavePOut(p=1)
     accuracys=[]
 
-    skf = StratifiedKFold(n_splits=10, random_state=None)
-    skf.get_n_splits(X0_train, Y0_train)
-    for train_index, test_index in skf.split(X0_train, Y0_train):
+    # skf = StratifiedKFold(n_splits=10, random_state=None)
+    # skf.get_n_splits(X0_train, Y0_train)
+    # for train_index, test_index in skf.split(X0_train, Y0_train):
     
-        # print("TRAIN:", train_index, "Validation:", test_index)
-        X_train, X_eval = pd.DataFrame(X0_train).iloc[train_index], pd.DataFrame(X0_train).iloc[test_index]
-        Y_train, y_eval = pd.DataFrame(Y0_train).iloc[train_index], pd.DataFrame(Y0_train).iloc[test_index]
+    #     # print("TRAIN:", train_index, "Validation:", test_index)
+    #     X_train, X_eval = pd.DataFrame(X0_train).iloc[train_index], pd.DataFrame(X0_train).iloc[test_index]
+    #     Y_train, y_eval = pd.DataFrame(Y0_train).iloc[train_index], pd.DataFrame(Y0_train).iloc[test_index]
     
-        model.fit(X0_train, Y0_train)
-        predictions = model.predict(X_eval)
-        score = accuracy_score(predictions, y_eval)
-        accuracys.append(score)
-        #scores = cross_val_score(knn, X, Y, cv=5, scoring='accuracy')
-        #eval_score_list.append(scores.mean())
+    #     model.fit(X0_train, Y0_train)
+    #     predictions = model.predict(X_eval)
+    #     score = accuracy_score(predictions, y_eval)
+    #     accuracys.append(score)
+    #     #scores = cross_val_score(knn, X, Y, cv=5, scoring='accuracy')
+    #     #eval_score_list.append(scores.mean())
 
-    #eval_accuracy = np.mean(eval_score_list)
-    eval_accuracy = np.mean(accuracys)
+    # #eval_accuracy = np.mean(eval_score_list)
+    # eval_accuracy = np.mean(accuracys)
 
     #save the pretrained model:
-    model_name='pretrained_knn_model'
+    model_name='pretrained_knn_model.pkl'
     pickle.dump(model, open(model_name, 'wb'))
 
-    return eval_accuracy, model, X0_train, Y0_train, X_test, Y_test
+    return 'eval_accuracy', 'model', X0_train, Y0_train, X_test, Y_test
 
 
 def test(X_train, Y_train, X_test, Y_test,pretrain_model=False):
@@ -109,6 +114,13 @@ def test(X_train, Y_train, X_test, Y_test,pretrain_model=False):
     return test_score, classification_rep
 
 
+def predict(character, model_name):
+    model = pickle.load(open(model_name, 'rb' ))
+    prediction = model.predict(character)
+    return prediction
+
+def train_knn(features, model_version):
+    print('training')
 with open('data.json', 'r') as f: 
     data = json.load(f)
     x = []
@@ -118,23 +130,14 @@ with open('data.json', 'r') as f:
         arr_2 = data[i]['vertical_histogram_projection']
         arr_3 = data[i]['horizontal_histogram_projection']
         arr_4 = data[i]['nb_of_pixels_per_segment']
-        arr_5 = data[i]['vertical_ratio']
-        arr_6 = data[i]['vertical_symmetry']
-        arr_7 = data[i]['horizontal_symmetry']
-        # arr_8 = data[i]['percentage_of_pixels_at_horizontal_center']
-        # arr_9 = data[i]['percentage_of_pixels_at_vertical_center']
-        arr_10 = data[i]['horizontal_line_intersection']
-        arr_11 = data[i]['vertical_line_intersection']
-        array = arr_4
-        # array.extend(arr_3)
-        # array.extend(arr_2)
-        # array.append(arr_10)
-        # array.append(arr_11)
-        x.append(arr_4[::2])
+        predict([arr_4])
+        break
+        x.append(arr_4)
         y.append(data[i]['label'])
 
-eval_accuracy, model, X_train, Y_train, X_test, Y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.2, max_range_k=100)
-test_score, conf_rep = test(X_train, Y_train, X_test, Y_test, pretrain_model=True)
-print("Evaluation Score: {}".format(eval_accuracy))
-print("Test Score: {}".format(test_score))
-print(conf_rep)
+
+# eval_accuracy, model, X_train, Y_train, X_test, Y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.05, max_range_k=100)
+# test_score, conf_rep = test(X_train, Y_train, X_test, Y_test, pretrain_model=True)
+# # print("Evaluation Score: {}".format(eval_accuracy))
+# print("Test Score: {}".format(test_score))
+# print(conf_rep)

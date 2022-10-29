@@ -174,3 +174,10 @@ def percentage_of_pixels_on_vertical_center(image):
 #             data[i]["color"] = label_color[data[i]["label"]]
 #         with open('data_with_colors.json', 'w') as output:
 #             json.dump(data, output, ensure_ascii=False, indent = 4)
+
+
+def get_character_features(features, character):
+    """
+    This function gets required features of a certain character
+    """
+    return ''

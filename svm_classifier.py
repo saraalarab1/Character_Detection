@@ -52,19 +52,21 @@ def train(X, Y, k_cross_validation_ratio, testing_size):
     lpo = LeavePOut(p=1)
     accuracys=[]
 
-    skf = StratifiedKFold(n_splits=10, random_state=None)
-    skf.get_n_splits(X0_train, Y0_train)
-    for train_index, test_index in skf.split(X0_train, Y0_train):
+    # skf = StratifiedKFold(n_splits=10, random_state=None)
+    # skf.get_n_splits(X0_train, Y0_train)
+    # for train_index, test_index in skf.split(X0_train, Y0_train):
     
-        # print("TRAIN:", train_index, "Validation:", test_index)
-        X_train, X_eval = pd.DataFrame(X0_train).iloc[train_index], pd.DataFrame(X0_train).iloc[test_index]
-        Y_train, y_eval = pd.DataFrame(Y0_train).iloc[train_index], pd.DataFrame(Y0_train).iloc[test_index]
-    
-        model.fit(X0_train, Y0_train)
-        predictions = model.predict(X_eval)
-        score = accuracy_score(predictions, y_eval)
-        print(score)
-        accuracys.append(score)
+    #     # print("TRAIN:", train_index, "Validation:", test_index)
+    #     X_train, X_eval = pd.DataFrame(X0_train).iloc[train_index], pd.DataFrame(X0_train).iloc[test_index]
+    #     Y_train, y_eval = pd.DataFrame(Y0_train).iloc[train_index], pd.DataFrame(Y0_train).iloc[test_index]
+    print('before fitting')
+    model.fit(X0_train, Y0_train)
+    print('fitting done')
+    predictions = model.predict(X_test)
+    print('predicting done')
+    score = accuracy_score(predictions, Y_test)
+    print(score)
+    accuracys.append(score)
         #scores = cross_val_score(knn, X, Y, cv=5, scoring='accuracy')
         #eval_score_list.append(scores.mean())
 
@@ -97,7 +99,7 @@ def test(X_train, Y_train, X_test, Y_test,pretrain_model=False):
     return test_score, classification_rep
 
 
-with open('data.json', 'r') as f: 
+with open('new_data.json', 'r') as f: 
     data = json.load(f)
     x = []
     y = []
@@ -111,8 +113,8 @@ with open('data.json', 'r') as f:
 
         x.append(data[i]["nb_of_pixels_per_segment"])
         y.append(data[i]['label'])
-
-eval_accuracy, model, X_train, Y_train, X_test, Y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.2)
+print('training')
+eval_accuracy, model, X_train, Y_train, X_test, Y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.01)
 test_score, conf_rep = test(X_train, Y_train, X_test, Y_test, pretrain_model=True)
 print("Evaluation Score: {}".format(eval_accuracy))
 print("Test Score: {}".format(test_score))
