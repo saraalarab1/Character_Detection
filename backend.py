@@ -2,7 +2,7 @@ from copyreg import pickle
 from datetime import datetime
 from genericpath import exists
 from http.client import OK
-from os import mkdir
+from os import makedirs
 import os
 from flask import Flask
 from requests import request
@@ -22,7 +22,7 @@ def train_new_model():
     features = request.form['features']
     models = request.form['models']
     model_version = datetime.now().replace('-', '_').replace(' ','_').replace(':','_')
-    mkdir(model_version)
+    makedirs(model_version)
     yaml_info = dict()
     if len(models)> 1:
         yaml_info['prediction_model'] = 'ensemble.pkl'
