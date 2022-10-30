@@ -186,7 +186,7 @@ def get_character_features(features, character):
     features_data = []
     for feature in features:
         if feature == 'nb_of_pixels_per_segment':
-            features_data.append(nb_of_pixels_per_segment(character))
+            features_data.append(nb_of_pixels_per_segment(character, 7))
         elif feature == 'aspect_ratio':
             features_data.append(aspect_ratio(character))
         elif feature == 'vertical_ratio':

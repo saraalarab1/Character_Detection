@@ -60,7 +60,7 @@ def train_new_model():
 def predict():
     if request.method == 'POST':
         model_version = request.form.get('model_version')
-        yaml_path = os.path.join(f"models/{model_version}", 'model.yaml')
+        yaml_path = os.path.join(f"models/{model_version}", "model.yaml")
         # character = request.form.get('character') # this should be converted to numpy array if it isn't
         character = cv.imread(os.path.join("processed_images","img001-001.png"))
         with open(yaml_path, 'r') as f:
@@ -70,7 +70,7 @@ def predict():
             model_name = yaml_info['prediction_model']
             model = pickle.load(open(os.path.join(f"models/{model_version}", model_name), 'rb' ))
             prediction = model.predict(character_features)
-            return prediction
+            return render_template("predict.html")
     return render_template("predict.html")
 
 

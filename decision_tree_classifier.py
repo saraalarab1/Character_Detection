@@ -72,7 +72,7 @@ def train(X, Y, k_cross_validation_ratio, testing_size, model_version=None, feat
     eval_accuracy = np.mean(accuracys)
 
     #save the pretrained model:
-    model_name='pretrained_dtree_model'
+    model_name='pretrained_dtree_model.pkl'
     if model_version:
         pickle.dump(model, open(f"models/{model_version}/{model_name}", 'wb'))
     else:
@@ -84,7 +84,7 @@ def train(X, Y, k_cross_validation_ratio, testing_size, model_version=None, feat
 def test(X_train, Y_train, X_test, Y_test,pretrain_model=False):
 
     if pretrain_model:
-        model = pickle.load(open('models/pretrained_dtree_model', 'rb' ))
+        model = pickle.load(open('models/pretrained_dtree_model.pkl', 'rb' ))
         
     else:
         eval_score, model, X_train, Y_train, X_test, Y_test = train(X_test, Y_test, pretrained_model=False)

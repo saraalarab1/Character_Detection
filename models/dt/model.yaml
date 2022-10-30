@@ -1,5 +1,6 @@
+prediction_model: pretrained_dt_model.pkl
 features:
-  - number_of_pixels_per_segment
+  - nb_of_pixels_per_segment
   - aspect_ratio
   - horizontal_ratio
   - vertical_symmetry

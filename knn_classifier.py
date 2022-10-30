@@ -99,7 +99,7 @@ def train(X, Y, k_cross_validation_ratio, testing_size, optimal_k=True, max_rang
 def test(X_train, Y_train, X_test, Y_test,pretrain_model=False):
 
     if pretrain_model:
-        model = pickle.load(open('models/knn/pretrained_knn_model', 'rb' ))
+        model = pickle.load(open('models/knn/pretrained_knn_model.pkl', 'rb' ))
         
     else:
         eval_score, model, X_train, Y_train, X_test, Y_test = train(X_test, Y_test, pretrained_model=False)
