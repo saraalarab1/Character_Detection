@@ -22,7 +22,7 @@ from sklearn.preprocessing import StandardScaler
 sc = StandardScaler()
 
 
-def train(X, Y, k_cross_validation_ratio, testing_size, optimal_k=True, max_range_k=100, model_version=None, features=None):
+def train(X, Y, k_cross_validation_ratio, testing_size, optimal_k=True, max_range_k=100, model_version=None):
 
     X0_train, X_test, Y0_train, Y_test = train_test_split(X,Y,test_size=testing_size, random_state=7)
     #Scaler is needed to scale all the inputs to a similar range
@@ -114,7 +114,7 @@ def test(X_train, Y_train, X_test, Y_test,pretrain_model=False):
 def train_knn(features, model_version):
     print('training')
     x,y = get_input_output_labels(features)
-    train(x, y, k_cross_validation_ratio=5, testing_size=0.05, max_range_k=100, model_version = model_version, features = features)
+    train(x, y, k_cross_validation_ratio=5, testing_size=0.05, max_range_k=100, model_version = model_version)
     
 def get_input_output_labels(features):
     with open('data.json', 'r') as f: 
