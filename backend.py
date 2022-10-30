@@ -54,7 +54,6 @@ def train_new_model():
 
     return render_template("train_new_model.html")
 
-
     
 @app.route('/predict', methods=['GET','POST'])
 def predict():
