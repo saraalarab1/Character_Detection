@@ -48,14 +48,11 @@ def train(X, Y, k_cross_validation_ratio, testing_size, optimal_k=True, max_rang
     # print(k_range)
     for k in tqdm(k_range):
         knn = KNeighborsClassifier(n_neighbors=k)
-        print('fitting')
         knn.fit(X0_train, Y0_train)
-        print('fitting done')
         y_pred = knn.predict(X_test)
-        print('predicting done')
         scores[k] = metrics.accuracy_score(Y_test, y_pred)
         scores_list.append(round(metrics.accuracy_score(Y_test, y_pred),3))
-        print('all done')
+    print('all done')
     print(scores_list)
     k_optimal = scores_list.index(max(scores_list)) +1
     model = KNeighborsClassifier(n_neighbors= k_optimal)
@@ -93,7 +90,7 @@ def train(X, Y, k_cross_validation_ratio, testing_size, optimal_k=True, max_rang
     else:
         pickle.dump(model, open(f"models/knn/{model_name}", 'wb'))
 
-    return 'eval_accuracy', 'model', X0_train, Y0_train, X_test, Y_test
+    return 'eval_accuracy', model, X0_train, Y0_train, X_test, Y_test
 
 
 def test(X_train, Y_train, X_test, Y_test,pretrain_model=False):

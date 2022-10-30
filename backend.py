@@ -25,25 +25,27 @@ def get_available_models():
 def train_new_model():
     if request.method == 'POST':
         features = request.form['features']
-        models = request.form['model_version']
-        model_version = datetime.now().replace('-', '_').replace(' ','_').replace(':','_')
-        makedirs(model_version)
+        models = request.form['models']
+        model_version = str(datetime.now()).replace('-', '_').replace(' ','_').replace(':','_')
+        makedirs("models/"+model_version)
         yaml_info = dict()
         if len(models)> 1:
             yaml_info['prediction_model'] = 'ensemble.pkl'
         else:
-            yaml_info['prediction_model'] = models[0]['name']
+            yaml_info['prediction_model'] = models[0]
         yaml_info['training'] = 'running'
-        yaml_path = os.path.join(model_version, 'model.yaml')
+        yaml_path = os.path.join("models",model_version, 'model.yaml')
         with open(yaml_path, 'w') as output:
             yaml.dump(yaml_info, output)
-
+        print(models)
+        models = [models]
+        features = [features]
         for model in models:
-            if model['name'] == 'knn':
+            if model == 'knn':
                 train_knn(features, model_version)
-            if model['name'] == 'svm':
+            if model == 'svm':
                 train_svm(features, model_version)
-            if model['name'] == 'dt':
+            if model == 'dt':
                 train_dt(features, model_version)
         
         with open(yaml_path, 'r') as f:
