@@ -23,7 +23,7 @@ sc = StandardScaler()
 
 
 def train(X, Y, k_cross_validation_ratio, testing_size, optimal_k=True, max_range_k=100, model_version=None):
-
+    
     X0_train, X_test, Y0_train, Y_test = train_test_split(X,Y,test_size=testing_size, random_state=7)
     #Scaler is needed to scale all the inputs to a similar range
     # scaler = StandardScaler()

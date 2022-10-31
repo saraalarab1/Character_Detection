@@ -13,13 +13,14 @@ from decision_tree_classifier import train_dt
 
 app = Flask(__name__)
 
-@app.route('/', methods = ['GET'])
+@app.route('/info', methods = ['GET'])
 def get_available_models():
     """
     This function searches for all models 
     and returns its characterstics
     """
-    return ''
+    models = os.listdir('models')
+    return models
 
 @app.route('/train_new_model', methods= ['GET','POST'])
 def train_new_model():
