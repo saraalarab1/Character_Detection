@@ -3,7 +3,7 @@ from datetime import datetime
 from genericpath import exists
 from os import makedirs
 import os
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, jsonify, render_template, request, redirect, url_for
 import yaml
 import cv2 as cv
 from features import get_character_features
@@ -20,8 +20,10 @@ def get_available_models():
     and returns its characterstics
     """
     models = os.listdir('models')
-    return models
+    response = jsonify(models)
+    response.headers.add("Access-Control-Allow-Origin", "*")
 
+    return response
 @app.route('/train_new_model', methods= ['GET','POST'])
 def train_new_model():
     if request.method == 'POST':
