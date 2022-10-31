@@ -4,6 +4,7 @@ from genericpath import exists
 from os import makedirs
 import os
 from flask import Flask, jsonify, render_template, request, redirect, url_for
+from matplotlib.style import available
 import yaml
 import cv2 as cv
 from features import get_character_features
@@ -13,6 +14,13 @@ from decision_tree_classifier import train_dt
 
 app = Flask(__name__)
 
+
+def read_yaml(yaml_path):
+    with open(yaml_path, 'r') as f:
+        yaml_info = yaml.load(f)
+    return yaml_info
+
+
 @app.route('/info', methods = ['GET'])
 def get_available_models():
     """
@@ -20,7 +28,12 @@ def get_available_models():
     and returns its characterstics
     """
     models = os.listdir('models')
-    response = jsonify(models)
+    available_models = dict()
+    for model in models:
+        yaml_model_path = os.path.join('models', model, 'model.yaml')
+        yaml_info = read_yaml(yaml_model_path)
+        available_models[model] = yaml_info
+    response = jsonify(models, available_models)
     response.headers.add("Access-Control-Allow-Origin", "*")
 
     return response
