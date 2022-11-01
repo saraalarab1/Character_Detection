@@ -17,7 +17,7 @@ app = Flask(__name__)
 
 def read_yaml(yaml_path):
     with open(yaml_path, 'r') as f:
-        yaml_info = yaml.load(f)
+        yaml_info = yaml.safe_load(f)
     return yaml_info
 
 
@@ -33,7 +33,7 @@ def get_available_models():
         yaml_model_path = os.path.join('models', model, 'model.yaml')
         yaml_info = read_yaml(yaml_model_path)
         available_models[model] = yaml_info
-    response = jsonify(models, available_models)
+    response = jsonify(models=models, available_models=available_models)
     response.headers.add("Access-Control-Allow-Origin", "*")
 
     return response
