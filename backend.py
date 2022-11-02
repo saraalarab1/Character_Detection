@@ -35,40 +35,54 @@ def get_available_models():
         available_models[model] = yaml_info
     response = jsonify(models=models, available_models=available_models)
     response.headers.add("Access-Control-Allow-Origin", "*")
-
     return response
+
+@app.route('/features', methods = ['GET'])
+def get_features():
+    """
+    This function searches for all models 
+    and returns its characterstics
+    """
+    features_path = os.path.join('features', 'features.yaml')
+    features = read_yaml(features_path)
+    response = jsonify(features=features['features'])
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response
+
 @app.route('/train_new_model', methods= ['GET','POST'])
 def train_new_model():
     if request.method == 'POST':
         features = request.form['features']
         models = request.form['models']
-        model_version = str(datetime.now()).replace('-', '_').replace(' ','_').replace(':','_')
-        makedirs("models/"+model_version)
-        yaml_info = dict()
-        if len(models)> 1:
-            yaml_info['prediction_model'] = 'ensemble.pkl'
-        else:
-            yaml_info['prediction_model'] = models[0]
-        yaml_info['training'] = 'running'
-        yaml_path = os.path.join("models",model_version, 'model.yaml')
-        with open(yaml_path, 'w') as output:
-            yaml.dump(yaml_info, output)
+        print(features)
         print(models)
-        models = [models]
-        features = [features]
-        for model in models:
-            if model == 'knn':
-                train_knn(features, model_version)
-            if model == 'svm':
-                train_svm(features, model_version)
-            if model == 'dt':
-                train_dt(features, model_version)
+        # model_version = str(datetime.now()).replace('-', '_').replace(' ','_').replace(':','_')
+        # makedirs("models/"+model_version)
+        # yaml_info = dict()
+        # if len(models)> 1:
+        #     yaml_info['prediction_model'] = 'ensemble.pkl'
+        # else:
+        #     yaml_info['prediction_model'] = models[0]
+        # yaml_info['training'] = 'running'
+        # yaml_path = os.path.join("models",model_version, 'model.yaml')
+        # with open(yaml_path, 'w') as output:
+        #     yaml.dump(yaml_info, output)
+        # print(models)
+        # models = [models]
+        # features = [features]
+        # for model in models:
+        #     if model == 'knn':
+        #         train_knn(features, model_version)
+        #     if model == 'svm':
+        #         train_svm(features, model_version)
+        #     if model == 'dt':
+        #         train_dt(features, model_version)
         
-        with open(yaml_path, 'r') as f:
-            yaml_info = yaml.load(f)
-            yaml_info['training'] = 'completed'
-        with open(yaml_path, 'w') as output:
-            yaml.dump(yaml_info, output)
+        # with open(yaml_path, 'r') as f:
+        #     yaml_info = yaml.load(f)
+        #     yaml_info['training'] = 'completed'
+        # with open(yaml_path, 'w') as output:
+        #     yaml.dump(yaml_info, output)
 
     return render_template("train_new_model.html")
 
@@ -76,6 +90,7 @@ def train_new_model():
 @app.route('/predict', methods=['GET','POST'])
 def predict():
     if request.method == 'POST':
+        print(request)
         model_version = request.form.get('model_version')
         yaml_path = os.path.join(f"models/{model_version}", "model.yaml")
         # character = request.form.get('character') # this should be converted to numpy array if it isn't
