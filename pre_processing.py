@@ -1,18 +1,10 @@
 import json
 import os
-import random
 import cv2 as cv
-import numpy as np
-from numpy import array, asarray
-import matplotlib.pyplot as plt
 from resizing import gray_to_black
-from resizing import resize
-import statistics
-from mpl_toolkits.mplot3d import Axes3D
 import json
 from csv import reader
-from features import get_aspect_ratio, get_horizontal_histogram_projection, get_horizontal_line_intersection, get_horizontal_ratio, get_horizontal_symmetry, get_nb_of_pixels_per_segment, get_vertical_histogram_projection, get_vertical_line_intersection, get_vertical_ratio, get_vertical_symmetry
-from skeletonize import skeletonize_image
+from features import get_horizontal_histogram_projection, get_horizontal_line_intersection, get_horizontal_ratio, get_horizontal_symmetry, get_nb_of_pixels_per_segment, get_vertical_histogram_projection, get_vertical_line_intersection, get_vertical_ratio, get_vertical_symmetry
 WIDTH = 40
 HEIGHT = 40
 
@@ -85,27 +77,7 @@ def extract_features_for_training_data():
 
 
 
-def pre_process_image(image):
-    gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-    thresh_image = cv.threshold(gray_image, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
-    contours = cv.findContours(thresh_image, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-    contours = contours[0] if len(contours) == 2 else contours[1]
-    max_area = 0
-    current_variables =  (0,0,0,0)
-    dim = (WIDTH, HEIGHT)
-    # choose bounding rectangle for character with biggest area
-    for countour in contours:
-        x,y,w,h = cv.boundingRect(countour)
-        if w*h > max_area:
-            max_area = w*h
-            current_variables = (x,y,x+w,y+h)
-    if current_variables != (0,0,0,0):
-        # change image dimensions to minimum bounding rectangle
-        image = image[current_variables[1]:current_variables[3], current_variables[0]:current_variables[2]] 
-    # # resize image
-    image = cv.resize(image, dim, interpolation = cv.INTER_AREA)
-    image = gray_to_black(image)
-    return image
+
 # pre_process_images()
 # convert_csv_to_json()
 

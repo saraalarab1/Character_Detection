@@ -8,6 +8,7 @@ from matplotlib.style import available
 import yaml
 import cv2 as cv
 from features import get_character_features
+from features import pre_process_image
 from knn_classifier import train_knn
 from svm_classifier import train_svm
 from decision_tree_classifier import train_dt
@@ -89,19 +90,20 @@ def predict():
         base64_image = base64_image.split('base64,')[1]
         im_bytes = base64.b64decode(base64_image)
         im_arr = np.frombuffer(im_bytes, dtype=np.uint8)  # im_arr is one-dim Numpy array
-        img = cv.imdecode(im_arr, flags=cv.IMREAD_COLOR)
+        image = cv.imdecode(im_arr, flags=cv.IMREAD_COLOR)
         model_version = request.json['model_version']
-        image = pre_process_
-        # yaml_path = os.path.join(f"models/{model_version}", "model.yaml")
-        # # character = request.form.get('character') # this should be converted to numpy array if it isn't
-        # character = cv.imread(os.path.join("processed_images","img001-001.png"))
-        # with open(yaml_path, 'r') as f:
-        #     yaml_info = yaml.safe_load(f)
-        #     features = yaml_info['features']
-        #     character_features = get_character_features(features, character)
-        #     model_name = yaml_info['prediction_model']
-        #     model = pickle.load(open(os.path.join(f"models/{model_version}", model_name), 'rb' ))
-        #     prediction = model.predict(character_features)
+        image = pre_process_image(image)
+        # cv.imshow('image', image)
+        # cv.waitKey(0)
+        yaml_path = os.path.join(f"models/{model_version}", "model.yaml")
+        with open(yaml_path, 'r') as f:
+            yaml_info = yaml.safe_load(f)
+            features = yaml_info['features']
+            character_features = get_character_features(features, image)
+            model_name = yaml_info['prediction_model']
+            model = pickle.load(open(os.path.join(f"models/{model_version}", model_name), 'rb' ))
+            prediction = model.predict(character_features)
+            print(prediction)
         #     return render_template("predict.html")
     response = jsonify(request.json)
     response.headers.add("Access-Control-Allow-Origin", "*")
