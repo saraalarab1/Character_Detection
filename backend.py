@@ -11,9 +11,14 @@ from features import get_character_features
 from knn_classifier import train_knn
 from svm_classifier import train_svm
 from decision_tree_classifier import train_dt
+from flask_cors import CORS
+import base64
+from PIL import Image
+import io
+import numpy as np
 
 app = Flask(__name__)
-
+CORS(app, resources={r"*": {"origins": "*"}})
 
 def read_yaml(yaml_path):
     with open(yaml_path, 'r') as f:
@@ -89,22 +94,42 @@ def train_new_model():
     
 @app.route('/predict', methods=['GET','POST'])
 def predict():
+    print('predicting')
     if request.method == 'POST':
-        print(request)
-        model_version = request.form.get('model_version')
-        yaml_path = os.path.join(f"models/{model_version}", "model.yaml")
-        # character = request.form.get('character') # this should be converted to numpy array if it isn't
-        character = cv.imread(os.path.join("processed_images","img001-001.png"))
-        with open(yaml_path, 'r') as f:
-            yaml_info = yaml.safe_load(f)
-            features = yaml_info['features']
-            character_features = get_character_features(features, character)
-            model_name = yaml_info['prediction_model']
-            model = pickle.load(open(os.path.join(f"models/{model_version}", model_name), 'rb' ))
-            prediction = model.predict(character_features)
-            return render_template("predict.html")
-    return render_template("predict.html")
+        base64_image = request.json['image']
+        base64_image = base64_image.split('base64,')[1]
+        im_bytes = base64.b64decode(base64_image)
+        im_arr = np.frombuffer(im_bytes, dtype=np.uint8)  # im_arr is one-dim Numpy array
+        img = cv.imdecode(im_arr, flags=cv.IMREAD_COLOR)
+        model_version = request.json['model_version']
+        image = pre_process_
+        # yaml_path = os.path.join(f"models/{model_version}", "model.yaml")
+        # # character = request.form.get('character') # this should be converted to numpy array if it isn't
+        # character = cv.imread(os.path.join("processed_images","img001-001.png"))
+        # with open(yaml_path, 'r') as f:
+        #     yaml_info = yaml.safe_load(f)
+        #     features = yaml_info['features']
+        #     character_features = get_character_features(features, character)
+        #     model_name = yaml_info['prediction_model']
+        #     model = pickle.load(open(os.path.join(f"models/{model_version}", model_name), 'rb' ))
+        #     prediction = model.predict(character_features)
+        #     return render_template("predict.html")
+    response = jsonify(request.json)
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response
 
+
+
+
+
+# Take in base64 string and return PIL image
+def stringToImage(base64_string):
+    imgdata = base64.b64decode(base64_string)
+    return Image.open(io.BytesIO(imgdata))
+
+# convert PIL Image to an RGB image( technically a numpy array ) that's compatible with opencv
+def toRGB(image):
+    return cv.cvtColor(np.array(image), cv.COLOR_BGR2RGB)
 
 if __name__ == "__main__":
     app.run(debug = True)
