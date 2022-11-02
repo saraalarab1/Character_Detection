@@ -1,9 +1,8 @@
-import json
-from random import random
+
 import statistics
 import cv2 as cv
 import numpy as np
-
+from resizing import gray_to_black
 MAX_COUNT_HORIZONTAL = 5
 MAX_COUNT_VERTICAL = 4
 WIDTH = 40
@@ -213,4 +212,25 @@ def get_character_features(features, character):
     return features_data
 
 
-    
+
+def pre_process_image(image):
+    gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+    thresh_image = cv.threshold(gray_image, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
+    contours = cv.findContours(thresh_image, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    contours = contours[0] if len(contours) == 2 else contours[1]
+    max_area = 0
+    current_variables =  (0,0,0,0)
+    dim = (WIDTH, HEIGHT)
+    # choose bounding rectangle for character with biggest area
+    for countour in contours:
+        x,y,w,h = cv.boundingRect(countour)
+        if w*h > max_area:
+            max_area = w*h
+            current_variables = (x,y,x+w,y+h)
+    if current_variables != (0,0,0,0):
+        # change image dimensions to minimum bounding rectangle
+        image = image[current_variables[1]:current_variables[3], current_variables[0]:current_variables[2]] 
+    # # resize image
+    image = cv.resize(image, dim, interpolation = cv.INTER_AREA)
+    image = gray_to_black(image)
+    return image
