@@ -106,7 +106,7 @@ def test(X_train, Y_train, X_test, Y_test,pretrain_model=False):
     y_pred = model.predict(X_test)
     print("Text Prediction: {}".format(y_pred.shape))
     print("Y_test shape: {}".format(Y_test))
-    classification_rep = classification_report(Y_test, y_pred)
+    classification_rep = classification_report(Y_test, y_pred,zero_division=True)
     test_score = metrics.accuracy_score(Y_test, y_pred)
 
     return test_score, classification_rep
@@ -114,7 +114,11 @@ def test(X_train, Y_train, X_test, Y_test,pretrain_model=False):
 def train_knn(features, model_version):
     print('training')
     x,y = get_input_output_labels(features)
-    train(x, y, k_cross_validation_ratio=5, testing_size=0.05, max_range_k=100, model_version = model_version)
+    eval_accuracy, model, X_train, Y_train, X_test, Y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.05, max_range_k=100, model_version = model_version)
+    test_score, conf_rep = test(X_train, Y_train, X_test, Y_test, pretrain_model=True)
+    print("Evaluation Score: {}".format(eval_accuracy))
+    print("Test Score: {}".format(test_score))
+    print(conf_rep)
     
 def get_input_output_labels(features):
     with open('data.json', 'r') as f: 
@@ -127,9 +131,4 @@ def get_input_output_labels(features):
             y.append(data[i]['label'])
     return (x,y)
 
-# x,y = get_input_output_labels(['nb_of_pixels_per_segment'])
-# eval_accuracy, model, X_train, Y_train, X_test, Y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.05, max_range_k=100)
-# test_score, conf_rep = test(X_train, Y_train, X_test, Y_test, pretrain_model=True)
-# print("Evaluation Score: {}".format(eval_accuracy))
-# print("Test Score: {}".format(test_score))
-# print(conf_rep)
+# train_knn(['nb_of_pixels_per_segment'],test)

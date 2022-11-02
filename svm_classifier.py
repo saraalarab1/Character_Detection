@@ -15,7 +15,6 @@ from sklearn.preprocessing import StandardScaler
 sc = StandardScaler()
 
 def get_gamma_and_C(model):
-
     # creating a KFold object with 5 splits 
     folds = KFold(n_splits = 5, shuffle = True, random_state = 101)
 
@@ -32,8 +31,6 @@ def get_gamma_and_C(model):
         return_train_score= True)
 
     return model.best_params_
-
-
 
 def train(X, Y, k_cross_validation_ratio, testing_size, model_version=None):
 
@@ -59,11 +56,9 @@ def train(X, Y, k_cross_validation_ratio, testing_size, model_version=None):
     #     # print("TRAIN:", train_index, "Validation:", test_index)
     #     X_train, X_eval = pd.DataFrame(X0_train).iloc[train_index], pd.DataFrame(X0_train).iloc[test_index]
     #     Y_train, y_eval = pd.DataFrame(Y0_train).iloc[train_index], pd.DataFrame(Y0_train).iloc[test_index]
-    print('before fitting')
+
     model.fit(X0_train, Y0_train)
-    print('fitting done')
     predictions = model.predict(X_test)
-    print('predicting done')
     score = accuracy_score(predictions, Y_test)
     print(score)
     accuracys.append(score)
@@ -82,20 +77,20 @@ def train(X, Y, k_cross_validation_ratio, testing_size, model_version=None):
 
     return eval_accuracy, model, X0_train, Y0_train, X_test, Y_test
 
-def test(X_train, Y_train, X_test, Y_test,pretrain_model=False):
+def test(X_train, Y_train, X_test, Y_test,model_version):
 
-    if pretrain_model:
+    try:
         model = pickle.load(open('models/svm/pretrained_svm_model.pkl', 'rb' ))
         
-    else:
-        eval_score, model, X_train, Y_train, X_test, Y_test = train(X_test, Y_test, pretrained_model=False)
+    except:
+        eval_score, model, X_train, Y_train, X_test, Y_test = train(X_test, Y_test,k_cross_validation_ratio=5, testing_size=0.05, model_version = model_version)
         print("Evaluation score: {}".format(eval_score))
 
     model.fit(X_train, Y_train)
     y_pred = model.predict(X_test)
     print("Text Prediction: {}".format(y_pred.shape))
     print("Y_test shape: {}".format(Y_test))
-    classification_rep = classification_report(Y_test, y_pred)
+    classification_rep = classification_report(Y_test, y_pred,zero_division=True)
     test_score = metrics.accuracy_score(Y_test, y_pred)
 
     return test_score, classification_rep
@@ -103,7 +98,11 @@ def test(X_train, Y_train, X_test, Y_test,pretrain_model=False):
 def train_svm(features, model_version):
     print('training')
     x,y = get_input_output_labels(features)
-    train(x, y, k_cross_validation_ratio=5, testing_size=0.05, max_range_k=100, model_version = model_version, features = features)
+    eval_accuracy, model, X_train, Y_train, X_test, Y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.05, model_version = model_version)
+    test_score, conf_rep = test(X_train, Y_train, X_test, Y_test,model_version=model_version)
+    print("Evaluation Score: {}".format(eval_accuracy))
+    print("Test Score: {}".format(test_score))
+    print(conf_rep)
 
 def get_input_output_labels(features):
     with open('data.json', 'r') as f: 
@@ -112,14 +111,8 @@ def get_input_output_labels(features):
         y = []
         for i in data.keys():
             for feature in features:
-                print(feature)
                 x.append(data[i][feature])
             y.append(data[i]['label'])
     return (x,y)
 
-# x,y = get_input_output_labels(['nb_of_pixels_per_segment'])
-# eval_accuracy, model, X_train, Y_train, X_test, Y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.01)
-# test_score, conf_rep = test(X_train, Y_train, X_test, Y_test, pretrain_model=True)
-# print("Evaluation Score: {}".format(eval_accuracy))
-# print("Test Score: {}".format(test_score))
-# print(conf_rep)
+# train_svm(['nb_of_pixels_per_segment'],test)

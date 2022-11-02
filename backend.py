@@ -57,37 +57,35 @@ def get_features():
 @app.route('/train_new_model', methods= ['GET','POST'])
 def train_new_model():
     if request.method == 'POST':
-        features = request.form['features']
-        models = request.form['models']
+        features = request.json['features']
+        models = request.json['models']
         print(features)
         print(models)
-        # model_version = str(datetime.now()).replace('-', '_').replace(' ','_').replace(':','_')
-        # makedirs("models/"+model_version)
-        # yaml_info = dict()
-        # if len(models)> 1:
-        #     yaml_info['prediction_model'] = 'ensemble.pkl'
-        # else:
-        #     yaml_info['prediction_model'] = models[0]
-        # yaml_info['training'] = 'running'
-        # yaml_path = os.path.join("models",model_version, 'model.yaml')
-        # with open(yaml_path, 'w') as output:
-        #     yaml.dump(yaml_info, output)
-        # print(models)
-        # models = [models]
-        # features = [features]
-        # for model in models:
-        #     if model == 'knn':
-        #         train_knn(features, model_version)
-        #     if model == 'svm':
-        #         train_svm(features, model_version)
-        #     if model == 'dt':
-        #         train_dt(features, model_version)
+        model_version = str(datetime.now()).replace('-', '_').replace(' ','_').replace(':','_')
+        makedirs("models/"+model_version)
+        yaml_info = dict()
+        if len(models)> 1:
+            yaml_info['prediction_model'] = 'ensemble.pkl'
+        else:
+            yaml_info['prediction_model'] = models[0]['name']
+        yaml_info['training'] = 'running'
+        yaml_path = os.path.join("models",model_version, 'model.yaml')
+        with open(yaml_path, 'w') as output:
+            yaml.dump(yaml_info, output)
+   
+        for model in models:
+            if model['name'] == 'knn':
+                train_knn(features, model_version)
+            if model['name'] == 'svm':
+                train_svm(features, model_version)
+            if model['name'] == 'dt':
+                train_dt(features, model_version)
         
-        # with open(yaml_path, 'r') as f:
-        #     yaml_info = yaml.load(f)
-        #     yaml_info['training'] = 'completed'
-        # with open(yaml_path, 'w') as output:
-        #     yaml.dump(yaml_info, output)
+        with open(yaml_path, 'r') as f:
+            yaml_info = yaml.safe_load(f)
+            yaml_info['training'] = 'completed'
+        with open(yaml_path, 'w') as output:
+            yaml.dump(yaml_info, output)
 
     return render_template("train_new_model.html")
 
