@@ -66,32 +66,32 @@ def train_new_model():
             yaml_info['prediction_model'] = 'ensemble.pkl'
         else:
             yaml_info['prediction_model'] = models[0]['name']
+
         yaml_info['training'] = 'running'
         yaml_path = os.path.join("models",model_version, 'model.yaml')
         with open(yaml_path, 'w') as output:
             yaml.dump(yaml_info, output)
    
         for model in models:
+            yaml_info[model['name']]=dict()
+            yaml_info[model['name']]['features'] = model['features']
             if model['name'] == 'knn':
                 eval_accuracy, test_score, conf_rep = train_knn(model['features'], model_version)
             if model['name'] == 'svm':
                 eval_accuracy, test_score, conf_rep = train_svm(model['features'], model_version)
             if model['name'] == 'dt':
                 eval_accuracy, test_score, conf_rep = train_dt(model['features'], model_version)
+            label_data= get_info(conf_rep)
+            yaml_info[model['name']]['eval_accuracy'] = float(eval_accuracy)
+            yaml_info[model['name']]['test_score'] = float(test_score)
+            yaml_info[model['name']]['conf_rep'] = label_data
 
-        label_data= get_info(conf_rep)
+        yaml_info['training'] = 'completed'
 
-        with open(yaml_path, 'r') as f:
-            yaml_info = yaml.safe_load(f)
-            yaml_info['training'] = 'completed'
-            yaml_info['eval_accuracy'] = float(eval_accuracy)
-            yaml_info['test_score'] = float(test_score)
-            yaml_info['conf_rep'] = label_data
         with open(yaml_path, 'w') as output:
             yaml.dump(yaml_info, output)
 
     response = jsonify(training='completed', eval_accuracy=eval_accuracy, test_score=test_score)
-    print(response.json)
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response
     
@@ -132,6 +132,8 @@ def get_info(conf_rep):
     for label_information in data:
         label_information = " ".join(label_information.split())
         label_information = label_information.split(" ")
+        if len(label_information) < 4:
+            continue
         label_data.append({label_information[0]:[float(label_information[1]),float(label_information[2]),float(label_information[3])]})
 
     return label_data
