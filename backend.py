@@ -101,18 +101,22 @@ def predict():
         im_arr = np.frombuffer(im_bytes, dtype=np.uint8)  # im_arr is one-dim Numpy array
         image = cv.imdecode(im_arr, flags=cv.IMREAD_COLOR)
         model_version = request.json['model_version']
-        image = pre_process_image(image)
-        # cv.imshow('image', image)
-        # cv.waitKey(0)
+        letters = pre_process_image(image)
+        for letter in letters:
+            cv.imshow('image', letter)
+            cv.waitKey(0)
+        print('Number Of Letters: '+ str(len(letters)))
         yaml_path = os.path.join(f"models/{model_version}", "model.yaml")
         with open(yaml_path, 'r') as f:
             yaml_info = yaml.safe_load(f)
             features = yaml_info['features']
-            character_features = get_character_features(features, image)
+            character_features = get_character_features(features, letters)
             model_name = yaml_info['prediction_model']
             model = pickle.load(open(os.path.join(f"models/{model_version}", model_name), 'rb' ))
-            prediction = model.predict(character_features)
-            print(prediction)
+            for character in character_features:
+                prediction = model.predict(character)
+                print(prediction)
+            # print(prediction)
         #     return render_template("predict.html")
     response = jsonify(request.json)
     response.headers.add("Access-Control-Allow-Origin", "*")
