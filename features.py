@@ -178,38 +178,41 @@ def percentage_of_pixels_on_vertical_center(image):
 #             json.dump(data, output, ensure_ascii=False, indent = 4)
 
 
-def get_character_features(features, character):
+def get_character_features(features, characters):
     """
     This function gets required features of a certain character
     """
     features_data = []
-    for feature in features:
-        if feature == 'nb_of_pixels_per_segment':
-            features_data.append(nb_of_pixels_per_segment(character, 7))
-        elif feature == 'aspect_ratio':
-            features_data.append(aspect_ratio(character))
-        elif feature == 'vertical_ratio':
-            features_data.append(vertical_ratio(character))
-        elif feature == 'horizontal_ratio':
-            features_data.append(horizontal_ratio(character))
-        elif feature == 'vertical_symmetry':
-            features_data.append(vertical_symmetry(character))
-        elif feature == 'horizontal_symmetry':
-            features_data.append(horizontal_symmetry(character))
-        elif feature == 'horizontal_line_intersection':
-            features_data.append(horizontal_line_intersection(character))
-        elif feature == 'vertical_line_intersection':
-            features_data.append(vertical_line_intersection(character))
-        elif feature == 'vertical_histogram_projection':
-            features_data.append(vertical_histogram_projection(character))
-        elif feature == 'horizontal_histogram_projection':
-            features_data.append(horizontal_histogram_projection(character))
-        elif feature == 'percentage_of_pixels_on_horizontal_center':
-            features_data.append(percentage_of_pixels_on_horizontal_center(character))
-        elif feature == 'percentage_of_pixels_on_vertical_center':
-            features_data.append(percentage_of_pixels_on_vertical_center(character))
-
-    return features_data
+    features_of_characters = []
+    for character in characters: 
+        for feature in features:
+            if feature == 'nb_of_pixels_per_segment':
+                features_data.append(nb_of_pixels_per_segment(character, 7))
+            elif feature == 'aspect_ratio':
+                features_data.append(aspect_ratio(character))
+            elif feature == 'vertical_ratio':
+                features_data.append(vertical_ratio(character))
+            elif feature == 'horizontal_ratio':
+                features_data.append(horizontal_ratio(character))
+            elif feature == 'vertical_symmetry':
+                features_data.append(vertical_symmetry(character))
+            elif feature == 'horizontal_symmetry':
+                features_data.append(horizontal_symmetry(character))
+            elif feature == 'horizontal_line_intersection':
+                features_data.append(horizontal_line_intersection(character))
+            elif feature == 'vertical_line_intersection':
+                features_data.append(vertical_line_intersection(character))
+            elif feature == 'vertical_histogram_projection':
+                features_data.append(vertical_histogram_projection(character))
+            elif feature == 'horizontal_histogram_projection':
+                features_data.append(horizontal_histogram_projection(character))
+            elif feature == 'percentage_of_pixels_on_horizontal_center':
+                features_data.append(percentage_of_pixels_on_horizontal_center(character))
+            elif feature == 'percentage_of_pixels_on_vertical_center':
+                features_data.append(percentage_of_pixels_on_vertical_center(character))
+        features_of_characters.append(features_data)
+        features_data = []
+    return features_of_characters
 
 
 
@@ -222,15 +225,50 @@ def pre_process_image(image):
     current_variables =  (0,0,0,0)
     dim = (WIDTH, HEIGHT)
     # choose bounding rectangle for character with biggest area
+    letters = []
+    all_contours = []
     for countour in contours:
         x,y,w,h = cv.boundingRect(countour)
-        if w*h > max_area:
-            max_area = w*h
-            current_variables = (x,y,x+w,y+h)
-    if current_variables != (0,0,0,0):
-        # change image dimensions to minimum bounding rectangle
-        image = image[current_variables[1]:current_variables[3], current_variables[0]:current_variables[2]] 
+        # if w*h > max_area:
+        #     max_area = w*h
+        current_variables = (x,y,x+w,y+h)
+        all_contours.append(current_variables)
+        # if current_variables != (0,0,0,0):
+        # # change image dimensions to minimum bounding rectangle
+        #     current_image = image[current_variables[1]:current_variables[3], current_variables[0]:current_variables[2]]
+        #     current_image = cv.resize(current_image, dim, interpolation = cv.INTER_AREA)
+        #     current_image = gray_to_black(current_image)
+        #     letters.append(current_image)
+    new_countours = []
+    for i in range(len(all_contours)):
+        if i >= len(all_contours):
+            break
+        x1,y1, x1_, y1_ = all_contours[i]
+        found = False
+        print(i)
+        for j in range(i+1, len(all_contours)):
+            x2, y2, x2_, y2_ = all_contours[j]
+            print(x1, x1_)
+            print(x2, x2_)
+            print('---------------------')
+            if (x1 >x2 and x1 < x2_) or (x1_<x2_ and x1_ >x2) or (x2 > x1 and x2 < x1_) or (x2_ < x1_ and x2_ > x1):
+                new_countours.append((min(x1,x2), min(y1, y2), max(x1_, x2_), max(y1_, y2_)))
+                found = True
+                print('found one')
+                all_contours.pop(j)
+                break
+        if not found:
+            new_countours.append(all_contours[i])
+    # current_variables = new_countours[0]
+    # cv.imshow('image', image[current_variables[1]:current_variables[3], current_variables[0]:current_variables[2]])
+    # cv.waitKey(0)
     # # resize image
-    image = cv.resize(image, dim, interpolation = cv.INTER_AREA)
-    image = gray_to_black(image)
-    return image
+    new_countours.sort(key=lambda x: x[0], reverse=False)
+    for contour in new_countours: 
+        current_variables = contour
+        current_image = image[current_variables[1]:current_variables[3], current_variables[0]:current_variables[2]]
+        current_image = cv.resize(current_image, dim, interpolation = cv.INTER_AREA)
+        current_image = gray_to_black(current_image)
+        letters.append(current_image)
+
+    return letters
