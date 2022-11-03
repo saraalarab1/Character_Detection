@@ -42,7 +42,7 @@ def train(X, Y, k_cross_validation_ratio, testing_size, model_version=None):
     # X_test = scaler.transform(X_test)
     #X_train, X_eval, Y_train, y_eval = train_test_split(X0_train, Y0_train, test_size= 100/k_cross_validation_ratio, random_state=7)
     
-    model = SVC(kernel = 'rbf', random_state = 0)
+    model = SVC(kernel = 'rbf', random_state = 0, probability= True)
 
     #eval_score_list = []
     #Evaluation using cross validation: lpo: leave p out
@@ -103,7 +103,7 @@ def train_svm(features, model_version):
     print("Evaluation Score: {}".format(eval_accuracy))
     print("Test Score: {}".format(test_score))
     print(conf_rep)
-    return eval_accuracy, test_score, conf_rep
+    return eval_accuracy, model, test_score, conf_rep
 
 def get_input_output_labels(features):
     with open('data.json', 'r') as f: 
