@@ -58,10 +58,7 @@ def get_features():
 @app.route('/train_new_model', methods= ['GET','POST'])
 def train_new_model():
     if request.method == 'POST':
-        features = request.json['features']
         models = request.json['models']
-        print(features)
-        print(models)
         model_version = str(datetime.now()).replace('-', '_').replace(' ','_').replace(':','_')
         makedirs("models/"+model_version)
         yaml_info = dict()
@@ -76,20 +73,27 @@ def train_new_model():
    
         for model in models:
             if model['name'] == 'knn':
-                train_knn(features, model_version)
+                eval_accuracy, test_score, conf_rep = train_knn(model['features'], model_version)
             if model['name'] == 'svm':
-                train_svm(features, model_version)
+                eval_accuracy, test_score, conf_rep = train_svm(model['features'], model_version)
             if model['name'] == 'dt':
-                train_dt(features, model_version)
-        
+                eval_accuracy, test_score, conf_rep = train_dt(model['features'], model_version)
+
+        label_data= get_info(conf_rep)
+
         with open(yaml_path, 'r') as f:
             yaml_info = yaml.safe_load(f)
             yaml_info['training'] = 'completed'
+            yaml_info['eval_accuracy'] = float(eval_accuracy)
+            yaml_info['test_score'] = float(test_score)
+            yaml_info['conf_rep'] = label_data
         with open(yaml_path, 'w') as output:
             yaml.dump(yaml_info, output)
 
-    return render_template("train_new_model.html")
-
+    response = jsonify(training='completed', eval_accuracy=eval_accuracy, test_score=test_score)
+    print(response.json)
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response
     
 @app.route('/predict', methods=['GET','POST'])
 def predict():
@@ -123,7 +127,18 @@ def predict():
     return response
 
 
+def get_info(conf_rep):
+    data = conf_rep.splitlines()[2:61]
+    # average_data =  conf_rep.splitlines()[62:65]
+    # average_data = " ".join(label_information.split())
+    # print(average_data)
+    label_data = []
+    for label_information in data:
+        label_information = " ".join(label_information.split())
+        label_information = label_information.split(" ")
+        label_data.append({label_information[0]:[float(label_information[1]),float(label_information[2]),float(label_information[3])]})
 
+    return label_data
 
 
 # Take in base64 string and return PIL image
