@@ -76,20 +76,25 @@ def train_new_model():
    
         for model in models:
             if model['name'] == 'knn':
-                train_knn(features, model_version)
+                eval_accuracy, test_score, conf_rep = train_knn(features, model_version)
             if model['name'] == 'svm':
-                train_svm(features, model_version)
+                eval_accuracy, test_score, conf_rep = train_svm(features, model_version)
             if model['name'] == 'dt':
-                train_dt(features, model_version)
-        
+                eval_accuracy, test_score, conf_rep = train_dt(features, model_version)
+                
         with open(yaml_path, 'r') as f:
             yaml_info = yaml.safe_load(f)
             yaml_info['training'] = 'completed'
+            yaml_info['eval_accuracy'] = eval_accuracy
+            yaml_info['test_score'] = test_score
+            yaml_info['conf_rep'] = conf_rep
         with open(yaml_path, 'w') as output:
             yaml.dump(yaml_info, output)
 
-    return render_template("train_new_model.html")
-
+    response = jsonify(training='completed', eval_accuracy=eval_accuracy, test_score=test_score)
+    print(response.json)
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response
     
 @app.route('/predict', methods=['GET','POST'])
 def predict():

@@ -119,6 +119,7 @@ def train_knn(features, model_version):
     print("Evaluation Score: {}".format(eval_accuracy))
     print("Test Score: {}".format(test_score))
     print(conf_rep)
+    return eval_accuracy, test_score, conf_rep
     
 def get_input_output_labels(features):
     with open('data.json', 'r') as f: 
