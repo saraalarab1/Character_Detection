@@ -43,25 +43,26 @@ def train(X, Y, k_cross_validation_ratio, testing_size, model_version=None):
     #X_train, X_eval, Y_train, y_eval = train_test_split(X0_train, Y0_train, test_size= 100/k_cross_validation_ratio, random_state=7)
     
     model = SVC(kernel = 'rbf', random_state = 0, probability= True)
+    model.fit(X0_train, Y0_train)
 
     #eval_score_list = []
     #Evaluation using cross validation: lpo: leave p out
-    lpo = LeavePOut(p=1)
+    # lpo = LeavePOut(p=1)
+
     accuracys=[]
 
-    # skf = StratifiedKFold(n_splits=10, random_state=None)
-    # skf.get_n_splits(X0_train, Y0_train)
-    # for train_index, test_index in skf.split(X0_train, Y0_train):
+    skf = StratifiedKFold(n_splits=10, random_state=None)
+    skf.get_n_splits(X0_train, Y0_train)
+    for train_index, test_index in skf.split(X0_train, Y0_train):
     
-    #     # print("TRAIN:", train_index, "Validation:", test_index)
-    #     X_train, X_eval = pd.DataFrame(X0_train).iloc[train_index], pd.DataFrame(X0_train).iloc[test_index]
-    #     Y_train, y_eval = pd.DataFrame(Y0_train).iloc[train_index], pd.DataFrame(Y0_train).iloc[test_index]
+        # print("TRAIN:", train_index, "Validation:", test_index)
+        X_train, X_eval = pd.DataFrame(X0_train).iloc[train_index], pd.DataFrame(X0_train).iloc[test_index]
+        Y_train, y_eval = pd.DataFrame(Y0_train).iloc[train_index], pd.DataFrame(Y0_train).iloc[test_index]
 
-    model.fit(X0_train, Y0_train)
-    predictions = model.predict(X_test)
-    score = accuracy_score(predictions, Y_test)
-    print(score)
-    accuracys.append(score)
+        model.fit(X_train, Y_train.values.ravel())
+        predictions = model.predict(X_eval)
+        score = accuracy_score(predictions, y_eval)
+        accuracys.append(score)
         #scores = cross_val_score(knn, X, Y, cv=5, scoring='accuracy')
         #eval_score_list.append(scores.mean())
 
@@ -75,18 +76,15 @@ def train(X, Y, k_cross_validation_ratio, testing_size, model_version=None):
     else:
         pickle.dump(model, open(f"models/svm/{model_name}", 'wb'))
 
-    return eval_accuracy, model, X0_train, Y0_train, X_test, Y_test
+    return eval_accuracy, model, X_test, Y_test
 
-def test(X_train, Y_train, X_test, Y_test,model_version):
+def test(X_test, Y_test,model_version):
 
-    try:
+    if model_version:
+        model = pickle.load(open(f'models/{model_version}/pretrained_svm_model.pkl', 'rb' ))
+    else:
         model = pickle.load(open('models/svm/pretrained_svm_model.pkl', 'rb' ))
-        
-    except:
-        eval_score, model, X_train, Y_train, X_test, Y_test = train(X_test, Y_test,k_cross_validation_ratio=5, testing_size=0.3, model_version = model_version)
-        print("Evaluation score: {}".format(eval_score))
 
-    model.fit(X_train, Y_train)
     y_pred = model.predict(X_test)
     print("Text Prediction: {}".format(y_pred.shape))
     print("Y_test shape: {}".format(Y_test))
@@ -95,11 +93,11 @@ def test(X_train, Y_train, X_test, Y_test,model_version):
 
     return test_score, classification_rep
 
-def train_svm(features, model_version):
+def train_svm(features, model_version=None):
     print('training')
     x,y = get_input_output_labels(features)
-    eval_accuracy, model, X_train, Y_train, X_test, Y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.05, model_version = model_version)
-    test_score, conf_rep = test(X_train, Y_train, X_test, Y_test,model_version=model_version)
+    eval_accuracy, model, X_test, Y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.05, model_version = model_version)
+    test_score, conf_rep = test(X_test, Y_test,model_version=model_version)
     print("Evaluation Score: {}".format(eval_accuracy))
     print("Test Score: {}".format(test_score))
     print(conf_rep)
@@ -116,4 +114,4 @@ def get_input_output_labels(features):
             y.append(data[i]['label'])
     return (x,y)
 
-# train_svm(['nb_of_pixels_per_segment'],test)
+train_svm(['nb_of_pixels_per_segment'])
