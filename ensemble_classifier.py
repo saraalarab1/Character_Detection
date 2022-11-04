@@ -75,7 +75,7 @@ def test(X_train, Y_train, X_test, Y_test,model_version,pretrain_model=False):
 def train_ensemble(estimators, weights,features, model_version):
     print('training')
     X,y = get_input_output_labels(features)
-    eval_accuracy, model, X_train, Y_train, X_test, Y_test = train(X, y, estimators, weights, features,model_version= model_version, testing_size=0.05,)
+    eval_accuracy, model, X_train, Y_train, X_test, Y_test = train(X, y, estimators, weights, features,model_version= model_version, testing_size=0.1)
     test_score, conf_rep = test(X_train, Y_train, X_test, Y_test, model_version ,pretrain_model=True)
     print("Evaluation Score: {}".format(eval_accuracy))
     print("Test Score: {}".format(test_score))

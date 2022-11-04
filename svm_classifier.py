@@ -12,9 +12,11 @@ from sklearn.metrics import classification_report, accuracy_score
 from sklearn.svm import SVC
 from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import BaggingClassifier
+
 sc = StandardScaler()
 
-def get_gamma_and_C(model):
+def get_gamma_and_C(model, X_train, Y_train):
     # creating a KFold object with 5 splits 
     folds = KFold(n_splits = 5, shuffle = True, random_state = 101)
 
@@ -29,7 +31,7 @@ def get_gamma_and_C(model):
         cv = folds, 
         verbose= 1,
         return_train_score= True)
-
+    model.fit(X_train, Y_train)    
     return model.best_params_
 
 def train(x, y, k_cross_validation_ratio, testing_size, model_version):
@@ -96,7 +98,7 @@ def test(X_test, Y_test,model_version):
 def train_svm(features, model_version=None):
     print('training')
     x,y = get_input_output_labels(features)
-    eval_accuracy, model, X_test, Y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.05, model_version = model_version)
+    eval_accuracy, model, X_test, Y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.1, model_version = model_version)
     test_score, conf_rep = test(X_test, Y_test,model_version=model_version)
     print("Evaluation Score: {}".format(eval_accuracy))
     print("Test Score: {}".format(test_score))

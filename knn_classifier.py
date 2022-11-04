@@ -109,7 +109,7 @@ def test(X_test, Y_test, model_version):
 def train_knn(features, model_version=None):
     print('training')
     x,y = get_input_output_labels(features)
-    eval_accuracy, model, X_test, Y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.05, max_range_k=100, model_version = model_version)
+    eval_accuracy, model, X_test, Y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.25, max_range_k=100, model_version = model_version)
     test_score, conf_rep = test(X_test, Y_test, model_version=model_version)
     print("Evaluation Score: {}".format(eval_accuracy))
     print("Test Score: {}".format(test_score))
