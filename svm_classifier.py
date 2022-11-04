@@ -32,9 +32,9 @@ def get_gamma_and_C(model):
 
     return model.best_params_
 
-def train(X, Y, k_cross_validation_ratio, testing_size, model_version=None):
+def train(x, y, k_cross_validation_ratio, testing_size, model_version):
 
-    X0_train, X_test, Y0_train, Y_test = train_test_split(X,Y,test_size=testing_size, random_state=7)
+    X0_train, X_test, Y0_train, Y_test = train_test_split(x,y,test_size=testing_size, random_state=7)
     #Scaler is needed to scale all the inputs to a similar range
     # scaler = StandardScaler()
     # scaler = scaler.fit(X0_train)

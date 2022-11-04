@@ -24,7 +24,7 @@ from sklearn.model_selection import StratifiedKFold
 sc = StandardScaler()
 
 
-def train(x, y, k_cross_validation_ratio, testing_size, optimal_k=True, max_range_k=100, model_version=None):
+def train(x, y, k_cross_validation_ratio, testing_size, model_version, optimal_k=True, max_range_k=100):
     
     X0_train, X_test, Y0_train, Y_test = train_test_split(x,y,test_size=testing_size, random_state=7)
     #Scaler is needed to scale all the inputs to a similar range
