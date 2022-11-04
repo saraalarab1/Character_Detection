@@ -19,6 +19,8 @@ from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import LeavePOut #for P-cross validation
 from sklearn.metrics import classification_report, accuracy_score
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import StratifiedKFold
+
 sc = StandardScaler()
 
 
@@ -57,11 +59,9 @@ def train(X, Y, k_cross_validation_ratio, testing_size, optimal_k=True, max_rang
     k_optimal = scores_list.index(max(scores_list)) +1
     model = KNeighborsClassifier(n_neighbors= k_optimal)
     model.fit(X0_train, Y0_train)
-    # print(k_optimal)
      
     #eval_score_list = []
     #Evaluation using cross validation: lpo: leave p out
-    from sklearn.model_selection import StratifiedKFold
     #lpo = LeavePOut(p=1)
     accuracys=[]
 
@@ -119,7 +119,7 @@ def train_knn(features, model_version):
     print("Evaluation Score: {}".format(eval_accuracy))
     print("Test Score: {}".format(test_score))
     print(conf_rep)
-    return eval_accuracy, test_score, conf_rep
+    return eval_accuracy, model, test_score, conf_rep
     
 def get_input_output_labels(features):
     with open('data.json', 'r') as f: 

@@ -17,6 +17,7 @@ import base64
 from PIL import Image
 import io
 import numpy as np
+from ensemble_classifier import train_ensemble
 
 app = Flask(__name__)
 CORS(app, resources={r"*": {"origins": "*"}})
@@ -59,6 +60,7 @@ def get_features():
 def train_new_model():
     if request.method == 'POST':
         models = request.json['models']
+        features = request.json['features']
         model_version = str(datetime.now()).replace('-', '_').replace(' ','_').replace(':','_')
         makedirs("models/"+model_version)
         yaml_info = dict()
@@ -66,32 +68,44 @@ def train_new_model():
             yaml_info['prediction_model'] = 'ensemble.pkl'
         else:
             yaml_info['prediction_model'] = models[0]['name']
+
+        yaml_info['features'] = features
         yaml_info['training'] = 'running'
         yaml_path = os.path.join("models",model_version, 'model.yaml')
         with open(yaml_path, 'w') as output:
             yaml.dump(yaml_info, output)
-   
+
+        estimators=[]
+        weights = []
         for model in models:
+            print(model)
             if model['name'] == 'knn':
-                eval_accuracy, test_score, conf_rep = train_knn(model['features'], model_version)
+                eval_accuracy, model_classifier, test_score, conf_rep = train_knn(features, model_version)
             if model['name'] == 'svm':
-                eval_accuracy, test_score, conf_rep = train_svm(model['features'], model_version)
+                eval_accuracy, model_classifier, test_score, conf_rep = train_svm(features, model_version)
             if model['name'] == 'dt':
-                eval_accuracy, test_score, conf_rep = train_dt(model['features'], model_version)
+                eval_accuracy, model_classifier, test_score, conf_rep = train_dt(features, model_version)
 
-        label_data= get_info(conf_rep)
+            estimators.append((model['name'],model_classifier))
+            weights.append(int(model['weight']))
+            label_data= get_info(conf_rep)
 
-        with open(yaml_path, 'r') as f:
-            yaml_info = yaml.safe_load(f)
-            yaml_info['training'] = 'completed'
-            yaml_info['eval_accuracy'] = float(eval_accuracy)
-            yaml_info['test_score'] = float(test_score)
-            yaml_info['conf_rep'] = label_data
+            yaml_info[model['name']] = dict()
+            yaml_info[model['name']]['eval_accuracy'] = float(eval_accuracy)
+            yaml_info[model['name']]['test_score'] = float(test_score)
+            yaml_info[model['name']]['conf_rep'] = label_data
+            yaml_info[model['name']]['weight'] = model['weight']
+
+        if yaml_info['prediction_model'] == 'ensemble.pkl':
+            print(estimators,weights,features,model_version)
+            train_ensemble(estimators,weights,features,model_version)
+
+        yaml_info['training'] = 'completed'
+
         with open(yaml_path, 'w') as output:
             yaml.dump(yaml_info, output)
 
     response = jsonify(training='completed', eval_accuracy=eval_accuracy, test_score=test_score)
-    print(response.json)
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response
     
@@ -106,9 +120,9 @@ def predict():
         image = cv.imdecode(im_arr, flags=cv.IMREAD_COLOR)
         model_version = request.json['model_version']
         letters = pre_process_image(image)
-        for letter in letters:
-            cv.imshow('image', letter)
-            cv.waitKey(0)
+        # for letter in letters:
+        #     cv.imshow('image', letter)
+        #     cv.waitKey(0)
         print('Number Of Letters: '+ str(len(letters)))
         yaml_path = os.path.join(f"models/{model_version}", "model.yaml")
         with open(yaml_path, 'r') as f:
@@ -136,6 +150,8 @@ def get_info(conf_rep):
     for label_information in data:
         label_information = " ".join(label_information.split())
         label_information = label_information.split(" ")
+        if len(label_information) < 4:
+            continue
         label_data.append({label_information[0]:[float(label_information[1]),float(label_information[2]),float(label_information[3])]})
 
     return label_data
