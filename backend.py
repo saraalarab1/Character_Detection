@@ -96,7 +96,7 @@ def train_new_model():
             yaml_info[model['name']]['conf_rep'] = label_data
             yaml_info[model['name']]['weight'] = model['weight']
 
-        if yaml_info['prediction_model'] == 'ensemble.pkl':
+        if yaml_info['prediction_model'] == 'pretrained_ensemble_model.pkl':
             print(estimators,weights,features,model_version)
             train_ensemble(estimators,weights,features,model_version)
 

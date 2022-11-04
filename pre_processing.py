@@ -18,7 +18,8 @@ def convert_csv_to_json():
         # Iterate over each row in the csv using reader object
         for row in csv_reader:
             # row variable is a list that represents a row in csv
-            training_dataset[row[0]] = {"label": row[1]}
+            if os.path.exists('processed_images/' + row[0]):
+                training_dataset[row[0]] = {"label": row[1]}
     with open('data.json', 'w', encoding='utf-8') as f:
         json.dump(training_dataset, f, ensure_ascii=False, indent=4)
 
@@ -56,7 +57,10 @@ def extract_features_for_training_data():
     with open('data.json', 'r') as f:
         data = json.load(f)
         for i in data.keys():
+            if not os.path.exists('processed_images/' + i):
+                continue
             print('processed_images/' + i)
+
             image= cv.imread('processed_images/' + i)
             # aspect_ratio_image = cv.imread('Img_2/' + i)
             # data[i]['aspect_ratio'] = aspect_ratio(aspect_ratio_image)
@@ -72,6 +76,7 @@ def extract_features_for_training_data():
             data[i]['vertical_line_intersection'] = vertical_line_intersection(image)
             data[i]['vertical_ratio'] = vertical_ratio(image)
             data[i]['vertical_symmetry'] = vertical_symmetry(image)
+    print('dumping data')
     with open('data.json', 'w') as output:
            json.dump(data, output, ensure_ascii=False, indent = 4)
 
@@ -79,7 +84,7 @@ def extract_features_for_training_data():
 
 
 # pre_process_images()
-# convert_csv_to_json()
+convert_csv_to_json()
 
 extract_features_for_training_data()
 # post_skeletonization()

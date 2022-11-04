@@ -73,7 +73,7 @@ def train(X, Y, k_cross_validation_ratio, testing_size, optimal_k=True, max_rang
         X_train, X_eval = pd.DataFrame(X0_train).iloc[train_index], pd.DataFrame(X0_train).iloc[test_index]
         Y_train, y_eval = pd.DataFrame(Y0_train).iloc[train_index], pd.DataFrame(Y0_train).iloc[test_index]
     
-        model.fit(X_train, Y_train)
+        model.fit(X0_train, Y0_train)
         predictions = model.predict(X_eval)
         score = accuracy_score(predictions, y_eval)
         accuracys.append(score)
@@ -114,7 +114,7 @@ def test(X_train, Y_train, X_test, Y_test,pretrain_model=False):
 def train_knn(features, model_version):
     print('training')
     x,y = get_input_output_labels(features)
-    eval_accuracy, model, X_train, Y_train, X_test, Y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.05, max_range_k=100, model_version = model_version)
+    eval_accuracy, model, X_train, Y_train, X_test, Y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.25, max_range_k=100, model_version = model_version)
     test_score, conf_rep = test(X_train, Y_train, X_test, Y_test, pretrain_model=True)
     print("Evaluation Score: {}".format(eval_accuracy))
     print("Test Score: {}".format(test_score))
