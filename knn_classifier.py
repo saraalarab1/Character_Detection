@@ -73,7 +73,7 @@ def train(X, Y, k_cross_validation_ratio, testing_size, optimal_k=True, max_rang
         X_train, X_eval = pd.DataFrame(X0_train).iloc[train_index], pd.DataFrame(X0_train).iloc[test_index]
         Y_train, y_eval = pd.DataFrame(Y0_train).iloc[train_index], pd.DataFrame(Y0_train).iloc[test_index]
     
-        model.fit(X0_train, Y0_train)
+        model.fit(X_train, Y_train)
         predictions = model.predict(X_eval)
         score = accuracy_score(predictions, y_eval)
         accuracys.append(score)
