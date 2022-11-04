@@ -4,7 +4,7 @@ import cv2 as cv
 from resizing import gray_to_black
 import json
 from csv import reader
-from features import get_horizontal_histogram_projection, get_horizontal_line_intersection, get_horizontal_ratio, get_horizontal_symmetry, get_nb_of_pixels_per_segment, get_vertical_histogram_projection, get_vertical_line_intersection, get_vertical_ratio, get_vertical_symmetry
+from features import horizontal_histogram_projection, horizontal_line_intersection, horizontal_ratio, horizontal_symmetry, nb_of_pixels_per_segment, vertical_histogram_projection, vertical_line_intersection, vertical_ratio, vertical_symmetry
 WIDTH = 40
 HEIGHT = 40
 
@@ -61,17 +61,15 @@ def extract_features_for_training_data():
             # aspect_ratio_image = cv.imread('Img_2/' + i)
             # data[i]['aspect_ratio'] = get_aspect_ratio(aspect_ratio_image)
 
-            data[i]['horizontal_histogram_projection'] = get_horizontal_histogram_projection(image)
-            data[i]['horizontal_line_intersection'] = get_horizontal_line_intersection(image)
-            data[i]['horizontal_ratio'] = get_horizontal_ratio(image)
-            data[i]['horizontal_symmetry'] = get_horizontal_symmetry(image)
-
-            data[i]['nb_of_pixels_per_segment'] = get_nb_of_pixels_per_segment(image, 7)
-
-            data[i]['vertical_histogram_projection'] = get_vertical_histogram_projection(image)
-            data[i]['vertical_line_intersection'] = get_vertical_line_intersection(image)
-            data[i]['vertical_ratio'] = get_vertical_ratio(image)
-            data[i]['vertical_symmetry'] = get_vertical_symmetry(image)
+            data[i]['horizontal_histogram_projection'] = horizontal_histogram_projection(image)
+            data[i]['horizontal_line_intersection'] = horizontal_line_intersection(image)
+            data[i]['horizontal_ratio'] = horizontal_ratio(image)
+            data[i]['horizontal_symmetry'] = horizontal_symmetry(image)
+            data[i]['nb_of_pixels_per_segment'] = nb_of_pixels_per_segment(image, 7)
+            data[i]['vertical_histogram_projection'] = vertical_histogram_projection(image)
+            data[i]['vertical_line_intersection'] = vertical_line_intersection(image)
+            data[i]['vertical_ratio'] = vertical_ratio(image)
+            data[i]['vertical_symmetry'] = vertical_symmetry(image)
     with open('data.json', 'w') as output:
            json.dump(data, output, ensure_ascii=False, indent = 4)
 
@@ -81,7 +79,7 @@ def extract_features_for_training_data():
 # pre_process_images()
 # convert_csv_to_json()
 
-# extract_features_for_training_data()
+extract_features_for_training_data()
 # post_skeletonization()
 
 # create_json()

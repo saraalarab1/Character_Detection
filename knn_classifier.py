@@ -93,13 +93,13 @@ def train(X, Y, k_cross_validation_ratio, testing_size, optimal_k=True, max_rang
     return eval_accuracy, model, X0_train, Y0_train, X_test, Y_test
 
 
-def test(X_train, Y_train, X_test, Y_test,pretrain_model=False):
+def test(X_train, Y_train, X_test, Y_test,pretrain_model=True):
 
     if pretrain_model:
         model = pickle.load(open('models/knn/pretrained_knn_model.pkl', 'rb' ))
         
     else:
-        eval_score, model, X_train, Y_train, X_test, Y_test = train(X_test, Y_test, pretrained_model=False)
+        eval_score, model, X_train, Y_train, X_test, Y_test = train(X_test, Y_test)
         print("Evaluation score: {}".format(eval_score))
 
     model.fit(X_train, Y_train)
@@ -111,7 +111,7 @@ def test(X_train, Y_train, X_test, Y_test,pretrain_model=False):
 
     return test_score, classification_rep
 
-def train_knn(features, model_version):
+def train_knn(features, model_version=None):
     print('training')
     x,y = get_input_output_labels(features)
     eval_accuracy, model, X_train, Y_train, X_test, Y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.05, max_range_k=100, model_version = model_version)
@@ -132,4 +132,4 @@ def get_input_output_labels(features):
             y.append(data[i]['label'])
     return (x,y)
 
-# train_knn(['nb_of_pixels_per_segment'],test)
+train_knn(['vertical_histogram_projection'])
