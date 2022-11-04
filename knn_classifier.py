@@ -24,9 +24,9 @@ from sklearn.model_selection import StratifiedKFold
 sc = StandardScaler()
 
 
-def train(X, Y, k_cross_validation_ratio, testing_size, optimal_k=True, max_range_k=100, model_version=None):
+def train(x, y, k_cross_validation_ratio, testing_size, optimal_k=True, max_range_k=100, model_version=None):
     
-    X0_train, X_test, Y0_train, Y_test = train_test_split(X,Y,test_size=testing_size, random_state=7)
+    X0_train, X_test, Y0_train, Y_test = train_test_split(x,y,test_size=testing_size, random_state=7)
     #Scaler is needed to scale all the inputs to a similar range
     # scaler = StandardScaler()
     # scaler = scaler.fit(X0_train)
@@ -34,7 +34,6 @@ def train(X, Y, k_cross_validation_ratio, testing_size, optimal_k=True, max_rang
     # X_test = scaler.transform(X_test)
     #X_train, X_eval, Y_train, y_eval = train_test_split(X0_train, Y0_train, test_size= 100/k_cross_validation_ratio, random_state=7)
     
-
     # range for optimal K, can be specified by user
     if optimal_k and max_range_k>1:
         k_range= range(1, max_range_k)
@@ -47,14 +46,13 @@ def train(X, Y, k_cross_validation_ratio, testing_size, optimal_k=True, max_rang
     # Set the parameters by cross-validation
 
     #finding the optimal nb of neighbors
-    # print(k_range)
     for k in tqdm(k_range):
         knn = KNeighborsClassifier(n_neighbors=k)
         knn.fit(X0_train, Y0_train)
         y_pred = knn.predict(X_test)
         scores[k] = metrics.accuracy_score(Y_test, y_pred)
         scores_list.append(round(metrics.accuracy_score(Y_test, y_pred),3))
-    print('all done')
+
     print(scores_list)
     k_optimal = scores_list.index(max(scores_list)) +1
     model = KNeighborsClassifier(n_neighbors= k_optimal)
@@ -73,7 +71,7 @@ def train(X, Y, k_cross_validation_ratio, testing_size, optimal_k=True, max_rang
         X_train, X_eval = pd.DataFrame(X0_train).iloc[train_index], pd.DataFrame(X0_train).iloc[test_index]
         Y_train, y_eval = pd.DataFrame(Y0_train).iloc[train_index], pd.DataFrame(Y0_train).iloc[test_index]
     
-        model.fit(X_train, Y_train)
+        model.fit(X_train, Y_train.values.ravel())
         predictions = model.predict(X_eval)
         score = accuracy_score(predictions, y_eval)
         accuracys.append(score)
@@ -90,19 +88,16 @@ def train(X, Y, k_cross_validation_ratio, testing_size, optimal_k=True, max_rang
     else:
         pickle.dump(model, open(f"models/knn/{model_name}", 'wb'))
 
-    return eval_accuracy, model, X0_train, Y0_train, X_test, Y_test
+    return eval_accuracy, model, X_test, Y_test
 
 
-def test(X_train, Y_train, X_test, Y_test,pretrain_model=True):
+def test(X_test, Y_test, model_version):
 
-    if pretrain_model:
-        model = pickle.load(open('models/knn/pretrained_knn_model.pkl', 'rb' ))
-        
+    if model_version:
+        model = pickle.load(open(f'models/{model_version}/pretrained_knn_model.pkl', 'rb' ))
     else:
-        eval_score, model, X_train, Y_train, X_test, Y_test = train(X_test, Y_test)
-        print("Evaluation score: {}".format(eval_score))
+        model = pickle.load(open('models/knn/pretrained_knn_model.pkl', 'rb' ))
 
-    model.fit(X_train, Y_train)
     y_pred = model.predict(X_test)
     print("Text Prediction: {}".format(y_pred.shape))
     print("Y_test shape: {}".format(Y_test))
@@ -114,8 +109,8 @@ def test(X_train, Y_train, X_test, Y_test,pretrain_model=True):
 def train_knn(features, model_version=None):
     print('training')
     x,y = get_input_output_labels(features)
-    eval_accuracy, model, X_train, Y_train, X_test, Y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.05, max_range_k=100, model_version = model_version)
-    test_score, conf_rep = test(X_train, Y_train, X_test, Y_test, pretrain_model=True)
+    eval_accuracy, model, X_test, Y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.05, max_range_k=100, model_version = model_version)
+    test_score, conf_rep = test(X_test, Y_test, model_version=model_version)
     print("Evaluation Score: {}".format(eval_accuracy))
     print("Test Score: {}".format(test_score))
     print(conf_rep)
