@@ -69,9 +69,7 @@ def extract_features_for_training_data():
             data[i]['horizontal_line_intersection'] = horizontal_line_intersection(image)
             data[i]['horizontal_ratio'] = horizontal_ratio(image)
             data[i]['horizontal_symmetry'] = horizontal_symmetry(image)
-
             data[i]['nb_of_pixels_per_segment'] = nb_of_pixels_per_segment(image, 7)
-
             data[i]['vertical_histogram_projection'] = vertical_histogram_projection(image)
             data[i]['vertical_line_intersection'] = vertical_line_intersection(image)
             data[i]['vertical_ratio'] = vertical_ratio(image)
