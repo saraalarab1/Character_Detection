@@ -65,7 +65,7 @@ def train_new_model():
         makedirs("models/"+model_version)
         yaml_info = dict()
         if len(models)> 1:
-            yaml_info['prediction_model'] = 'ensemble.pkl'
+            yaml_info['prediction_model'] = 'pretrained_ensemble_model.pkl'
         else:
             yaml_info['prediction_model'] = models[0]['name']
 
@@ -127,6 +127,7 @@ def predict():
         yaml_path = os.path.join(f"models/{model_version}", "model.yaml")
         with open(yaml_path, 'r') as f:
             yaml_info = yaml.safe_load(f)
+            print(yaml_info)
             features = yaml_info['features']
             character_features = get_character_features(features, letters)
             model_name = yaml_info['prediction_model']

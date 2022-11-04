@@ -59,7 +59,7 @@ def extract_features_for_training_data():
             print('processed_images/' + i)
             image= cv.imread('processed_images/' + i)
             # aspect_ratio_image = cv.imread('Img_2/' + i)
-            # data[i]['aspect_ratio'] = get_aspect_ratio(aspect_ratio_image)
+            # data[i]['aspect_ratio'] = aspect_ratio(aspect_ratio_image)
 
             data[i]['horizontal_histogram_projection'] = horizontal_histogram_projection(image)
             data[i]['horizontal_line_intersection'] = horizontal_line_intersection(image)
