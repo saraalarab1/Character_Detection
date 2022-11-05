@@ -1,20 +1,15 @@
 
 import json
 import numpy as np 
-import cv2
-import pandas as pd
 import pickle
-from sklearn.model_selection import GridSearchCV, KFold, train_test_split
+from pandas import DataFrame as df
 from sklearn import metrics
-from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import LeavePOut #for P-cross validation
+from sklearn.model_selection import GridSearchCV, KFold, StratifiedKFold, LeavePOut #for P-cross validation
+from sklearn.model_selection import cross_val_score, train_test_split
 from sklearn.metrics import classification_report, accuracy_score
 from sklearn.svm import SVC
-from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import BaggingClassifier
 
-sc = StandardScaler()
 
 def get_gamma_and_C(model, X_train, Y_train):
     # creating a KFold object with 5 splits 
@@ -34,7 +29,7 @@ def get_gamma_and_C(model, X_train, Y_train):
     model.fit(X_train, Y_train)    
     return model.best_params_
 
-def train(x, y, k_cross_validation_ratio, testing_size, model_version):
+def train(x, y, testing_size, model_version):
 
     X0_train, X_test, Y0_train, Y_test = train_test_split(x,y,test_size=testing_size, random_state=7)
     #Scaler is needed to scale all the inputs to a similar range
@@ -47,28 +42,32 @@ def train(x, y, k_cross_validation_ratio, testing_size, model_version):
     model = SVC(kernel = 'rbf', random_state = 0, probability= True)
     model.fit(X0_train, Y0_train)
 
-    #eval_score_list = []
-    #Evaluation using cross validation: lpo: leave p out
-    # lpo = LeavePOut(p=1)
+    accuracy = cross_val_score(model, X0_train, Y0_train, cv=5, scoring='accuracy')
+    print(f"{accuracy}")
 
     accuracys=[]
 
+    #Evaluation using cross validation
+    # LeavePOut
+    # lpo = LeavePOut(p=2)
+    # KFold
+    # kf = KFold(n_splits=10)
+    # kf.get_n_splits(X0_train)
+    # StratifiedKFold
     skf = StratifiedKFold(n_splits=10, random_state=None)
     skf.get_n_splits(X0_train, Y0_train)
     for train_index, test_index in skf.split(X0_train, Y0_train):
     
         # print("TRAIN:", train_index, "Validation:", test_index)
-        X_train, X_eval = pd.DataFrame(X0_train).iloc[train_index], pd.DataFrame(X0_train).iloc[test_index]
-        Y_train, y_eval = pd.DataFrame(Y0_train).iloc[train_index], pd.DataFrame(Y0_train).iloc[test_index]
+        X_train, X_eval = df(X0_train).iloc[train_index], df(X0_train).iloc[test_index]
+        Y_train, y_eval = df(Y0_train).iloc[train_index], df(Y0_train).iloc[test_index]
 
         model.fit(X_train, Y_train.values.ravel())
         predictions = model.predict(X_eval)
         score = accuracy_score(predictions, y_eval)
         accuracys.append(score)
-        #scores = cross_val_score(knn, X, Y, cv=5, scoring='accuracy')
-        #eval_score_list.append(scores.mean())
 
-    #eval_accuracy = np.mean(eval_score_list)
+
     eval_accuracy = np.mean(accuracys)
 
     #save the pretrained model:
@@ -98,7 +97,7 @@ def test(X_test, Y_test,model_version):
 def train_svm(features, model_version=None):
     print('training')
     x,y = get_input_output_labels(features)
-    eval_accuracy, model, X_test, Y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.1, model_version = model_version)
+    eval_accuracy, model, X_test, Y_test = train(x, y, testing_size=0.1, model_version = model_version)
     test_score, conf_rep = test(X_test, Y_test,model_version=model_version)
     print("Evaluation Score: {}".format(eval_accuracy))
     print("Test Score: {}".format(test_score))

@@ -1,38 +1,46 @@
 import pickle
-from sklearn.model_selection import GridSearchCV, KFold, train_test_split
-from matplotlib.style import available
 import numpy as np
 import json
-from sklearn.model_selection import StratifiedKFold
-from sklearn.ensemble import VotingClassifier
-import pandas as pd
-import matplotlib.pyplot as plt
-import os
-# from skimage import feature
-import pickle
-from sklearn.model_selection import GridSearchCV, KFold, train_test_split
+from pandas import DataFrame as df
 from sklearn import metrics
-from sklearn import model_selection
-from sklearn.model_selection import LeavePOut #for P-cross validation
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.model_selection import StratifiedKFold, KFold, LeavePOut #for P-cross validation
 from sklearn.metrics import classification_report, accuracy_score
+from sklearn.ensemble import BaggingClassifier, VotingClassifier
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import StratifiedKFold
 
 def train(x, y, estimators, weights, testing_size, model_version):
 
     X0_train, X_test, Y0_train, y_test = train_test_split(x,y,test_size=testing_size, random_state=7)
+    #Scaler is needed to scale all the inputs to a similar range
+    # scaler = StandardScaler()
+    # scaler = scaler.fit(X0_train)
+    # X0_train = scaler.transform(X0_train)
+    # X_test = scaler.transform(X_test)
+    #X_train, X_eval, Y_train, y_eval = train_test_split(X0_train, Y0_train, test_size= 100/k_cross_validation_ratio, random_state=7)
 
     ensemble=VotingClassifier(estimators=estimators, voting='soft', weights=weights)
     ensemble.fit(X0_train, Y0_train)
 
+    accuracy = cross_val_score(ensemble, X0_train, Y0_train, cv=5, scoring='accuracy')
+    print(f"{accuracy}")
+
     accuracys=[]
 
+    #Evaluation using cross validation
+    # LeavePOut
+    # lpo = LeavePOut(p=2)
+    # KFold
+    # kf = KFold(n_splits=10)
+    # kf.get_n_splits(X0_train)
+    # StratifiedKFold
     skf = StratifiedKFold(n_splits=10, random_state=None)
     skf.get_n_splits(X0_train, Y0_train)
     for train_index, test_index in skf.split(X0_train, Y0_train):
+        
         # print("TRAIN:", train_index, "Validation:", test_index)
-        X_train, X_eval = pd.DataFrame(X0_train).iloc[train_index], pd.DataFrame(X0_train).iloc[test_index]
-        Y_train, y_eval = pd.DataFrame(Y0_train).iloc[train_index], pd.DataFrame(Y0_train).iloc[test_index]
+        X_train, X_eval = df(X0_train).iloc[train_index], df(X0_train).iloc[test_index]
+        Y_train, y_eval = df(Y0_train).iloc[train_index], df(Y0_train).iloc[test_index]
     
         ensemble.fit(X_train, Y_train.values.ravel())
         predictions = ensemble.predict(X_eval)
