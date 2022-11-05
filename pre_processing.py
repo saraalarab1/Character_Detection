@@ -25,32 +25,38 @@ def convert_csv_to_json():
 
 def pre_process_images():
     images_dir = os.listdir('Img')
-    for i in range(len(images_dir)):
-        image_name = images_dir[i]
-        image_path = os.path.join('Img', image_name)
-        image = cv.imread(image_path)
-        gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-        thresh_image = cv.threshold(gray_image, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
-        contours = cv.findContours(thresh_image, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-        contours = contours[0] if len(contours) == 2 else contours[1]
-        max_area = 0
-        current_variables =  (0,0,0,0)
-        dim = (WIDTH, HEIGHT)
-        # choose bounding rectangle for character with biggest area
-        for countour in contours:
-            x,y,w,h = cv.boundingRect(countour)
-            if w*h > max_area:
-                max_area = w*h
-                current_variables = (x,y,x+w,y+h)
-        if current_variables != (0,0,0,0):
-            # change image dimensions to minimum bounding rectangle
-            image = image[current_variables[1]:current_variables[3], current_variables[0]:current_variables[2]] 
-        # # resize image
-        image = cv.resize(image, dim, interpolation = cv.INTER_AREA)
-        image = gray_to_black(image)
-        cv.imwrite('processed_images/'+image_name, image)
-
-
+    with open('data.json', 'r') as f:
+        data = json.load(f)
+        for i in range(len(images_dir)):
+            image_name = images_dir[i]
+            image_path = os.path.join('Img', image_name)
+            image = cv.imread(image_path)
+            gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+            thresh_image = cv.threshold(gray_image, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
+            contours = cv.findContours(thresh_image, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+            contours = contours[0] if len(contours) == 2 else contours[1]
+            max_area = 0
+            current_variables =  (0,0,0,0)
+            dim = (WIDTH, HEIGHT)
+            # choose bounding rectangle for character with biggest area
+            for countour in contours:
+                x,y,w,h = cv.boundingRect(countour)
+                if w*h > max_area:
+                    max_area = w*h
+                    current_variables = (x,y,x+w,y+h)
+            if current_variables != (0,0,0,0):
+                # change image dimensions to minimum bounding rectangle
+                image = image[current_variables[1]:current_variables[3], current_variables[0]:current_variables[2]] 
+            # # resize image
+            print(image_name)
+            # image = cv.resize(image, dim, interpolation = cv.INTER_AREA)
+            # image = gray_to_black(image)
+            # cv.imwrite('processed_images/'+image_name, image)
+            if image_name in data:
+                data[image_name]['aspect_ratio'] = image.shape[1]/image.shape[0]
+    print('dumping data')
+    with open('data.json', 'w') as output:
+           json.dump(data, output, ensure_ascii=False, indent = 4)
 
 def extract_features_for_training_data():
     data = dict()
@@ -82,11 +88,32 @@ def extract_features_for_training_data():
 
 
 # pre_process_images()
-convert_csv_to_json()
+# convert_csv_to_json()
 
-extract_features_for_training_data()
+# extract_features_for_training_data()
 # post_skeletonization()
 
 # create_json()
 # assign_random_colors()
 # plot()
+
+
+def get_mean_of_feature(feature: str):
+    with open('data.json', 'r') as f:
+        data = json.load(f)
+        current_dict = dict()
+        for i in data.keys():
+            if data[i]['label'] in current_dict:
+                current_dict[data[i]['label']]['nbOfOccurences'] = current_dict[data[i]['label']]['nbOfOccurences'] + 1
+                current_dict[data[i]['label']]['sum'] = current_dict[data[i]['label']]['sum'] + data[i]['aspect_ratio']
+            else:
+                current_dict[data[i]['label']]= dict()
+                current_dict[data[i]['label']]['nbOfOccurences'] = 1
+                current_dict[data[i]['label']]['sum'] = data[i]['aspect_ratio']
+
+        print(current_dict)
+        for i in current_dict.keys():
+            current_dict[i] = current_dict[i]['sum']/current_dict[i]['nbOfOccurences']
+        print(current_dict)
+
+get_mean_of_feature('aspect_ratio')

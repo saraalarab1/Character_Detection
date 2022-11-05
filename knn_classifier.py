@@ -10,7 +10,10 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import LeavePOut, StratifiedKFold, KFold #for P-cross validation
 from sklearn.metrics import classification_report, accuracy_score
+from sklearn.metrics import confusion_matrix, plot_confusion_matrix
+import matplotlib.pyplot as plt
 
+printable = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 def train(x, y, testing_size, model_version, optimal_k=True, max_range_k=100):
     
     X0_train, X_test, Y0_train, Y_test = train_test_split(x,y,test_size=testing_size, random_state=7)
@@ -91,6 +94,23 @@ def test(X_test, Y_test, model_version):
         model = pickle.load(open('models/knn/pretrained_knn_model.pkl', 'rb' ))
 
     y_pred = model.predict(X_test)
+    y_pred_proba = model.predict_proba(X_test)
+    for i in range(len(y_pred_proba)):
+        print(Y_test[i])
+        current_prediction_prob = max(y_pred_proba[i])
+        if current_prediction_prob< 0.75:
+            possible_results = len([x for x in y_pred_proba[i] if x > 0])
+            indices = sort_index(y_pred_proba[i])[:min(possible_results, 3)]
+            labels = []
+            for index in indices:
+                labels.append(printable[index])
+            eval_acc, new_model = train_knn(features=['aspect_ratio'], just_train=True, labels= labels)
+            y_pred = new_model.predict([X_test[i]])
+        print(y_pred_proba[i])
+    confusion_matrix(y_pred, Y_test)
+    print(confusion_matrix)
+    plot_confusion_matrix(model, X_test, Y_test, cmap=plt.cm.Blues)
+    plt.show()
     print("Text Prediction: {}".format(y_pred.shape))
     print("Y_test shape: {}".format(Y_test))
     classification_rep = classification_report(Y_test, y_pred,zero_division=True)
@@ -98,25 +118,88 @@ def test(X_test, Y_test, model_version):
 
     return test_score, classification_rep
 
-def train_knn(features, model_version=None):
+def sort_index(lst, rev=True):
+    index = range(len(lst))
+    s = sorted(index, reverse=rev, key=lambda i: lst[i])
+    return s
+
+def train_knn(features, model_version=None, labels = None, just_train = False):
     print('training')
-    x,y = get_input_output_labels(features)
-    eval_accuracy, model, X_test, Y_test = train(x, y, testing_size=0.25, max_range_k=100, model_version = model_version)
-    test_score, conf_rep = test(X_test, Y_test, model_version=model_version)
-    print("Evaluation Score: {}".format(eval_accuracy))
-    print("Test Score: {}".format(test_score))
-    print(conf_rep)
-    return eval_accuracy, model, test_score, conf_rep
+    x,y = get_input_output_labels(features, labels)
+    eval_accuracy, model, X_test, Y_test = train(x, y, testing_size=0.25, max_range_k=30, model_version = model_version)
+    if not just_train:
+        test_score, conf_rep = test(X_test, Y_test, model_version=model_version)
+        print("Evaluation Score: {}".format(eval_accuracy))
+        print("Test Score: {}".format(test_score))
+        print(conf_rep)
+    return eval_accuracy, model, 
     
-def get_input_output_labels(features):
+def get_features(x, features):
+    with open('data.json', 'r') as f: 
+        data = json.load(f)
+        features_data = []
+        for i in x:
+            features_list = []
+            for feature in features:
+                features_list = data[i][feature]
+                if type(features_list) != list:
+                    features_list = [features_list]
+            features_data.append(features_list)
+        return features_data
+
+def train(features, labels = None):
+    with open('data.json', 'r') as f:
+        data = json.load(f)
+        x = []
+        y= []
+        for i in data.keys():
+            x.append(i)
+            y.append(data[i]['label'])
+    X0_train, X_test, Y0_train, Y_test = train_test_split(x,y,test_size=0.3, random_state=7)
+    X0_train_features = get_features(X0_train, features)
+    knn = KNeighborsClassifier(n_neighbors=7)
+    knn.fit(X0_train_features, Y0_train)
+    X_test_features = get_features(X_test, features)
+    Y_pred = knn.predict(X_test_features)
+    confusion_matrix(Y_pred, Y_test)
+    plot_confusion_matrix(knn, X_test_features, Y_test, cmap=plt.cm.Blues)
+    plt.show()
+    y_pred_proba = knn.predict_proba(X_test_features)
+    classification_rep = classification_report(Y_test, Y_pred,zero_division=True)
+    print(classification_rep)
+    for i in range(len(y_pred_proba)):
+        current_prediction_prob = max(y_pred_proba[i])
+        if current_prediction_prob< 0.75:
+            print(i)
+            possible_results = len([x for x in y_pred_proba[i] if x > 0])
+            indices = sort_index(y_pred_proba[i])[:min(possible_results, 3)]
+            labels = []
+            for index in indices:
+                labels.append(printable[index])
+            X0_train_features2 = get_features(X0_train, features=['aspect_ratio'])
+            X_test_features2 = get_features(X_test, features=['aspect_ratio'])
+
+            new_model = KNeighborsClassifier(n_neighbors= 5)
+            new_model.fit(X0_train_features2, Y0_train)
+
+            Y_pred[i] = new_model.predict([X_test_features2[i]])[0]
+    classification_rep = classification_report(Y_test, Y_pred,zero_division=True)
+    print(classification_rep)
+def get_input_output_labels(features, labels = None):
     with open('data.json', 'r') as f: 
         data = json.load(f)
         x = []
         y = []
         for i in data.keys():
+            if labels is not None and data[i]['label'] in labels:
+                continue
             for feature in features:
+                if type(data[i][feature]) != list:
+                    data[i][feature] = [data[i][feature]]
                 x.append(data[i][feature])
             y.append(data[i]['label'])
     return (x,y)
 
-train_knn(['nb_of_pixels_per_segment'])
+# train_knn(['nb_of_pixels_per_segment'])
+
+train(features=['nb_of_pixels_per_segment'])
