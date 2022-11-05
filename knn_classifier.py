@@ -10,8 +10,9 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import LeavePOut, StratifiedKFold, KFold #for P-cross validation
 from sklearn.metrics import classification_report, accuracy_score
-from sklearn.metrics import confusion_matrix, plot_confusion_matrix
+from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
+from mlxtend.plotting import plot_confusion_matrix
 
 printable = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 def train(x, y, testing_size, model_version, optimal_k=True, max_range_k=100):
@@ -170,8 +171,9 @@ def train(features, labels = None):
     X_test_features, Y_test_features = get_features(X_test, Y_test, features)
     X_test_features2, Y_test_features2 = get_features(X_test, Y_test, features=['aspect_ratio'])
     Y_pred = knn.predict(X_test_features)
-    confusion_matrix(Y_pred, Y_test)
-    plot_confusion_matrix(knn, X_test_features, Y_test, cmap=plt.cm.Blues)
+    cm = confusion_matrix(Y_pred, Y_test)
+    # plot_confusion_matrix(knn, X_test_features, Y_test, cmap=plt.cm.Blues)
+    plot_confusion_matrix(conf_mat=cm)
     plt.show()
     y_pred_proba = knn.predict_proba(X_test_features)
     classification_rep = classification_report(Y_test, Y_pred,zero_division=True)
@@ -197,8 +199,9 @@ def train(features, labels = None):
             print('correct prediction: ' + Y_test[i]) 
             Y_pred[i] = new_prediction
     classification_rep = classification_report(Y_test, Y_pred,zero_division=True)
-    confusion_matrix(Y_pred, Y_test)
-    plot_confusion_matrix(knn, X_test_features, Y_test, cmap=plt.cm.Blues)
+    am = confusion_matrix(Y_pred, Y_test)
+    # plot_confusion_matrix(knn, X_test_features, Y_test, cmap=plt.cm.Blues)
+    plot_confusion_matrix(conf_mat=am)
     plt.show()
     print(classification_rep)
 
