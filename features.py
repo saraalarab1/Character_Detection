@@ -29,15 +29,45 @@ def aspect_ratio(image):
     """
     return  round(float(image.shape[1]) / image.shape[0],4)
 
+# def vertical_ratio(image):
+#     """
+#     Add definition
+#     """
+#     image_left = image[:,:int(WIDTH/2)]
+#     image_right = image[:, int(WIDTH/2):]
+#     total_pixel_left = np.sum(image_left == 0)
+#     total_pixel_right =  np.sum(image_right == 0)
+#     return round(total_pixel_left/total_pixel_right,4)
+
 def vertical_ratio(image):
     """
     Add definition
     """
-    image_left = image[:,:int(WIDTH/2)]
-    image_right = image[:, int(WIDTH/2):]
-    total_pixel_left = np.sum(image_left == 0)
-    total_pixel_right =  np.sum(image_right == 0)
-    return round(total_pixel_left/total_pixel_right,4)
+    vertical_ratio_per_block = []
+  
+    nRows = 4
+    mCols = 2
+    for i in range(0,nRows):
+        for j in range(0, mCols):
+            a = int(i*HEIGHT/nRows)
+            b = int(i*HEIGHT/nRows + HEIGHT/nRows )
+            c = int(j*WIDTH/mCols)
+            d = int(j*WIDTH/mCols + WIDTH/mCols)
+            roi = image[a:b,c:d]
+            width = roi.shape[1]
+            image_left = roi[:,:int(width/2)]
+            image_right = roi[:, int(width/2):]
+            total_pixel_left = np.sum(image_left == 0)
+            total_pixel_right =  np.sum(image_right == 0)
+            if total_pixel_left == 0 and total_pixel_right ==0:
+                vertical_ratio_per_block.append(-1)
+            elif total_pixel_left == 0:
+                vertical_ratio_per_block.append(0)
+            elif total_pixel_right ==0:
+                vertical_ratio_per_block.append(1)
+            else:
+                vertical_ratio_per_block.append(round(total_pixel_left/total_pixel_right,3))
+    return vertical_ratio_per_block
 
 def horizontal_ratio(image):
     """
@@ -272,3 +302,6 @@ def pre_process_image(image):
         letters.append(current_image)
 
     return letters
+
+image= cv.imread('processed_images/img001-001.png')
+vertical_ratio(image)
