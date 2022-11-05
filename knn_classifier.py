@@ -114,9 +114,12 @@ def get_input_output_labels(features):
         x = []
         y = []
         for i in data.keys():
+            features_arr = []
             for feature in features:
-                x.append(data[i][feature])
+                arr = data[i][feature]
+                features_arr.extend(arr)
+            x.append(features_arr)
             y.append(data[i]['label'])
     return (x,y)
 
-train_knn(['nb_of_pixels_per_segment'])
+train_knn(['nb_of_pixels_per_segment','vertical_ratio'])
