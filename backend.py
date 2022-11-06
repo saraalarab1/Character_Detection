@@ -9,7 +9,7 @@ import yaml
 import cv2 as cv
 from features import get_character_features
 from features import pre_process_image
-from knn_classifier import train_knn
+from our_model import train_knn
 from svm_classifier import train_svm
 from decision_tree_classifier import train_dt
 from flask_cors import CORS

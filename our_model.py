@@ -172,42 +172,41 @@ def train(features, labels = None):
     X0_train_features, _ = get_features(X0_train, Y0_train,  features)
     knn = KNeighborsClassifier(n_neighbors=7)
     knn.fit(X0_train_features, Y0_train)
-    secondLayer = pickle.load(open(f'models/knn/secondLayerKnn.pkl', 'rb' ))
+    secondLayer = pickle.load(open(f'models/svm/pretrained_svm_model.pkl', 'rb' ))
 
     X_test_features, Y_test_features = get_features(X_test, Y_test, features)
-    X_test_features2, Y_test_features2 = get_features(X_test, Y_test, features=['nb_of_black_pixels'])
+    X_test_features2, Y_test_features2 = get_features(X_test, Y_test, features)
     Y_pred = knn.predict(X_test_features)
     cm = confusion_matrix(Y_pred, Y_test)
     # plot_confusion_matrix(knn, X_test_features, Y_test, cmap=plt.cm.Blues)
-    # plot_confusion_matrix(conf_mat=cm)
-    # plt.show()
+    plot_confusion_matrix(conf_mat=cm)
+    plt.show()
     y_pred_proba = knn.predict_proba(X_test_features)
     classification_rep = classification_report(Y_test, Y_pred,zero_division=True)
-    print(classification_rep)
+    eval_accuracy = accuracy_score(Y_pred, Y_test)
+    print(f"Evaluation Before {eval_accuracy}")
+    # print(classification_rep)
     for i in range(len(y_pred_proba)):
         current_prediction_prob = max(y_pred_proba[i])
         if current_prediction_prob< 0.55:
             if Y_pred[i] in secondLayerLetters:
-                print(current_prediction_prob)
-                print('possible labels')
+                print(Y_pred[i])
+                # print(current_prediction_prob)
+                # print('possible labels')
                 possible_results = len([x for x in y_pred_proba[i] if x > 0]) # ['y, Y, q']
                 indices = sort_index(y_pred_proba[i])[:min(possible_results, 3)] # y 0.4 q 0.3 Y 0.3                 
                 labels = []
                 for index in indices:
                     labels.append(printable[index])
-                print(labels)
                 if labels[0] in secondLayerLetters:
                     new_labels = []
                     for label in labels: 
                         if label in secondLayerLetters:
-                            new_labels.append(label)  # y Y
-
-            # Y 0.3 y 0.1 
+                            new_labels.append(label)  
                 new_prediction = secondLayer.predict([X_test_features2[i]])[0]
                 cases_proba_max = max(secondLayer.predict_proba([X_test_features2[i]])[0])
 
                 if cases_proba_max > 0.65:
-                    print(cases_proba_max)
                     if new_prediction == 'lower':
                         print('new prediction: ' + Y_pred[i].lower())
                     else:
@@ -216,12 +215,13 @@ def train(features, labels = None):
                     print('correct prediction: ' + Y_test[i]) 
                     Y_pred[i] = Y_pred[i].lower() if new_prediction == 'lower' else Y_pred[i].upper()
                     print('-----------------------------------------')
+    eval_accuracy = accuracy_score(Y_pred, Y_test)
+    print(f"Evaluation AFter {eval_accuracy}")
     classification_rep = classification_report(Y_test, Y_pred,zero_division=True)
     am = confusion_matrix(Y_pred, Y_test)
     # plot_confusion_matrix(knn, X_test_features, Y_test, cmap=plt.cm.Blues)
     plot_confusion_matrix(conf_mat=am)
     plt.show()
-    print(classification_rep)
 
 
 def get_input_output_labels(features, labels = None):

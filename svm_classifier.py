@@ -67,7 +67,6 @@ def train(x, y, testing_size, model_version):
         score = accuracy_score(predictions, y_eval)
         accuracys.append(score)
 
-
     eval_accuracy = np.mean(accuracys)
 
     #save the pretrained model:
@@ -87,6 +86,12 @@ def test(X_test, Y_test,model_version):
         model = pickle.load(open('models/svm/pretrained_svm_model.pkl', 'rb' ))
 
     y_pred = model.predict(X_test)
+    # for i in range(len(y_pred)): 
+    #     print(X_test[i])
+    #     if X_test[i][0] > 1000:
+    #         y_pred[i] = 'upper'
+    #     else:
+    #         y_pred[i]= 'lower'
     print("Text Prediction: {}".format(y_pred.shape))
     print("Y_test shape: {}".format(Y_test))
     classification_rep = classification_report(Y_test, y_pred, zero_division=True)
@@ -110,9 +115,15 @@ def get_input_output_labels(features):
         x = []
         y = []
         for i in data.keys():
+            features_arr = []
+            # if data[i]['label'] in secondLayerLetters:
             for feature in features:
-                x.append(data[i][feature])
-            y.append(data[i]['label'].lower())
+                arr = data[i][feature]
+                if type(arr) != list:
+                    arr = [arr]
+                features_arr.extend(arr)
+            x.append(features_arr)
+            y.append(data[i]['label_2'])
     return (x,y)
 
 train_svm(['nb_of_pixels_per_segment'])
