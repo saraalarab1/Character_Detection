@@ -117,6 +117,8 @@ def get_input_output_labels(features):
             features_arr = []
             for feature in features:
                 arr = data[i][feature]
+                if type(arr) != list:
+                    arr = [arr]
                 features_arr.extend(arr)
             x.append(features_arr)
             y.append(data[i]['label'])
