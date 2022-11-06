@@ -87,6 +87,12 @@ def test(X_test, Y_test,model_version):
         model = pickle.load(open('models/svm/pretrained_svm_model.pkl', 'rb' ))
 
     y_pred = model.predict(X_test)
+    for i in range(len(y_pred)): 
+        print(X_test[i])
+        if X_test[i][0] > 1000:
+            y_pred[i] = 'upper'
+        else:
+            y_pred[i]= 'lower'
     print("Text Prediction: {}".format(y_pred.shape))
     print("Y_test shape: {}".format(Y_test))
     classification_rep = classification_report(Y_test, y_pred, zero_division=True)
@@ -103,7 +109,7 @@ def train_svm(features, model_version=None):
     print("Test Score: {}".format(test_score))
     print(conf_rep)
     return eval_accuracy, model, test_score, conf_rep
-secondLayerLetters = 'uUvVxXwWyYzZ0oOkKcCnNmMAabBrRdDeEfFgGhHiIjJ'
+secondLayerLetters = 'uUvVxXwWyYzZ0oO'
 
 def get_input_output_labels(features):
     with open('data.json', 'r') as f: 
