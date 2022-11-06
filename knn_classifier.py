@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 from mlxtend.plotting import plot_confusion_matrix
 
 printable = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+secondLayerLetters = '0OUVWXYZouvwxyz'
 def train(x, y, testing_size, model_version, optimal_k=True, max_range_k=100):
     
     X0_train, X_test, Y0_train, Y_test = train_test_split(x,y,test_size=testing_size, random_state=7)
@@ -173,8 +174,8 @@ def train(features, labels = None):
     Y_pred = knn.predict(X_test_features)
     cm = confusion_matrix(Y_pred, Y_test)
     # plot_confusion_matrix(knn, X_test_features, Y_test, cmap=plt.cm.Blues)
-    plot_confusion_matrix(conf_mat=cm)
-    plt.show()
+    # plot_confusion_matrix(conf_mat=cm)
+    # plt.show()
     y_pred_proba = knn.predict_proba(X_test_features)
     classification_rep = classification_report(Y_test, Y_pred,zero_division=True)
     print(classification_rep)
@@ -184,11 +185,22 @@ def train(features, labels = None):
             print(i)
             print(current_prediction_prob)
             print('possible labels')
-            possible_results = len([x for x in y_pred_proba[i] if x > 0])
-            indices = sort_index(y_pred_proba[i])[:min(possible_results, 3)]
+            if Y_pred[i] in secondLayerLetters:
+                print(Y_pred[i]) 
+                continue                 
+            possible_results = len([x for x in y_pred_proba[i] if x > 0]) # ['y, Y, q']
+            indices = sort_index(y_pred_proba[i])[:min(possible_results, 3)] # y 0.4 q 0.3 Y 0.3                 
             labels = []
             for index in indices:
                 labels.append(printable[index])
+            if printable[labels[0]] in secondLayerLetters:
+                new_labels = []
+                for label in labels: 
+                    if label in secondLayerLetters:
+                        new_labels.append(label)  # y Y
+            
+            # Y 0.3 y 0.1 
+            
             X0_train_features2, Y0_train_features2 = get_features(X0_train, Y0_train, features=['aspect_ratio'], labels= labels)
 
             new_model = KNeighborsClassifier(n_neighbors= 5)
