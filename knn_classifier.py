@@ -148,10 +148,13 @@ def get_features(x, y, features, labels = None):
         for i in x:
             features_list = []
             if data[i]['label'] in labels:
+                features_list = []
                 for feature in features:
-                    features_list = data[i][feature]
-                    if type(features_list) != list:
-                        features_list = [features_list]
+                    if type(data[i][feature]) != list:
+                        features_list.append(data[i][feature])
+                    else:
+                        features_list = data[i][feature]
+
                 features_data.append(features_list)
                 results.append(y[index])
             index = index + 1
@@ -169,8 +172,10 @@ def train(features, labels = None):
     X0_train_features, _ = get_features(X0_train, Y0_train,  features)
     knn = KNeighborsClassifier(n_neighbors=7)
     knn.fit(X0_train_features, Y0_train)
+    secondLayer = pickle.load(open(f'models/knn/secondLayerKnn.pkl', 'rb' ))
+
     X_test_features, Y_test_features = get_features(X_test, Y_test, features)
-    X_test_features2, Y_test_features2 = get_features(X_test, Y_test, features=['aspect_ratio'])
+    X_test_features2, Y_test_features2 = get_features(X_test, Y_test, features=['aspect_ratio', 'vertical_symmetry', 'horizontal_symmetry', 'vertical_ratio', 'horizontal_ratio'])
     Y_pred = knn.predict(X_test_features)
     cm = confusion_matrix(Y_pred, Y_test)
     # plot_confusion_matrix(knn, X_test_features, Y_test, cmap=plt.cm.Blues)
@@ -182,34 +187,30 @@ def train(features, labels = None):
     for i in range(len(y_pred_proba)):
         current_prediction_prob = max(y_pred_proba[i])
         if current_prediction_prob< 0.55:
-            print(i)
-            print(current_prediction_prob)
-            print('possible labels')
             if Y_pred[i] in secondLayerLetters:
-                print(Y_pred[i]) 
-                continue                 
-            possible_results = len([x for x in y_pred_proba[i] if x > 0]) # ['y, Y, q']
-            indices = sort_index(y_pred_proba[i])[:min(possible_results, 3)] # y 0.4 q 0.3 Y 0.3                 
-            labels = []
-            for index in indices:
-                labels.append(printable[index])
-            if printable[labels[0]] in secondLayerLetters:
-                new_labels = []
-                for label in labels: 
-                    if label in secondLayerLetters:
-                        new_labels.append(label)  # y Y
-            
+                print(current_prediction_prob)
+                print('possible labels')
+                possible_results = len([x for x in y_pred_proba[i] if x > 0]) # ['y, Y, q']
+                indices = sort_index(y_pred_proba[i])[:min(possible_results, 3)] # y 0.4 q 0.3 Y 0.3                 
+                labels = []
+                for index in indices:
+                    labels.append(printable[index])
+                print(labels)
+                if labels[0] in secondLayerLetters:
+                    new_labels = []
+                    for label in labels: 
+                        if label in secondLayerLetters:
+                            new_labels.append(label)  # y Y
+
             # Y 0.3 y 0.1 
             
-            X0_train_features2, Y0_train_features2 = get_features(X0_train, Y0_train, features=['aspect_ratio'], labels= labels)
-
-            new_model = KNeighborsClassifier(n_neighbors= 5)
-            new_model.fit(X0_train_features2, Y0_train_features2)
-            new_prediction = new_model.predict([X_test_features2[i]])[0]
-            print('new prediction: ' + new_prediction)
-            print('old prediction: ' + Y_pred[i])
-            print('correct prediction: ' + Y_test[i]) 
-            Y_pred[i] = new_prediction
+                print(X_test_features2[i])
+                new_prediction = secondLayer.predict([X_test_features2[i]])[0]
+                print('new prediction: ' + new_prediction)
+                print('old prediction: ' + Y_pred[i])
+                print('correct prediction: ' + Y_test[i]) 
+                Y_pred[i] = new_prediction
+        print('-----------------------------------------')
     classification_rep = classification_report(Y_test, Y_pred,zero_division=True)
     am = confusion_matrix(Y_pred, Y_test)
     # plot_confusion_matrix(knn, X_test_features, Y_test, cmap=plt.cm.Blues)
