@@ -79,14 +79,24 @@ def extract_features_for_training_data():
            json.dump(data, output, ensure_ascii=False, indent = 4)
 
 
-
-
+def add_output_case():
+    with open('data.json', 'r') as f:
+        data = json.load(f)
+        for i in data.keys():
+            if data[i]['label'] == data[i]['label'].lower():
+                data[i]['label_2'] = 'lower'
+            else:
+                data[i]['label_2'] = 'upper'
+        with open('data.json', 'w') as output:
+           json.dump(data, output, ensure_ascii=False, indent = 4)
 # pre_process_images()
-convert_csv_to_json()
+# convert_csv_to_json()
 
-extract_features_for_training_data()
+# extract_features_for_training_data()
 # post_skeletonization()
 
 # create_json()
 # assign_random_colors()
 # plot()
+
+# add_output_case()
