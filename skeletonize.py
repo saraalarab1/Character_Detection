@@ -2,6 +2,7 @@ import numpy as np
 from skimage.morphology import skeletonize
 import matplotlib.pyplot as plt
 import cv2
+import os
 # Invert the horse image
 def skeletonize_image(image, image_name):
     """
@@ -54,7 +55,11 @@ def skeletonize_image(image, image_name):
 
     # fig.tight_layout()
     # plt.show()
-    return image
+    print(image_name)
     cv2.imwrite('skeletonized_images_2/'+image_name, image)
 
 # skeletonize_image('image', 'sldkfjdl')
+
+for image_name in os.listdir('Img'):
+    image = cv2.imread('Img/' + image_name)
+    skeletonize_image(image, image_name)

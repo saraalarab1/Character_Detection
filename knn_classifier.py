@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 from mlxtend.plotting import plot_confusion_matrix
 
 printable = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
-secondLayerLetters = '0OUVWXYZouvwxyz'
+secondLayerLetters = 'UuvV'
 def train(x, y, testing_size, model_version, optimal_k=True, max_range_k=100):
     
     X0_train, X_test, Y0_train, Y_test = train_test_split(x,y,test_size=testing_size, random_state=7)
@@ -175,7 +175,7 @@ def train(features, labels = None):
     secondLayer = pickle.load(open(f'models/knn/secondLayerKnn.pkl', 'rb' ))
 
     X_test_features, Y_test_features = get_features(X_test, Y_test, features)
-    X_test_features2, Y_test_features2 = get_features(X_test, Y_test, features=['aspect_ratio', 'vertical_symmetry', 'horizontal_symmetry', 'vertical_ratio', 'horizontal_ratio'])
+    X_test_features2, Y_test_features2 = get_features(X_test, Y_test, features=['nb_of_black_pixels'])
     Y_pred = knn.predict(X_test_features)
     cm = confusion_matrix(Y_pred, Y_test)
     # plot_confusion_matrix(knn, X_test_features, Y_test, cmap=plt.cm.Blues)
@@ -203,14 +203,19 @@ def train(features, labels = None):
                             new_labels.append(label)  # y Y
 
             # Y 0.3 y 0.1 
-            
-                print(X_test_features2[i])
                 new_prediction = secondLayer.predict([X_test_features2[i]])[0]
-                print('new prediction: ' + new_prediction)
-                print('old prediction: ' + Y_pred[i])
-                print('correct prediction: ' + Y_test[i]) 
-                Y_pred[i] = new_prediction
-        print('-----------------------------------------')
+                cases_proba_max = max(secondLayer.predict_proba([X_test_features2[i]])[0])
+
+                if cases_proba_max > 0.65:
+                    print(cases_proba_max)
+                    if new_prediction == 'lower':
+                        print('new prediction: ' + Y_pred[i].lower())
+                    else:
+                        print('new prediction: ' + Y_pred[i].upper())
+                    print('old prediction: ' + Y_pred[i])
+                    print('correct prediction: ' + Y_test[i]) 
+                    Y_pred[i] = Y_pred[i].lower() if new_prediction == 'lower' else Y_pred[i].upper()
+                    print('-----------------------------------------')
     classification_rep = classification_report(Y_test, Y_pred,zero_division=True)
     am = confusion_matrix(Y_pred, Y_test)
     # plot_confusion_matrix(knn, X_test_features, Y_test, cmap=plt.cm.Blues)
