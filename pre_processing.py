@@ -7,7 +7,7 @@ from csv import reader
 from features import horizontal_histogram_projection, horizontal_line_intersection, horizontal_ratio, horizontal_symmetry, nb_of_pixels_per_segment, vertical_histogram_projection, vertical_line_intersection, vertical_ratio, vertical_symmetry
 WIDTH = 40
 HEIGHT = 40
-
+import numpy as np
 
 def convert_csv_to_json():
     training_dataset = dict()
@@ -116,4 +116,16 @@ def get_mean_of_feature(feature: str):
             current_dict[i] = current_dict[i]['sum']/current_dict[i]['nbOfOccurences']
         print(current_dict)
 
-get_mean_of_feature('aspect_ratio')
+# get_mean_of_feature('aspect_ratio')
+
+def get_total_nb_of_pixels():
+        with open('data.json', 'r') as f:
+            data = json.load(f)
+            for i in data.keys():
+                print('we are in: '+ i)
+                current_image = cv.imread('skeletonized_images_2/' + i, 0)
+                data[i]['nb_of_black_pixels'] =int(np.sum(current_image == 0))
+            with open('data.json', 'w') as output:
+                json.dump(data, output, ensure_ascii=False, indent = 4) 
+
+get_total_nb_of_pixels()

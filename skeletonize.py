@@ -60,6 +60,6 @@ def skeletonize_image(image, image_name):
 
 # skeletonize_image('image', 'sldkfjdl')
 
-for image_name in os.listdir('Img'):
-    image = cv2.imread('Img/' + image_name)
-    skeletonize_image(image, image_name)
+# for image_name in os.listdir('Img'):
+#     image = cv2.imread('Img/' + image_name)
+#     skeletonize_image(image, image_name)
