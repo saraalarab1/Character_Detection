@@ -1,71 +1,74 @@
 import pickle
+from datetime import datetime
+from genericpath import exists
+from os import makedirs
+import os
+from flask import Flask, jsonify, render_template, request, redirect, url_for
+from sklearn.model_selection import GridSearchCV, KFold, train_test_split
+from matplotlib.style import available
 import numpy as np
 import json
-from pandas import DataFrame as df
+from sklearn.model_selection import StratifiedKFold
+from sklearn.ensemble import VotingClassifier
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import os
+# from skimage import feature
+
+import pickle
+from sklearn.model_selection import GridSearchCV, KFold, train_test_split
 from sklearn import metrics
-from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.model_selection import StratifiedKFold, KFold, LeavePOut #for P-cross validation
+from sklearn import model_selection
+from sklearn.model_selection import LeavePOut #for P-cross validation
 from sklearn.metrics import classification_report, accuracy_score
-from sklearn.ensemble import BaggingClassifier, VotingClassifier
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import StratifiedKFold
+from sklearn.metrics import confusion_matrix, plot_confusion_matrix
 
-def train(x, y, estimators, weights, testing_size, model_version):
+def train(X, y, estimators, weights, features, model_version, testing_size):
 
-    X0_train, X_test, Y0_train, y_test = train_test_split(x,y,test_size=testing_size, random_state=7)
-    #Scaler is needed to scale all the inputs to a similar range
-    # scaler = StandardScaler()
-    # scaler = scaler.fit(X0_train)
-    # X0_train = scaler.transform(X0_train)
-    # X_test = scaler.transform(X_test)
-    #X_train, X_eval, Y_train, y_eval = train_test_split(X0_train, Y0_train, test_size= 100/k_cross_validation_ratio, random_state=7)
+    X0_train, X_test, Y0_train, y_test = train_test_split(X,y,test_size=testing_size, random_state=7)
 
     ensemble=VotingClassifier(estimators=estimators, voting='soft', weights=weights)
     ensemble.fit(X0_train, Y0_train)
-
-    accuracy = cross_val_score(ensemble, X0_train, Y0_train, cv=5, scoring='accuracy')
-    print(f"{accuracy}")
+    y_pred = ensemble.predict(X_test)
 
     accuracys=[]
 
-    #Evaluation using cross validation
-    # LeavePOut
-    # lpo = LeavePOut(p=2)
-    # KFold
-    # kf = KFold(n_splits=10)
-    # kf.get_n_splits(X0_train)
-    # StratifiedKFold
     skf = StratifiedKFold(n_splits=10, random_state=None)
     skf.get_n_splits(X0_train, Y0_train)
     for train_index, test_index in skf.split(X0_train, Y0_train):
-        
         # print("TRAIN:", train_index, "Validation:", test_index)
-        X_train, X_eval = df(X0_train).iloc[train_index], df(X0_train).iloc[test_index]
-        Y_train, y_eval = df(Y0_train).iloc[train_index], df(Y0_train).iloc[test_index]
+        X_train, X_eval = pd.DataFrame(X0_train).iloc[train_index], pd.DataFrame(X0_train).iloc[test_index]
+        Y_train, y_eval = pd.DataFrame(Y0_train).iloc[train_index], pd.DataFrame(Y0_train).iloc[test_index]
     
-        ensemble.fit(X_train, Y_train.values.ravel())
+        ensemble.fit(X0_train, Y0_train)
         predictions = ensemble.predict(X_eval)
         score = accuracy_score(predictions, y_eval)
         accuracys.append(score)
 
     eval_accuracy = np.mean(accuracys)
-
     #save the pretrained model:
     model_name='pretrained_ensemble_model.pkl'
-    if model_version:
-        pickle.dump(ensemble, open(f"models/{model_version}/{model_name}", 'wb'))
+    pickle.dump(ensemble, open(f"models/ensemble/{model_name}", 'wb'))
+
+    return eval_accuracy, ensemble, X0_train, Y0_train, X_test, y_test
+
+def test(X_train, Y_train, X_test, Y_test,model_version,pretrain_model=False):
+
+    if pretrain_model:
+        model = pickle.load(open(f'models/ensemble/pretrained_ensemble_model.pkl', 'rb' ))
+        
     else:
-        pickle.dump(ensemble, open(f"models/ensemble/{model_name}", 'wb'))
+        eval_score, model, X_train, Y_train, X_test, Y_test = train(X_test, Y_test, pretrained_model=False)
+        print("Evaluation score: {}".format(eval_score))
 
-    return eval_accuracy, ensemble, X_test, y_test
-
-def test(X_test, Y_test,model_version):
-
-    if model_version:
-        model = pickle.load(open(f'models/{model_version}/pretrained_ensemble_model.pkl', 'rb' ))
-    else:
-        model = pickle.load(open('models/ensemble/pretrained_ensemble_model.pkl', 'rb' ))
-
+    model.fit(X_train, Y_train)
     y_pred = model.predict(X_test)
+    confusion_matrix(y_pred, Y_test)
+    plot_confusion_matrix(model, X_test, Y_test, cmap=plt.cm.Blues)
+    plt.show()
     print("Text Prediction: {}".format(y_pred.shape))
     print("Y_test shape: {}".format(Y_test))
     classification_rep = classification_report(Y_test, y_pred,zero_division=True)
@@ -73,11 +76,11 @@ def test(X_test, Y_test,model_version):
 
     return test_score, classification_rep
 
-def train_ensemble(estimators, weights,features, model_version=None):
+def train_ensemble(estimators, weights,features, model_version):
     print('training')
-    x,y = get_input_output_labels(features)
-    eval_accuracy, model, X_test, Y_test = train(x, y, estimators, weights, testing_size=0.1, model_version= model_version)
-    test_score, conf_rep = test(X_test, Y_test, model_version)
+    X,y = get_input_output_labels(features)
+    eval_accuracy, model, X_train, Y_train, X_test, Y_test = train(X, y, estimators, weights, features,model_version= model_version, testing_size=0.2,)
+    test_score, conf_rep = test(X_train, Y_train, X_test, Y_test, model_version ,pretrain_model=True)
     print("Evaluation Score: {}".format(eval_accuracy))
     print("Test Score: {}".format(test_score))
     print(conf_rep)
@@ -87,18 +90,17 @@ def train_ensemble(estimators, weights,features, model_version=None):
 def get_input_output_labels(features):
     with open('data.json', 'r') as f: 
         data = json.load(f)
-        x = []
+        X = []
         y = []
         for i in data.keys():
             for feature in features:
-                x.append(data[i][feature])
+                X.append(data[i][feature])
             y.append(data[i]['label'])
-    return (x,y)
+    return (X,y)
 
-
-knn = pickle.load(open(f'models/knn/pretrained_knn_model.pkl', 'rb' ))
-svm = pickle.load(open(f'models/svm/pretrained_svm_model.pkl', 'rb' ))
-dtree = pickle.load(open(f'models/dt/pretrained_dtree_model.pkl', 'rb' ))
+knn = pickle.load(open(f'models/knn_ensemble/pretrained_knn_model.pkl', 'rb' ))
+svm = pickle.load(open(f'models/svm_ensemble/pretrained_svm_model.pkl', 'rb' ))
+# dtree = pickle.load(open(f'models/dt/pretrained_dtree_model.pkl', 'rb' ))
 
 # train_ensemble([('KNN',knn),('SVM',svm),('DTree',dtree)],[1,1,1],['nb_of_pixels_per_segment'])
-train_ensemble([('KNN',knn),('SVM',svm)],[1,1],['nb_of_pixels_per_segment'])
+train_ensemble([('KNN',knn),('SVM',svm)],[1,1],['nb_of_pixels_per_segment'],None)
