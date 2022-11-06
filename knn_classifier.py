@@ -11,6 +11,8 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import LeavePOut, StratifiedKFold, KFold #for P-cross validation
 from sklearn.metrics import classification_report, accuracy_score
 
+secondLayerLetters = 'uUvVxXwWyYzZ0oO'
+
 def train(x, y, testing_size, model_version, optimal_k=True, max_range_k=100):
     
     X0_train, X_test, Y0_train, Y_test = train_test_split(x,y,test_size=testing_size, random_state=7)
@@ -78,7 +80,7 @@ def train(x, y, testing_size, model_version, optimal_k=True, max_range_k=100):
     if model_version:
         pickle.dump(model, open(f"models/{model_version}/{model_name}", 'wb'))
     else:
-        pickle.dump(model, open(f"models/knn/{model_name}", 'wb'))
+        pickle.dump(model, open(f"models/knn/SecondLayerKnn.pkl", 'wb'))
 
     return eval_accuracy, model, X_test, Y_test
 
@@ -88,9 +90,14 @@ def test(X_test, Y_test, model_version):
     if model_version:
         model = pickle.load(open(f'models/{model_version}/pretrained_knn_model.pkl', 'rb' ))
     else:
-        model = pickle.load(open('models/knn/pretrained_knn_model.pkl', 'rb' ))
+        model = pickle.load(open('models/knn/SecondLayerKnn.pkl', 'rb' ))
 
     y_pred = model.predict(X_test)
+    y_pred_proba = model.predict_proba(X_test)
+    for i in range(len(y_pred)):
+        print(f"True Value {Y_test[i]}")
+        print(f"Predicted Value {y_pred[i]}")
+        print(f"Probability {str(y_pred_proba[i])}")
     print("Text Prediction: {}".format(y_pred.shape))
     print("Y_test shape: {}".format(Y_test))
     classification_rep = classification_report(Y_test, y_pred,zero_division=True)
