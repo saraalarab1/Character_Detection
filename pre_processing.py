@@ -99,8 +99,17 @@ def add_output_case():
            json.dump(data, output, ensure_ascii=False, indent = 4)
 # pre_process_images()
 
+def get_total_nb_of_pixels():
+        with open('data.json', 'r') as f:
+            data = json.load(f)
+            for i in data.keys():
+                current_image = cv.imread('Img/' + i, 0)
+                data[i]['nb_of_black_pixels'] = cv.countNonZero(current_image)  
+            with open('data.json', 'w') as output:
+                json.dump(data, output, ensure_ascii=False, indent = 4) 
+# pre_process_images()
 
-pre_process_images()
+get_total_nb_of_pixels()
 # convert_csv_to_json()
 
 # extract_features_for_training_data()

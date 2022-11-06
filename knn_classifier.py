@@ -122,13 +122,14 @@ def get_input_output_labels(features):
         y = []
         for i in data.keys():
             features_arr = []
-            for feature in features:
-                arr = data[i][feature]
-                if type(arr) != list:
-                    arr = [arr]
-                features_arr.extend(arr)
-            x.append(features_arr)
-            y.append(data[i]['label_2'])
+            if data[i]['label'] in secondLayerLetters:
+                for feature in features:
+                    arr = data[i][feature]
+                    if type(arr) != list:
+                        arr = [arr]
+                    features_arr.extend(arr)
+                x.append(features_arr)
+                y.append(data[i]['label_2'])
     return (x,y)
 
-train_knn(['aspect_ratio'])
+train_knn(['nb_of_black_pixels', 'aspect_ratio'])
