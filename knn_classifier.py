@@ -132,4 +132,4 @@ def get_input_output_labels(features):
             y.append(data[i]['label'])
     return (x,y)
 
-# train_knn(['nb_of_pixels_per_segment'],test)
+train_knn(['nb_of_pixels_per_segment'],None)

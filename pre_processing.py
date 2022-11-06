@@ -48,7 +48,7 @@ def pre_process_images():
         image = cv.resize(image, dim, interpolation = cv.INTER_AREA)
         image = gray_to_black(image)
         cv.imwrite('processed_images/'+image_name, image)
-
+    
 
 
 def extract_features_for_training_data():
