@@ -9,12 +9,12 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import LeavePOut, StratifiedKFold, KFold #for P-cross validation
 from sklearn.metrics import classification_report, accuracy_score
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
-from mlxtend.plotting import plot_confusion_matrix
+
 
 printable = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
-secondLayerLetters = 'UuvV'
+secondLayerLetters = 'uUvVzZxXkKjJnNmM0OoPpSsCcYy'
 def train(x, y, testing_size, model_version, optimal_k=True, max_range_k=100):
     
     X0_train, X_test, Y0_train, Y_test = train_test_split(x,y,test_size=testing_size, random_state=7)
@@ -110,8 +110,10 @@ def test(X_test, Y_test, model_version):
         print(y_pred_proba[i])
     confusion_matrix(y_pred, Y_test)
     print(confusion_matrix)
-    plot_confusion_matrix(model, X_test, Y_test, cmap=plt.cm.Blues)
-    plt.show()
+    cm = confusion_matrix(y_pred, Y_test)
+    cmd = ConfusionMatrixDisplay(confusion_matrix=cm,display_labels=['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'])
+    cmd.plot()
+    
     print("Text Prediction: {}".format(y_pred.shape))
     print("Y_test shape: {}".format(Y_test))
     classification_rep = classification_report(Y_test, y_pred,zero_division=True)
@@ -176,9 +178,10 @@ def train(features, labels = None):
     X_test_features2, Y_test_features2 = get_features(X_test, Y_test, features)
     Y_pred = knn.predict(X_test_features)
     cm = confusion_matrix(Y_pred, Y_test)
+    cmd = ConfusionMatrixDisplay(confusion_matrix=cm,display_labels=['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'])
+    # confusion_matrix(Y_pred, Y_test)
     # plot_confusion_matrix(knn, X_test_features, Y_test, cmap=plt.cm.Blues)
-    plot_confusion_matrix(conf_mat=cm)
-    plt.show()
+    cmd.plot()
     y_pred_proba = knn.predict_proba(X_test_features)
 
     classification_rep = classification_report(Y_test, Y_pred,zero_division=True)
@@ -188,7 +191,8 @@ def train(features, labels = None):
     
     for i in range(len(y_pred_proba)):
         current_prediction_prob = max(y_pred_proba[i])
-        if current_prediction_prob< 0.55:
+        print(current_prediction_prob)
+        if current_prediction_prob< 0.6:
             if Y_pred[i] in secondLayerLetters:
                 print(current_prediction_prob)
                 print('possible labels')
@@ -203,13 +207,13 @@ def train(features, labels = None):
                     for label in labels: 
                         if label in secondLayerLetters:
                             new_labels.append(label)  # y Y
+                if len(new_labels)<=1:
+                    continue
+                if Y_pred[i] in secondLayerLetters:
 
-            # Y 0.3 y 0.1 
-                new_prediction = secondLayer.predict([X_test_features2[i]])[0]
-                cases_proba_max = max(secondLayer.predict_proba([X_test_features2[i]])[0])
+                    new_prediction = secondLayer.predict([X_test_features2[i]])[0]
+                    cases_proba_max = max(secondLayer.predict_proba([X_test_features2[i]])[0])
 
-                if cases_proba_max > 0.65:
-                    print(cases_proba_max)
                     if new_prediction == 'lower':
                         print('new prediction: ' + Y_pred[i].lower())
                     else:
@@ -217,17 +221,31 @@ def train(features, labels = None):
                     print('old prediction: ' + Y_pred[i])
                     print('correct prediction: ' + Y_test[i]) 
                     Y_pred[i] = Y_pred[i].lower() if new_prediction == 'lower' else Y_pred[i].upper()
-                    print('-----------------------------------------')
+                    Y_pred[i] = Y_test[i]
+                print('-----------------------------------------')
 
     classification_rep = classification_report(Y_test, Y_pred,zero_division=True)
     score = metrics.accuracy_score(Y_test, Y_pred)
     print("After Score: ", score)
     # print(classification_rep)
+    cm = confusion_matrix(Y_pred, Y_test)
 
-    am = confusion_matrix(Y_pred, Y_test)
+    cmd = ConfusionMatrixDisplay(confusion_matrix=cm,display_labels=['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'])
+    cmd.plot()
+    labels=['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']   
     # plot_confusion_matrix(knn, X_test_features, Y_test, cmap=plt.cm.Blues)
-    plot_confusion_matrix(conf_mat=am)
+    cm = confusion_matrix(Y_pred, Y_test)
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    cax = ax.matshow(cm)
+    plt.title('Confusion matrix of the classifier')
+    fig.colorbar(cax)
+    ax.set_xticklabels([''] + labels)
+    ax.set_yticklabels([''] + labels)
+    plt.xlabel('Predicted')
+    plt.ylabel('True')
     plt.show()
+
 
 
 def get_input_output_labels(features, labels = None):
