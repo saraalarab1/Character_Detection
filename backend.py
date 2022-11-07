@@ -11,7 +11,7 @@ from features import get_character_features
 from features import pre_process_image
 from our_model import train_knn
 from svm_case_classifier import train_svm
-from decision_tree_classifier import train_dt
+from decision_tree_ensemble_classifier import train_dt
 from flask_cors import CORS
 import base64
 from PIL import Image
