@@ -77,8 +77,6 @@ def test(X_test, Y_test,model_version):
         model = pickle.load(open('models/svm_case/pretrained_svm_model.pkl', 'rb' ))
 
     y_pred = model.predict(X_test)
-    print("Text Prediction: {}".format(y_pred.shape))
-    print("Y_test shape: {}".format(Y_test))
     classification_rep = classification_report(Y_test, y_pred, zero_division=True)
     test_score = metrics.accuracy_score(Y_test, y_pred)
 

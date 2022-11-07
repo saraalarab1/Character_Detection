@@ -1,8 +1,8 @@
 
-import statistics
+import json
 import cv2 as cv
 import numpy as np
-from resizing import gray_to_black
+from pre_processing import gray_to_black
 MAX_COUNT_HORIZONTAL = 5
 MAX_COUNT_VERTICAL = 4
 WIDTH = 120
@@ -119,10 +119,6 @@ def vertical_histogram_projection(image):
         if i%4==0:
             smaller_vector.append(int(sum))
             sum=0
-    median = statistics.median(smaller_vector)
-    stdev = statistics.stdev(smaller_vector)
-    mean = statistics.mean(smaller_vector)
-    # return [median, mean, stdev]
     return smaller_vector
 
 def horizontal_histogram_projection(image):
@@ -136,13 +132,7 @@ def horizontal_histogram_projection(image):
         if i%4==0:
             smaller_vector.append(int(sum))
             sum=0
-    median = statistics.median(smaller_vector)
-    stdev = statistics.stdev(smaller_vector)
-    mean = statistics.mean(smaller_vector)
-    # return [median, mean, stdev]
     return smaller_vector
-
-
 
 def percentage_of_pixels_on_horizontal_center(image):
     """
@@ -164,19 +154,6 @@ def percentage_of_pixels_on_vertical_center(image):
             nb_of_pixels_at_vertical = nb_of_pixels_at_vertical + 1
         image[i][int(HEIGHT/2)] = (255, 0, 0)
     return nb_of_pixels_at_vertical/(total_nb_of_black_pixels if total_nb_of_black_pixels > 0 else 0.1)
-
-
-# def assign_random_colors():
-#     label_color = dict()
-#     with open('data.json', 'r') as f:
-#         data = json.load(f)
-#         for i in data.keys():
-#             if not data[i]["label"] in label_color.keys():
-#                 label_color[data[i]["label"]] = "#"+''.join([random.choice('0123456789ABCDEF') for j in range(6)])
-#             data[i]["color"] = label_color[data[i]["label"]]
-#         with open('data_with_colors.json', 'w') as output:
-#             json.dump(data, output, ensure_ascii=False, indent = 4)
-
 
 def get_character_features(features, characters):
     """
@@ -213,8 +190,6 @@ def get_character_features(features, characters):
         features_of_characters.append(features_data)
         features_data = []
     return features_of_characters
-
-
 
 def pre_process_image(image):
     gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)

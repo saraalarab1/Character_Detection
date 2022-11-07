@@ -49,9 +49,8 @@ def train(X, Y, testing_size, for_ensemble,model_version, optimal_k=True, max_ra
         y_pred = knn.predict(X_test)
         scores[k] = metrics.accuracy_score(Y_test, y_pred)
         scores_list.append(round(metrics.accuracy_score(Y_test, y_pred),3))
-    print('all done')
-    print(scores_list)
     k_optimal = scores_list.index(max(scores_list)) +1
+    print(f"k optimal: {k_optimal}")
     model = KNeighborsClassifier(n_neighbors= k_optimal)
     model.fit(X0_train, Y0_train)
      

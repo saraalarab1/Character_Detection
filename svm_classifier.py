@@ -80,8 +80,6 @@ def test(X_test, Y_test,model_version,for_ensemble):
         model = pickle.load(open('models/svm/pretrained_svm_model.pkl', 'rb' ))
 
     y_pred = model.predict(X_test)
-    print("Text Prediction: {}".format(y_pred.shape))
-    print("Y_test shape: {}".format(Y_test))
     classification_rep = classification_report(Y_test, y_pred, zero_division=True)
     test_score = metrics.accuracy_score(Y_test, y_pred)
 
@@ -90,7 +88,7 @@ def test(X_test, Y_test,model_version,for_ensemble):
 def train_svm(features, model_version=None, for_ensemble = False):
     print('training')
     x,y = get_input_output_labels(features)
-    eval_accuracy, model, X_test, Y_test = train(x, y, testing_size=0.2, model_version = model_version, for_ensemble = for_ensemble)
+    eval_accuracy, model, X_test, Y_test = train(x, y, testing_size=0.1, model_version = model_version, for_ensemble = for_ensemble)
     test_score, conf_rep = test(X_test, Y_test,model_version=model_version, for_ensemble=for_ensemble)
     print("Evaluation Score: {}".format(eval_accuracy))
     print("Test Score: {}".format(test_score))
