@@ -52,8 +52,10 @@ def pre_process_images():
             # image = cv.resize(image, dim, interpolation = cv.INTER_AREA)
             # image = gray_to_black(image)
             # cv.imwrite('processed_images/'+image_name, image)
+
             if image_name in data:
                 data[image_name]['aspect_ratio'] = image.shape[1]/image.shape[0]
+
     print('dumping data')
     with open('data.json', 'w') as output:
            json.dump(data, output, ensure_ascii=False, indent = 4)
@@ -118,14 +120,14 @@ def get_mean_of_feature(feature: str):
 
 # get_mean_of_feature('aspect_ratio')
 
-def get_total_nb_of_pixels():
-        with open('data.json', 'r') as f:
-            data = json.load(f)
-            for i in data.keys():
-                print('we are in: '+ i)
-                current_image = cv.imread('skeletonized_images_2/' + i, 0)
-                data[i]['nb_of_black_pixels'] =int(np.sum(current_image == 0))
-            with open('data.json', 'w') as output:
-                json.dump(data, output, ensure_ascii=False, indent = 4) 
+# def get_total_nb_of_pixels():
+#         with open('data.json', 'r') as f:
+#             data = json.load(f)
+#             for i in data.keys():
+#                 print('we are in: '+ i)
+#                 current_image = cv.imread('skeletonized_images_2/' + i, 0)
+#                 data[i]['nb_of_black_pixels'] =int(np.sum(current_image == 0))
+#             with open('data.json', 'w') as output:
+#                 json.dump(data, output, ensure_ascii=False, indent = 4) 
 
-get_total_nb_of_pixels()
+# get_total_nb_of_pixels()

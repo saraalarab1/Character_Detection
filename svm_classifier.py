@@ -97,7 +97,7 @@ def test(X_test, Y_test,model_version):
 def train_svm(features, model_version=None):
     print('training')
     x,y = get_input_output_labels(features)
-    eval_accuracy, model, X_test, Y_test = train(x, y, testing_size=0.3, model_version = model_version)
+    eval_accuracy, model, X_test, Y_test = train(x, y, testing_size=0.2, model_version = model_version)
     test_score, conf_rep = test(X_test, Y_test,model_version=model_version)
     print("Evaluation Score: {}".format(eval_accuracy))
     print("Test Score: {}".format(test_score))
@@ -110,9 +110,13 @@ def get_input_output_labels(features):
         x = []
         y = []
         for i in data.keys():
+            current_features = []
             for feature in features:
-                x.append(data[i][feature])
-            y.append(data[i]['label'].lower())
+                if type(data[i][feature]) != list:
+                    data[i][feature] = [data[i][feature]]
+                current_features.extend(data[i][feature])
+            x.append(current_features)
+            y.append(data[i]['label'])
     return (x,y)
 
 train_svm(['nb_of_pixels_per_segment'])
