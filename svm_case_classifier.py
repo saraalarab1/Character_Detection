@@ -4,12 +4,13 @@ import numpy as np
 import pickle
 from pandas import DataFrame as df
 from sklearn import metrics
-from sklearn.model_selection import GridSearchCV, KFold, StratifiedKFold, LeavePOut #for P-cross validation
-from sklearn.model_selection import cross_val_score, train_test_split
+from sklearn.model_selection import GridSearchCV, KFold, StratifiedKFold
+from sklearn.model_selection import  train_test_split
 from sklearn.metrics import classification_report, accuracy_score
 from sklearn.svm import SVC
 from sklearn.preprocessing import StandardScaler
 
+secondLayerLetters = 'uUvVzZxXkKjJnNmM0OoPpSsCcYy'
 
 def get_gamma_and_C(model, X_train, Y_train):
     # creating a KFold object with 5 splits 
@@ -37,22 +38,12 @@ def train(x, y, testing_size, model_version):
     # scaler = scaler.fit(X0_train)
     # X0_train = scaler.transform(X0_train)
     # X_test = scaler.transform(X_test)
-    #X_train, X_eval, Y_train, y_eval = train_test_split(X0_train, Y0_train, test_size= 100/k_cross_validation_ratio, random_state=7)
     
     model = SVC(kernel = 'rbf', random_state = 0, probability= True)
     model.fit(X0_train, Y0_train)
 
-    accuracy = cross_val_score(model, X0_train, Y0_train, cv=5, scoring='accuracy')
-    print(f"{accuracy}")
-
     accuracys=[]
 
-    #Evaluation using cross validation
-    # LeavePOut
-    # lpo = LeavePOut(p=2)
-    # KFold
-    # kf = KFold(n_splits=10)
-    # kf.get_n_splits(X0_train)
     # StratifiedKFold
     skf = StratifiedKFold(n_splits=10, random_state=None)
     skf.get_n_splits(X0_train, Y0_train)
@@ -102,7 +93,6 @@ def train_svm(features, model_version=None):
     print("Test Score: {}".format(test_score))
     print(conf_rep)
     return eval_accuracy, model, test_score, conf_rep
-secondLayerLetters = 'uUvVzZxXkKjJnNmM0OoPpSsCcYy'
 
 def get_input_output_labels(features):
     with open('data.json', 'r') as f: 

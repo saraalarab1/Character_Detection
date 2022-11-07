@@ -6,8 +6,6 @@ import pandas as pd
 import pickle
 from sklearn.model_selection import GridSearchCV, KFold, train_test_split
 from sklearn import metrics
-from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import LeavePOut #for P-cross validation
 from sklearn.metrics import classification_report, accuracy_score
 from sklearn.svm import SVC
 from sklearn.model_selection import StratifiedKFold
@@ -32,7 +30,7 @@ def get_gamma_and_C(model):
 
     return model.best_params_
 
-def train(X, Y, k_cross_validation_ratio, testing_size, model_version=None):
+def train(X, Y, testing_size, model_version, for_ensemble):
 
     X0_train, X_test, Y0_train, Y_test = train_test_split(X,Y,test_size=testing_size, random_state=7)
     #Scaler is needed to scale all the inputs to a similar range
@@ -40,14 +38,9 @@ def train(X, Y, k_cross_validation_ratio, testing_size, model_version=None):
     # scaler = scaler.fit(X0_train)
     # X0_train = scaler.transform(X0_train)
     # X_test = scaler.transform(X_test)
-    #X_train, X_eval, Y_train, y_eval = train_test_split(X0_train, Y0_train, test_size= 100/k_cross_validation_ratio, random_state=7)
     
     model = SVC(kernel = 'rbf', random_state = 0, probability= True)
     model.fit(X0_train, Y0_train)
-
-    #eval_score_list = []
-    #Evaluation using cross validation: lpo: leave p out
-    # lpo = LeavePOut(p=1)
 
     accuracys=[]
 
@@ -63,25 +56,26 @@ def train(X, Y, k_cross_validation_ratio, testing_size, model_version=None):
         predictions = model.predict(X_eval)
         score = accuracy_score(predictions, y_eval)
         accuracys.append(score)
-        #scores = cross_val_score(knn, X, Y, cv=5, scoring='accuracy')
-        #eval_score_list.append(scores.mean())
 
-    #eval_accuracy = np.mean(eval_score_list)
     eval_accuracy = np.mean(accuracys)
 
     #save the pretrained model:
     model_name = "pretrained_svm_model.pkl"
     if model_version:
         pickle.dump(model, open(f"models/{model_version}/{model_name}", 'wb'))
+    elif for_ensemble:
+        pickle.dump(model, open(f"models/svm_ensemble/{model_name}", 'wb'))
     else:
         pickle.dump(model, open(f"models/svm/{model_name}", 'wb'))
 
     return eval_accuracy, model, X_test, Y_test
 
-def test(X_test, Y_test,model_version):
+def test(X_test, Y_test,model_version,for_ensemble):
 
     if model_version:
         model = pickle.load(open(f'models/{model_version}/pretrained_svm_model.pkl', 'rb' ))
+    elif for_ensemble:
+        model = pickle.load(open('models/svm_ensemble/pretrained_svm_model.pkl', 'rb' ))
     else:
         model = pickle.load(open('models/svm/pretrained_svm_model.pkl', 'rb' ))
 
@@ -93,11 +87,11 @@ def test(X_test, Y_test,model_version):
 
     return test_score, classification_rep
 
-def train_svm(features, model_version=None):
+def train_svm(features, model_version=None, for_ensemble = False):
     print('training')
     x,y = get_input_output_labels(features)
-    eval_accuracy, model, X_test, Y_test = train(x, y, k_cross_validation_ratio=5, testing_size=0.05, model_version = model_version)
-    test_score, conf_rep = test(X_test, Y_test,model_version=model_version)
+    eval_accuracy, model, X_test, Y_test = train(x, y, testing_size=0.2, model_version = model_version, for_ensemble = for_ensemble)
+    test_score, conf_rep = test(X_test, Y_test,model_version=model_version, for_ensemble=for_ensemble)
     print("Evaluation Score: {}".format(eval_accuracy))
     print("Test Score: {}".format(test_score))
     print(conf_rep)
@@ -120,4 +114,4 @@ def get_input_output_labels(features):
             y.append(data[i]['label'])
     return (x,y)
 
-train_svm(['nb_of_pixels_per_segment'])
+train_svm(['nb_of_pixels_per_segment'],for_ensemble=True)
