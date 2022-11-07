@@ -5,19 +5,19 @@ import numpy as np
 from resizing import gray_to_black
 MAX_COUNT_HORIZONTAL = 5
 MAX_COUNT_VERTICAL = 4
-WIDTH = 40
-HEIGHT = 40
+WIDTH = 120
+HEIGHT = 120
 
 def nb_of_pixels_per_segment(image, index):
     """
     Add definition
     """
     pixels_per_segment = []
-    for i in range(0, 40, index):
-        for j in range(0, 40, index):
+    for i in range(0, WIDTH, index):
+        for j in range(0, HEIGHT, index):
             total_pixels = 0
-            for k in range(0, min(40-i,index)):
-                for l in range(0, min(40-j,index)):
+            for k in range(0, min(WIDTH-i,index)):
+                for l in range(0, min(HEIGHT-j,index)):
                     if tuple(image[i+k][j+l])!=(255, 255, 255):
                         total_pixels = total_pixels + 1
             pixels_per_segment.append(total_pixels)

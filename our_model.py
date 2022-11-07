@@ -221,7 +221,7 @@ def train(features, labels = None):
                     print('old prediction: ' + Y_pred[i])
                     print('correct prediction: ' + Y_test[i]) 
                     Y_pred[i] = Y_pred[i].lower() if new_prediction == 'lower' else Y_pred[i].upper()
-                    Y_pred[i] = Y_test[i]
+                    # Y_pred[i] = Y_test[i]
                 print('-----------------------------------------')
 
     classification_rep = classification_report(Y_test, Y_pred,zero_division=True)

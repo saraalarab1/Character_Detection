@@ -100,7 +100,7 @@ def get_input_output_labels(features):
 
 knn = pickle.load(open(f'models/knn_ensemble/pretrained_knn_model.pkl', 'rb' ))
 svm = pickle.load(open(f'models/svm_ensemble/pretrained_svm_model.pkl', 'rb' ))
-# dtree = pickle.load(open(f'models/dt/pretrained_dtree_model.pkl', 'rb' ))
+dtree = pickle.load(open(f'models/dt/pretrained_dtree_model.pkl', 'rb' ))
 
 # train_ensemble([('KNN',knn),('SVM',svm),('DTree',dtree)],[1,1,1],['nb_of_pixels_per_segment'])
-train_ensemble([('KNN',knn),('SVM',svm)],[1,1],['nb_of_pixels_per_segment'],None)
+train_ensemble([('KNN',knn),('SVM',svm),('DTree',dtree)],[0.5,2,0.2],['nb_of_pixels_per_segment'],None)

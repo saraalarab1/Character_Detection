@@ -102,7 +102,7 @@ def train_svm(features, model_version=None):
     print("Test Score: {}".format(test_score))
     print(conf_rep)
     return eval_accuracy, model, test_score, conf_rep
-secondLayerLetters = 'uUvVxXwWyYzZ0oO'
+secondLayerLetters = 'uUvVzZxXkKjJnNmM0OoPpSsCcYy'
 
 def get_input_output_labels(features):
     with open('data.json', 'r') as f: 
@@ -110,16 +110,16 @@ def get_input_output_labels(features):
         x = []
         y = []
         for i in data.keys():
-            for feature in features:
-                features_arr = []
-                # if data[i]['label'] in secondLayerLetters:
+            if data[i]['label'] in secondLayerLetters:
                 for feature in features:
-                    arr = data[i][feature]
-                    if type(arr) != list:
-                        arr = [arr]
-                    features_arr.extend(arr)
+                    features_arr = []
+                    for feature in features:
+                        arr = data[i][feature]
+                        if type(arr) != list:
+                            arr = [arr]
+                        features_arr.extend(arr)
                 x.append(features_arr)
-            y.append(data[i]['label_2'])
+                y.append(data[i]['label_2'])
     return (x,y)
 
 train_svm(['nb_of_pixels_per_segment'])

@@ -5,8 +5,8 @@ from resizing import gray_to_black
 import json
 from csv import reader
 from features import horizontal_histogram_projection, horizontal_line_intersection, horizontal_ratio, horizontal_symmetry, nb_of_pixels_per_segment, vertical_histogram_projection, vertical_line_intersection, vertical_ratio, vertical_symmetry
-WIDTH = 40
-HEIGHT = 40
+WIDTH = 120
+HEIGHT = 120
 import numpy as np
 
 def convert_csv_to_json():
@@ -49,25 +49,25 @@ def pre_process_images():
                 image = image[current_variables[1]:current_variables[3], current_variables[0]:current_variables[2]] 
             # # resize image
             print(image_name)
-            # image = cv.resize(image, dim, interpolation = cv.INTER_AREA)
-            # image = gray_to_black(image)
-            # cv.imwrite('processed_images/'+image_name, image)
-            if image_name in data:
-                data[image_name]['aspect_ratio'] = image.shape[1]/image.shape[0]
-    print('dumping data')
-    with open('data.json', 'w') as output:
-           json.dump(data, output, ensure_ascii=False, indent = 4)
+            image = cv.resize(image, dim, interpolation = cv.INTER_AREA)
+            image = gray_to_black(image)
+            cv.imwrite('processed_images_2/'+image_name, image)
+    #         if image_name in data:
+    #             data[image_name]['aspect_ratio'] = image.shape[1]/image.shape[0]
+    # print('dumping data')
+    # with open('data.json', 'w') as output:
+    #        json.dump(data, output, ensure_ascii=False, indent = 4)
 
 def extract_features_for_training_data():
     data = dict()
     with open('data.json', 'r') as f:
         data = json.load(f)
         for i in data.keys():
-            if not os.path.exists('processed_images/' + i):
+            if not os.path.exists('processed_images_2/' + i) or i not in data:
                 continue
             print('processed_images/' + i)
 
-            image= cv.imread('processed_images/' + i)
+            image= cv.imread('processed_images_2/' + i)
             # aspect_ratio_image = cv.imread('Img_2/' + i)
             # data[i]['aspect_ratio'] = aspect_ratio(aspect_ratio_image)
 
@@ -85,12 +85,10 @@ def extract_features_for_training_data():
            json.dump(data, output, ensure_ascii=False, indent = 4)
 
 
-
-
 # pre_process_images()
 # convert_csv_to_json()
 
-# extract_features_for_training_data()
+extract_features_for_training_data()
 # post_skeletonization()
 
 # create_json()
@@ -128,4 +126,4 @@ def get_total_nb_of_pixels():
             with open('data.json', 'w') as output:
                 json.dump(data, output, ensure_ascii=False, indent = 4) 
 
-get_total_nb_of_pixels()
+# get_total_nb_of_pixels()

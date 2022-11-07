@@ -111,7 +111,6 @@ def get_input_output_labels(features):
         for i in data.keys():
             for feature in features:
                 features_arr = []
-                # if data[i]['label'] in secondLayerLetters:
                 for feature in features:
                     arr = data[i][feature]
                     if type(arr) != list:
