@@ -8,7 +8,7 @@ from matplotlib.style import available
 import yaml
 import cv2 as cv
 from features import get_character_features
-from features import pre_process_image
+from pre_processing import pre_process_image
 from our_model import train_knn
 from svm_case_classifier import train_svm
 from decision_tree_ensemble_classifier import train_dt
@@ -77,14 +77,18 @@ def train_new_model():
 
         estimators=[]
         weights = []
+        ensemble = False
+        if yaml_info['prediction_model'] == 'pretrained_ensemble_model.pkl':
+            ensemble = True
+
         for model in models:
             print(model)
             if model['name'] == 'knn':
-                eval_accuracy, model_classifier, test_score, conf_rep = train_knn(features, model_version)
+                eval_accuracy, model_classifier, test_score, conf_rep = train_knn(features, model_version,ensemble=ensemble)
             if model['name'] == 'svm':
-                eval_accuracy, model_classifier, test_score, conf_rep = train_svm(features, model_version)
+                eval_accuracy, model_classifier, test_score, conf_rep = train_svm(features, model_version,ensemble=ensemble)
             if model['name'] == 'dt':
-                eval_accuracy, model_classifier, test_score, conf_rep = train_dt(features, model_version)
+                eval_accuracy, model_classifier, test_score, conf_rep = train_dt(features, model_version,ensemble=ensemble)
 
             estimators.append((model['name'],model_classifier))
             weights.append(int(model['weight']))

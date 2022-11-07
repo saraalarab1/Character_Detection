@@ -10,7 +10,7 @@ from sklearn.metrics import classification_report, accuracy_score
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.preprocessing import StandardScaler
 
-def train(x, y, testing_size, model_version):
+def train(x, y, testing_size, model_version,for_ensemble):
 
     X0_train, X_test, Y0_train, Y_test = train_test_split(x,y,test_size=testing_size, random_state=7)
     #Scaler is needed to scale all the inputs to a similar range
@@ -28,13 +28,6 @@ def train(x, y, testing_size, model_version):
 
     accuracys=[]
 
-    #Evaluation using cross validation
-    # LeavePOut
-    # lpo = LeavePOut(p=2)
-    # KFold
-    # kf = KFold(n_splits=10)
-    # kf.get_n_splits(X0_train)
-    # StratifiedKFold
     skf = StratifiedKFold(n_splits=5, random_state=None)
     skf.get_n_splits(X0_train, Y0_train)
     for train_index, test_index in skf.split(X0_train, Y0_train):
@@ -54,16 +47,19 @@ def train(x, y, testing_size, model_version):
     model_name='pretrained_dtree_model.pkl'
     if model_version:
         pickle.dump(model, open(f"models/{model_version}/{model_name}", 'wb'))
+    elif for_ensemble:
+        pickle.dump(model, open(f"models/dt_ensemble/{model_name}", 'wb'))
     else:
         pickle.dump(model, open(f"models/dt/{model_name}", 'wb'))
 
     return eval_accuracy, model, X_test, Y_test
 
 
-def test(X_test, Y_test, model_version):
-
-    if model_version:
+def test(X_test, Y_test, model_version,for_ensemble):
+    if model_version: 
         model = pickle.load(open(f'models/{model_version}/pretrained_dtree_model.pkl', 'rb' ))
+    elif for_ensemble:
+        model = pickle.load(open('models/dt_ensemble/pretrained_dtree_model.pkl', 'rb' ))
     else:
         model = pickle.load(open('models/dt/pretrained_dtree_model.pkl', 'rb' ))
 
@@ -75,11 +71,11 @@ def test(X_test, Y_test, model_version):
 
     return test_score, classification_rep
 
-def train_dt(features, model_version=None):
+def train_dt(features, model_version=None, for_ensemble = False):
     print('training')
     x,y = get_input_output_labels(features)
-    eval_accuracy, model, X_test, Y_test = train(x, y, testing_size=0.05, model_version = model_version)
-    test_score, conf_rep = test(X_test, Y_test, model_version = model_version)
+    eval_accuracy, model, X_test, Y_test = train(x, y, testing_size=0.05, model_version = model_version , for_ensemble=for_ensemble)
+    test_score, conf_rep = test(X_test, Y_test, model_version = model_version,for_ensemble=for_ensemble)
     print("Evaluation Score: {}".format(eval_accuracy))
     print("Test Score: {}".format(test_score))
     print(conf_rep)

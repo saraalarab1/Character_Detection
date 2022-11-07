@@ -1,13 +1,10 @@
 import json
 import numpy as np 
 import pickle
-# from skimage import feature
-from tqdm import tqdm
 from pandas import DataFrame as df
 from sklearn import metrics
-from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.model_selection import LeavePOut, StratifiedKFold, KFold #for P-cross validation
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import  StratifiedKFold
 from sklearn.metrics import classification_report, accuracy_score
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
@@ -22,6 +19,8 @@ def test(X_test,Y_test, features):
     svm_case = pickle.load(open(f'models/svm_case/pretrained_svm_model.pkl', 'rb' ))
 
     X_test_features = get_features(X_test, Y_test, features)
+    X_test_features_case = get_features(X_test, Y_test, features=['nb_of_pixels_per_segment','aspect_ratio'])
+
 
     Y_pred = ensemble.predict(X_test_features)
     y_pred_proba = ensemble.predict_proba(X_test_features)
@@ -50,7 +49,7 @@ def test(X_test,Y_test, features):
                     continue
                 
                 # classify highest probability prediction to upper or lower based on svm model
-                new_prediction = svm_case.predict([X_test_features[i]])[0]
+                new_prediction = svm_case.predict([X_test_features_case[i]])[0]
                 if new_prediction == 'lower':
                     print('new prediction: ' + Y_pred[i].lower())
                 else:
@@ -62,9 +61,11 @@ def test(X_test,Y_test, features):
                 print('-----------------------------------------')
 
     classification_rep = classification_report(Y_test, Y_pred,zero_division=True)
-    print(classification_rep)
     score = metrics.accuracy_score(Y_test, Y_pred)
+    print(classification_rep)
     print("After Score: ", score)
+
+
 
     cm = confusion_matrix(Y_pred, Y_test)
     labels=['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']   
@@ -91,7 +92,7 @@ def sort_index(lst, rev=True):
 def test_model(features):
     print('training')
     x,y = get_input_output_labels()
-    X0_train, X_test, Y0_train, Y_test = train_test_split(x,y,test_size=0.8, random_state=7)
+    X0_train, X_test, Y0_train, Y_test = train_test_split(x,y,test_size=0.2, random_state=7)
     test(X_test,Y_test, features)
 
     
@@ -128,4 +129,4 @@ def get_input_output_labels():
     return (x,y)
 
 
-test_model(features=['nb_of_pixels_per_segment'])
+test_model(features=['nb_of_pixels_per_segment','horizontal_line_intersection','vertical_line_intersection'])

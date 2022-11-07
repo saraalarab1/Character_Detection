@@ -4,8 +4,8 @@ import cv2 as cv
 import json
 from csv import reader
 from features import horizontal_histogram_projection, horizontal_line_intersection, horizontal_ratio, horizontal_symmetry, nb_of_pixels_per_segment, vertical_histogram_projection, vertical_line_intersection, vertical_ratio, vertical_symmetry
-WIDTH = 120
-HEIGHT = 120
+WIDTH = 80
+HEIGHT = 80
 import numpy as np
 
 def convert_csv_to_json():
@@ -21,6 +21,63 @@ def convert_csv_to_json():
                 training_dataset[row[0]] = {"label": row[1]}
     with open('data.json', 'w', encoding='utf-8') as f:
         json.dump(training_dataset, f, ensure_ascii=False, indent=4)
+
+def pre_process_image(image):
+    gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+    thresh_image = cv.threshold(gray_image, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
+    contours = cv.findContours(thresh_image, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    contours = contours[0] if len(contours) == 2 else contours[1]
+    max_area = 0
+    current_variables =  (0,0,0,0)
+    dim = (WIDTH, HEIGHT)
+    # choose bounding rectangle for character with biggest area
+    letters = []
+    all_contours = []
+    for countour in contours:
+        x,y,w,h = cv.boundingRect(countour)
+        # if w*h > max_area:
+        #     max_area = w*h
+        current_variables = (x,y,x+w,y+h)
+        all_contours.append(current_variables)
+        # if current_variables != (0,0,0,0):
+        # # change image dimensions to minimum bounding rectangle
+        #     current_image = image[current_variables[1]:current_variables[3], current_variables[0]:current_variables[2]]
+        #     current_image = cv.resize(current_image, dim, interpolation = cv.INTER_AREA)
+        #     current_image = gray_to_black(current_image)
+        #     letters.append(current_image)
+    new_countours = []
+    for i in range(len(all_contours)):
+        if i >= len(all_contours):
+            break
+        x1,y1, x1_, y1_ = all_contours[i]
+        found = False
+        print(i)
+        for j in range(i+1, len(all_contours)):
+            x2, y2, x2_, y2_ = all_contours[j]
+            print(x1, x1_)
+            print(x2, x2_)
+            print('---------------------')
+            if (x1 >x2 and x1 < x2_) or (x1_<x2_ and x1_ >x2) or (x2 > x1 and x2 < x1_) or (x2_ < x1_ and x2_ > x1):
+                new_countours.append((min(x1,x2), min(y1, y2), max(x1_, x2_), max(y1_, y2_)))
+                found = True
+                print('found one')
+                all_contours.pop(j)
+                break
+        if not found:
+            new_countours.append(all_contours[i])
+    # current_variables = new_countours[0]
+    # cv.imshow('image', image[current_variables[1]:current_variables[3], current_variables[0]:current_variables[2]])
+    # cv.waitKey(0)
+    # # resize image
+    new_countours.sort(key=lambda x: x[0], reverse=False)
+    for contour in new_countours: 
+        current_variables = contour
+        current_image = image[current_variables[1]:current_variables[3], current_variables[0]:current_variables[2]]
+        current_image = cv.resize(current_image, dim, interpolation = cv.INTER_AREA)
+        current_image = gray_to_black(current_image)
+        letters.append(current_image)
+
+    return letters
 
 def pre_process_images():
     images_dir = os.listdir('Img')
@@ -151,8 +208,8 @@ def gray_to_black(image):
 
 
 extract_features_for_training_data()
-# get_total_nb_of_pixels()
 # pre_process_images()
+# get_total_nb_of_pixels()
 # convert_csv_to_json()
 # post_skeletonization()
 # create_json()

@@ -24,7 +24,7 @@ from sklearn.model_selection import LeavePOut #for P-cross validation
 from sklearn.metrics import classification_report, accuracy_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import confusion_matrix, plot_confusion_matrix
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, plot_confusion_matrix
 
 def train(X, y, estimators, weights, model_version, testing_size):
 
@@ -33,8 +33,13 @@ def train(X, y, estimators, weights, model_version, testing_size):
     ensemble=VotingClassifier(estimators=estimators, voting='soft', weights=weights)
     ensemble.fit(X0_train, Y0_train)
     
-    predictions = ensemble.predict(X_test)
-    eval_accuracy = accuracy_score(predictions, y_test)
+    Y_pred = ensemble.predict(X_test)
+    eval_accuracy = accuracy_score(Y_pred, y_test)
+
+    cm = confusion_matrix(Y_pred, y_test)
+    labels=['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']   
+    cmd = ConfusionMatrixDisplay(confusion_matrix=cm,display_labels=labels)
+    cmd.plot()
 
     #save the pretrained model:
     model_name='pretrained_ensemble_model.pkl'
@@ -65,26 +70,32 @@ def test(X_train, Y_train, X_test, Y_test,model_version):
 def train_ensemble(estimators, weights,features, model_version=None):
     print('training')
     X,y = get_input_output_labels(features)
-    eval_accuracy, model, X_train, Y_train, X_test, Y_test = train(X, y, estimators, weights,model_version= model_version, testing_size=0.2,)
+    eval_accuracy, model, X_train, Y_train, X_test, Y_test = train(X, y, estimators, weights,model_version= model_version, testing_size=0.1,)
     test_score, conf_rep = test(X_train, Y_train, X_test, Y_test, model_version)
+    print(conf_rep)
     print("Evaluation Score: {}".format(eval_accuracy))
     print("Test Score: {}".format(test_score))
-    print(conf_rep)
     return eval_accuracy, model, test_score, conf_rep
 
 
 def get_input_output_labels(features):
     with open('data.json', 'r') as f: 
         data = json.load(f)
-        X = []
+        x = []
         y = []
         for i in data.keys():
             for feature in features:
-                X.append(data[i][feature])
+                features_arr = []
+                for feature in features:
+                    arr = data[i][feature]
+                    if type(arr) != list:
+                        arr = [arr]
+                    features_arr.extend(arr)
+            x.append(features_arr)
             y.append(data[i]['label'])
-    return (X,y)
+    return (x,y)
 
 knn = pickle.load(open(f'models/knn_ensemble/pretrained_knn_model.pkl', 'rb' ))
 svm = pickle.load(open(f'models/svm_ensemble/pretrained_svm_model.pkl', 'rb' ))
 
-train_ensemble([('KNN',knn),('SVM',svm)],[0.5,2],['nb_of_pixels_per_segment'])
+train_ensemble([('KNN',knn),('SVM',svm)],[1,1],['nb_of_pixels_per_segment','horizontal_line_intersection','vertical_line_intersection'])

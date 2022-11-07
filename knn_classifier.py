@@ -102,11 +102,11 @@ def test(X_train, Y_train, X_test, Y_test, model_version, for_ensemble):
 def train_knn(features, model_version=None, for_ensemble = False):
     print('training')
     x,y = get_input_output_labels(features)
-    eval_accuracy, model, X_train, Y_train, X_test, Y_test = train(x, y, testing_size=0.25, max_range_k=100, model_version = model_version, for_ensemble=for_ensemble)
+    eval_accuracy, model, X_train, Y_train, X_test, Y_test = train(x, y, testing_size=0.2, max_range_k=50, model_version = model_version, for_ensemble=for_ensemble)
     test_score, conf_rep = test(X_train, Y_train, X_test, Y_test, model_version=model_version,for_ensemble = for_ensemble)
+    print(conf_rep)
     print("Evaluation Score: {}".format(eval_accuracy))
     print("Test Score: {}".format(test_score))
-    print(conf_rep)
     return eval_accuracy, model, test_score, conf_rep
     
 def get_input_output_labels(features):
@@ -122,8 +122,8 @@ def get_input_output_labels(features):
                     if type(arr) != list:
                         arr = [arr]
                     features_arr.extend(arr)
-                x.append(features_arr)
+            x.append(features_arr)
             y.append(data[i]['label'])
     return (x,y)
 
-train_knn(['nb_of_pixels_per_segment'], for_ensemble=True)
+train_knn(['nb_of_pixels_per_segment','horizontal_line_intersection','vertical_line_intersection'], for_ensemble=True)
