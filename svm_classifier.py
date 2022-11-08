@@ -123,7 +123,7 @@ def save_model(eval_accuracy, test_score, conf_rep, for_ensemble, features ):
     yaml_info['prediction_model'] = "pretrained_svm_model.pkl"
     yaml_info['features'] = features
     yaml_info['training'] = 'completed'
-    yaml_info['name'] = 'svm'
+    yaml_info['name'] = 'pretrained_svm_model.pkl'
 
     model_version="svm"
     if for_ensemble:
@@ -157,4 +157,4 @@ def get_info(conf_rep):
 
     return label_data
 
-# train_svm(['nb_of_pixels_per_segment','horizontal_line_intersection','vertical_line_intersection'],for_ensemble=True)
+# train_svm(['nb_of_pixels_per_segment','horizontal_line_intersection','vertical_line_intersection'],for_ensemble=False)

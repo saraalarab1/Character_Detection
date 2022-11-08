@@ -7,12 +7,12 @@ from flask import Flask, jsonify, render_template, request, redirect, url_for
 from matplotlib.style import available
 import yaml
 import cv2 as cv
-from features import get_character_features
+from features import get_character_features, get_case_features
 from pre_processing import pre_process_image
-from our_model import test_model
+from our_model import predict_model
 from knn_classifier import train_knn
-from svm_case_classifier import train_svm
-from decision_tree_ensemble_classifier import train_dt
+from svm_classifier import train_svm
+from decision_tree_classifier import train_dt
 from flask_cors import CORS
 import base64
 from PIL import Image
@@ -38,10 +38,14 @@ def get_available_models():
     models = os.listdir('models')
     available_models = dict()
     for model in models:
-        if model == "our_model":
+        if model == "svm_case" or model == "knn_ensemble" or model == "svm_ensemble":
+            continue
+        if len(os.listdir('models/'+model)) <2:
             continue
         yaml_model_path = os.path.join('models', model, 'model.yaml')
         yaml_info = read_yaml(yaml_model_path)
+        if 'features' not in yaml_info:
+            yaml_info['features']=[]
         available_models[model] = yaml_info
     response = jsonify(models=models, available_models=available_models)
     response.headers.add("Access-Control-Allow-Origin", "*")
@@ -70,7 +74,7 @@ def train_new_model():
         if len(models)> 1:
             yaml_info['prediction_model'] = 'pretrained_ensemble_model.pkl'
         else:
-            yaml_info['prediction_model'] = models[0]['name']
+            yaml_info['prediction_model'] = 'pretrained_'+models[0]['name']+'_model.pkl'
 
         yaml_info['features'] = features
         yaml_info['training'] = 'running'
@@ -87,11 +91,11 @@ def train_new_model():
         for model in models:
             print(model)
             if model['name'] == 'knn':
-                eval_accuracy, model_classifier, test_score, conf_rep = train_knn(features, model_version,ensemble=ensemble)
+                eval_accuracy, model_classifier, test_score, conf_rep = train_knn(features, model_version,for_ensemble=ensemble)
             if model['name'] == 'svm':
-                eval_accuracy, model_classifier, test_score, conf_rep = train_svm(features, model_version,ensemble=ensemble)
+                eval_accuracy, model_classifier, test_score, conf_rep = train_svm(features, model_version,for_ensemble=ensemble)
             if model['name'] == 'dt':
-                eval_accuracy, model_classifier, test_score, conf_rep = train_dt(features, model_version,ensemble=ensemble)
+                eval_accuracy, model_classifier, test_score, conf_rep = train_dt(features, model_version,for_ensemble=ensemble)
 
             estimators.append((model['name'],model_classifier))
             weights.append(int(model['weight']))
@@ -131,20 +135,27 @@ def predict():
         #     cv.imshow('image', letter)
         #     cv.waitKey(0)
         print('Number Of Letters: '+ str(len(letters)))
+        print(model_version)
         yaml_path = os.path.join(f"models/{model_version}", "model.yaml")
         with open(yaml_path, 'r') as f:
             yaml_info = yaml.safe_load(f)
-            print(yaml_info)
             features = yaml_info['features']
             character_features = get_character_features(features, letters)
-            model_name = yaml_info['prediction_model']
-            model = pickle.load(open(os.path.join(f"models/{model_version}", model_name), 'rb' ))
-            for character in character_features:
-                prediction = model.predict(character)
+            case_features = get_case_features(letters)
+            if model_version != 'topPerformer':
+                model_name = yaml_info['prediction_model']
+                model = pickle.load(open(os.path.join(f"models/{model_version}", model_name), 'rb' ))
+            word = ''
+            for i in range(len(character_features)):
+                if model_version == 'topPerformer':
+                    prediction = predict_model(character_features[i], case_features[i])
+                else:
+                    prediction = model.predict(character_features[i])
                 print(prediction)
+                word = word + prediction[0]
             # print(prediction)
         #     return render_template("predict.html")
-    response = jsonify(request.json)
+    response = jsonify(word = word)
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response
 

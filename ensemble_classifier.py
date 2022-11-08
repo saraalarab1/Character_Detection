@@ -59,9 +59,9 @@ def test(X_train, Y_train, X_test, Y_test,model_version):
         
     model.fit(X_train, Y_train)
     y_pred = model.predict(X_test)
-    confusion_matrix(y_pred, Y_test)
-    plot_confusion_matrix(model, X_test, Y_test, cmap=plt.cm.Blues)
-    plt.show()
+    # confusion_matrix(y_pred, Y_test)
+    # plot_confusion_matrix(model, X_test, Y_test, cmap=plt.cm.Blues)
+    # plt.show()
     classification_rep = classification_report(Y_test, y_pred,zero_division=True)
     test_score = metrics.accuracy_score(Y_test, y_pred)
 
@@ -103,7 +103,7 @@ def save_model(eval_accuracy, test_score, conf_rep, features ):
     yaml_info['prediction_model'] = "pretrained_ensemble_model.pkl"
     yaml_info['features'] = features
     yaml_info['training'] = 'completed'
-    yaml_info['name'] = 'ensemble'
+    yaml_info['name'] = 'pretrained_ensemble_model.pkl'
 
     model_version="ensemble"
 
@@ -135,7 +135,7 @@ def get_info(conf_rep):
 
     return label_data
 
-knn = pickle.load(open(f'models/knn_ensemble/pretrained_knn_model.pkl', 'rb' ))
-svm = pickle.load(open(f'models/svm_ensemble/pretrained_svm_model.pkl', 'rb' ))
+# knn = pickle.load(open(f'models/knn_ensemble/pretrained_knn_model.pkl', 'rb' ))
+# svm = pickle.load(open(f'models/svm_ensemble/pretrained_svm_model.pkl', 'rb' ))
 
 # train_ensemble([('KNN',knn),('SVM',svm)],[1,1],['nb_of_pixels_per_segment','horizontal_line_intersection','vertical_line_intersection'])

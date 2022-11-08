@@ -236,8 +236,7 @@ ensemble:
     - 0.8
     - 0.8
     - 0.8
-  eval_accuracy: 0.7987616099071208
-  test_score: 0.7987616099071208
+
   weight: 1
 features:
 - nb_of_pixels_per_segment
@@ -246,3 +245,5 @@ features:
 name: ensemble
 prediction_model: pretrained_ensemble_model.pkl
 training: completed
+eval_accuracy: 80.1
+test_score: 80.2

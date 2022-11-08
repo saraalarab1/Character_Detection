@@ -65,7 +65,7 @@ def train(X, Y, testing_size, for_ensemble,model_version, optimal_k=True, max_ra
         X_train, X_eval = pd.DataFrame(X0_train).iloc[train_index], pd.DataFrame(X0_train).iloc[test_index]
         Y_train, y_eval = pd.DataFrame(Y0_train).iloc[train_index], pd.DataFrame(Y0_train).iloc[test_index]
     
-        model.fit(X_train, Y_train)
+        model.fit(X_train, Y_train.values.ravel())
         predictions = model.predict(X_eval)
         score = accuracy_score(predictions, y_eval)
         accuracys.append(score)
@@ -117,6 +117,7 @@ def get_input_output_labels(features):
         data = json.load(f)
         x = []
         y = []
+        features_arr = []
         for i in data.keys():
             for feature in features:
                 features_arr = []
@@ -132,10 +133,10 @@ def get_input_output_labels(features):
 def save_model(eval_accuracy, test_score, conf_rep, for_ensemble, features ):
     yaml_info = dict()
 
-    yaml_info['prediction_model'] = "pretrained_ensemble_model.pkl"
+    yaml_info['prediction_model'] = "pretrained_knn_model.pkl"
     yaml_info['features'] = features
     yaml_info['training'] = 'completed'
-    yaml_info['name'] = 'knn'
+    yaml_info['name'] = 'pretrained_knn_model.pkl'
 
     model_version="knn"
     if for_ensemble:
@@ -169,4 +170,4 @@ def get_info(conf_rep):
 
     return label_data
 
-# train_knn(['nb_of_pixels_per_segment','horizontal_line_intersection','vertical_line_intersection'], for_ensemble=True)
+# train_knn(['nb_of_pixels_per_segment','horizontal_line_intersection','vertical_line_intersection'], for_ensemble=False)

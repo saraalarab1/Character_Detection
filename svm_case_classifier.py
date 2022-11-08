@@ -84,7 +84,7 @@ def test(X_test, Y_test,model_version):
 
     return test_score, classification_rep
 
-def train_svm(features, model_version=None):
+def train_svm_case(features, model_version=None):
     print('training')
     x,y = get_input_output_labels(features)
     eval_accuracy, model, X_test, Y_test = train(x, y, testing_size=0.2, model_version = model_version)
@@ -120,7 +120,7 @@ def save_model(eval_accuracy, test_score, conf_rep, features ):
     yaml_info['prediction_model'] = "pretrained_svm_model.pkl"
     yaml_info['features'] = features
     yaml_info['training'] = 'completed'
-    yaml_info['name'] = 'svm_case'
+    yaml_info['name'] = 'pretrained_svm_model.pkl'
 
     model_version="svm_case"
 
