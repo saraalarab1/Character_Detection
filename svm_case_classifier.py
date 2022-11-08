@@ -9,6 +9,8 @@ from sklearn.model_selection import  train_test_split
 from sklearn.metrics import classification_report, accuracy_score
 from sklearn.svm import SVC
 from sklearn.preprocessing import StandardScaler
+import os
+import yaml
 
 secondLayerLetters = 'uUvVzZxXkKjJnNmM0OoPpSsCcYy'
 
@@ -90,6 +92,8 @@ def train_svm(features, model_version=None):
     print(conf_rep)
     print("Evaluation Score: {}".format(eval_accuracy))
     print("Test Score: {}".format(test_score))
+    if model_version is None:
+        save_model(eval_accuracy, test_score, conf_rep ,features)
     return eval_accuracy, model, test_score, conf_rep
 
 def get_input_output_labels(features):
@@ -110,4 +114,46 @@ def get_input_output_labels(features):
                 y.append(data[i]['label_2'])
     return (x,y)
 
-# train_svm(['nb_of_pixels_per_segment','aspect_ratio'])
+def save_model(eval_accuracy, test_score, conf_rep, features ):
+    yaml_info = dict()
+
+    yaml_info['prediction_model'] = "pretrained_svm_model.pkl"
+    yaml_info['features'] = features
+    yaml_info['training'] = 'completed'
+    yaml_info['name'] = 'svm_case'
+
+    model_version="svm_case"
+
+    yaml_path = os.path.join("models",model_version, 'model.yaml')
+    with open(yaml_path, 'w') as output:
+        yaml.dump(yaml_info, output)
+
+        yaml_info['svm'] = dict()
+        yaml_info['svm']['eval_accuracy'] = float(eval_accuracy)
+        yaml_info['svm']['test_score'] = float(test_score)
+        yaml_info['svm']['conf_rep'] = get_info(conf_rep)
+        yaml_info['svm']['weight'] = 1
+
+    with open(yaml_path, 'w') as output:
+        yaml.dump(yaml_info, output)
+
+def get_info(conf_rep):
+    data = conf_rep.splitlines()[2:61]
+    # average_data =  conf_rep.splitlines()[62:65]
+    # average_data = " ".join(label_information.split())
+    # print(average_data)
+    label_data = []
+    for label_information in data:
+        label_information = " ".join(label_information.split())
+        label_information = label_information.split(" ")
+        if len(label_information) < 4:
+            continue
+        print(label_information[0])
+        print(label_information[1])
+        print(label_information[2])
+
+        label_data.append({label_information[0]:[label_information[1],label_information[2],label_information[3]]})
+
+    return label_data
+
+train_svm(['nb_of_pixels_per_segment','aspect_ratio'])

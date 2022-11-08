@@ -1,6 +1,6 @@
 
 import json
-
+import yaml
 import numpy as np 
 import cv2
 import pandas as pd
@@ -20,6 +20,7 @@ from sklearn.model_selection import LeavePOut #for P-cross validation
 from sklearn.metrics import classification_report, accuracy_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import StratifiedKFold
+
 
 sc = StandardScaler()
 
@@ -107,6 +108,8 @@ def train_knn(features, model_version=None, for_ensemble = False):
     print(conf_rep)
     print("Evaluation Score: {}".format(eval_accuracy))
     print("Test Score: {}".format(test_score))
+    if model_version is None:
+        save_model(eval_accuracy, test_score, conf_rep,for_ensemble ,features)
     return eval_accuracy, model, test_score, conf_rep
     
 def get_input_output_labels(features):
@@ -125,5 +128,45 @@ def get_input_output_labels(features):
             x.append(features_arr)
             y.append(data[i]['label'])
     return (x,y)
+
+def save_model(eval_accuracy, test_score, conf_rep, for_ensemble, features ):
+    yaml_info = dict()
+
+    yaml_info['prediction_model'] = "pretrained_ensemble_model.pkl"
+    yaml_info['features'] = features
+    yaml_info['training'] = 'completed'
+    yaml_info['name'] = 'knn'
+
+    model_version="knn"
+    if for_ensemble:
+        model_version = "knn_ensemble"
+
+    yaml_path = os.path.join("models",model_version, 'model.yaml')
+    with open(yaml_path, 'w') as output:
+        yaml.dump(yaml_info, output)
+
+        yaml_info['knn'] = dict()
+        yaml_info['knn']['eval_accuracy'] = float(eval_accuracy)
+        yaml_info['knn']['test_score'] = float(test_score)
+        yaml_info['knn']['conf_rep'] = get_info(conf_rep)
+        yaml_info['knn']['weight'] = 1
+
+    with open(yaml_path, 'w') as output:
+        yaml.dump(yaml_info, output)
+
+def get_info(conf_rep):
+    data = conf_rep.splitlines()[2:61]
+    # average_data =  conf_rep.splitlines()[62:65]
+    # average_data = " ".join(label_information.split())
+    # print(average_data)
+    label_data = []
+    for label_information in data:
+        label_information = " ".join(label_information.split())
+        label_information = label_information.split(" ")
+        if len(label_information) < 4:
+            continue
+        label_data.append({label_information[0]:[float(label_information[1]),float(label_information[2]),float(label_information[3])]})
+
+    return label_data
 
 # train_knn(['nb_of_pixels_per_segment','horizontal_line_intersection','vertical_line_intersection'], for_ensemble=True)
