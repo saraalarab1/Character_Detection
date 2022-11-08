@@ -38,6 +38,8 @@ def get_available_models():
     models = os.listdir('models')
     available_models = dict()
     for model in models:
+        if model == "our_model":
+            continue
         yaml_model_path = os.path.join('models', model, 'model.yaml')
         yaml_info = read_yaml(yaml_model_path)
         available_models[model] = yaml_info
