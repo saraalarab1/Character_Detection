@@ -98,4 +98,4 @@ def get_input_output_labels(features):
 knn = pickle.load(open(f'models/knn_ensemble/pretrained_knn_model.pkl', 'rb' ))
 svm = pickle.load(open(f'models/svm_ensemble/pretrained_svm_model.pkl', 'rb' ))
 
-train_ensemble([('KNN',knn),('SVM',svm)],[1,1],['nb_of_pixels_per_segment','horizontal_line_intersection','vertical_line_intersection'])
+# train_ensemble([('KNN',knn),('SVM',svm)],[1,1],['nb_of_pixels_per_segment','horizontal_line_intersection','vertical_line_intersection'])

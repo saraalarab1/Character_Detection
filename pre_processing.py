@@ -207,7 +207,7 @@ def gray_to_black(image):
     return image
 
 
-extract_features_for_training_data()
+# extract_features_for_training_data()
 # pre_process_images()
 # get_total_nb_of_pixels()
 # convert_csv_to_json()

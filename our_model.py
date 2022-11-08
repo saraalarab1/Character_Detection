@@ -129,4 +129,4 @@ def get_input_output_labels():
     return (x,y)
 
 
-test_model(features=['nb_of_pixels_per_segment','horizontal_line_intersection','vertical_line_intersection'])
+# test_model(features=['nb_of_pixels_per_segment','horizontal_line_intersection','vertical_line_intersection'])

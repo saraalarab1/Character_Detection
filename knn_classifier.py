@@ -126,4 +126,4 @@ def get_input_output_labels(features):
             y.append(data[i]['label'])
     return (x,y)
 
-train_knn(['nb_of_pixels_per_segment','horizontal_line_intersection','vertical_line_intersection'], for_ensemble=True)
+# train_knn(['nb_of_pixels_per_segment','horizontal_line_intersection','vertical_line_intersection'], for_ensemble=True)

@@ -110,4 +110,4 @@ def get_input_output_labels(features):
                 y.append(data[i]['label_2'])
     return (x,y)
 
-train_svm(['nb_of_pixels_per_segment','aspect_ratio'])
+# train_svm(['nb_of_pixels_per_segment','aspect_ratio'])
