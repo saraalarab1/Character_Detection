@@ -1,0 +1,15 @@
+prediction_model: pretrained_dt_model.pkl
+features:
+  - nb_of_pixels_per_segment
+  - aspect_ratio
+  - horizontal_ratio
+  - vertical_symmetry
+  - horizontal_symmetry
+  - horizontal_line_intersection
+  - vertical_line_intersection
+  - vertical_histogram_projection
+  - horizontal_histogram_projection
+  - percentage_of_pixels_on_horizontal_center
+  - percentage_of_pixels_on_vertical_center
+training_accuracy: 82.4
+testing_accuracy: 78.5

@@ -132,4 +132,4 @@ def get_input_output_labels(features):
                 y.append(data[i]['label_2'])
     return (x,y)
 
-train_knn(['nb_of_black_pixels', 'aspect_ratio'])
+# train_knn(['nb_of_black_pixels', 'aspect_ratio'])

@@ -100,4 +100,4 @@ def get_input_output_labels(features):
             y.append(data[i]['label'])
     return (x,y)
 
-train_dt(['nb_of_pixels_per_segment'])
+# train_dt(['nb_of_pixels_per_segment'])

@@ -104,4 +104,4 @@ svm = pickle.load(open(f'models/svm/pretrained_svm_model.pkl', 'rb' ))
 dtree = pickle.load(open(f'models/dt/pretrained_dtree_model.pkl', 'rb' ))
 
 # train_ensemble([('KNN',knn),('SVM',svm),('DTree',dtree)],[1,1,1],['nb_of_pixels_per_segment'])
-train_ensemble([('KNN',knn),('SVM',svm)],[1,1],['nb_of_pixels_per_segment'])
+# train_ensemble([('KNN',knn),('SVM',svm)],[1,1],['nb_of_pixels_per_segment'])
