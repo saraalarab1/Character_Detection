@@ -129,7 +129,7 @@ def get_input_output_labels(features):
                         arr = [arr]
                     features_arr.extend(arr)
                 x.append(features_arr)
-                y.append(data[i]['label_2'])
+                y.append(data[i]['label'])
     return (x,y)
 
-# train_knn(['nb_of_black_pixels', 'aspect_ratio'])
+# train_knn(['nb_of_pixels_per_segment'])
