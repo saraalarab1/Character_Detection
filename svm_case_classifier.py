@@ -148,10 +148,6 @@ def get_info(conf_rep):
         label_information = label_information.split(" ")
         if len(label_information) < 4:
             continue
-        print(label_information[0])
-        print(label_information[1])
-        print(label_information[2])
-
         label_data.append({label_information[0]:[label_information[1],label_information[2],label_information[3]]})
 
     return label_data

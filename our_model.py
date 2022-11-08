@@ -8,6 +8,8 @@ from sklearn.model_selection import  StratifiedKFold
 from sklearn.metrics import classification_report, accuracy_score
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
+import os
+import yaml
 
 
 printable = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
@@ -61,9 +63,9 @@ def test(X_test,Y_test, features):
                 print('-----------------------------------------')
 
     classification_rep = classification_report(Y_test, Y_pred,zero_division=True)
-    score = metrics.accuracy_score(Y_test, Y_pred)
+    test_score = metrics.accuracy_score(Y_test, Y_pred)
     print(classification_rep)
-    print("After Score: ", score)
+    print("After Score: ", test_score)
 
 
 
@@ -83,6 +85,8 @@ def test(X_test,Y_test, features):
     plt.ylabel('True')
     plt.show()
 
+    return classification_rep, test_score
+
 
 def sort_index(lst, rev=True):
     index = range(len(lst))
@@ -93,8 +97,8 @@ def test_model(features):
     print('training')
     x,y = get_input_output_labels()
     X0_train, X_test, Y0_train, Y_test = train_test_split(x,y,test_size=0.2, random_state=7)
-    test(X_test,Y_test, features)
-
+    conf_rep, test_score = test(X_test,Y_test, features)
+    save_model(test_score, conf_rep ,features)
     
 def get_features(x, y, features, labels = None):
     if labels == None: 
@@ -127,6 +131,42 @@ def get_input_output_labels():
             x.append(i)
             y.append(data[i]['label'])
     return (x,y)
+
+def save_model(test_score, conf_rep, features):
+    yaml_info = dict()
+
+    yaml_info['prediction_model'] = "pretrained_detection_model.pkl"
+    yaml_info['features'] = features
+    yaml_info['training'] = 'completed'
+    yaml_info['name'] = 'our_model'
+
+    model_version="our_model"
+
+    yaml_path = os.path.join("models",model_version, 'model.yaml')
+    with open(yaml_path, 'w') as output:
+        yaml.dump(yaml_info, output)
+
+        yaml_info['our_model'] = dict()
+        yaml_info['our_model']['test_score'] = float(test_score)
+        yaml_info['our_model']['conf_rep'] = get_info(conf_rep)
+
+    with open(yaml_path, 'w') as output:
+        yaml.dump(yaml_info, output)
+
+def get_info(conf_rep):
+    data = conf_rep.splitlines()[2:61]
+    # average_data =  conf_rep.splitlines()[62:65]
+    # average_data = " ".join(label_information.split())
+    # print(average_data)
+    label_data = []
+    for label_information in data:
+        label_information = " ".join(label_information.split())
+        label_information = label_information.split(" ")
+        if len(label_information) < 4:
+            continue
+        label_data.append({label_information[0]:[float(label_information[1]),float(label_information[2]),float(label_information[3])]})
+
+    return label_data
 
 
 # test_model(features=['nb_of_pixels_per_segment','horizontal_line_intersection','vertical_line_intersection'])
