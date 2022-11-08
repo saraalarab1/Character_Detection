@@ -1,23 +1,22 @@
 
-import statistics
+import json
 import cv2 as cv
 import numpy as np
-from resizing import gray_to_black
 MAX_COUNT_HORIZONTAL = 5
 MAX_COUNT_VERTICAL = 4
-WIDTH = 40
-HEIGHT = 40
+WIDTH = 80
+HEIGHT = 80
 
 def nb_of_pixels_per_segment(image, index):
     """
     Add definition
     """
     pixels_per_segment = []
-    for i in range(0, 40, index):
-        for j in range(0, 40, index):
+    for i in range(0, WIDTH, index):
+        for j in range(0, HEIGHT, index):
             total_pixels = 0
-            for k in range(0, min(40-i,index)):
-                for l in range(0, min(40-j,index)):
+            for k in range(0, min(WIDTH-i,index)):
+                for l in range(0, min(HEIGHT-j,index)):
                     if tuple(image[i+k][j+l])!=(255, 255, 255):
                         total_pixels = total_pixels + 1
             pixels_per_segment.append(total_pixels)
@@ -119,10 +118,6 @@ def vertical_histogram_projection(image):
         if i%4==0:
             smaller_vector.append(int(sum))
             sum=0
-    median = statistics.median(smaller_vector)
-    stdev = statistics.stdev(smaller_vector)
-    mean = statistics.mean(smaller_vector)
-    # return [median, mean, stdev]
     return smaller_vector
 
 def horizontal_histogram_projection(image):
@@ -136,13 +131,7 @@ def horizontal_histogram_projection(image):
         if i%4==0:
             smaller_vector.append(int(sum))
             sum=0
-    median = statistics.median(smaller_vector)
-    stdev = statistics.stdev(smaller_vector)
-    mean = statistics.mean(smaller_vector)
-    # return [median, mean, stdev]
     return smaller_vector
-
-
 
 def percentage_of_pixels_on_horizontal_center(image):
     """
@@ -164,19 +153,6 @@ def percentage_of_pixels_on_vertical_center(image):
             nb_of_pixels_at_vertical = nb_of_pixels_at_vertical + 1
         image[i][int(HEIGHT/2)] = (255, 0, 0)
     return nb_of_pixels_at_vertical/(total_nb_of_black_pixels if total_nb_of_black_pixels > 0 else 0.1)
-
-
-# def assign_random_colors():
-#     label_color = dict()
-#     with open('data.json', 'r') as f:
-#         data = json.load(f)
-#         for i in data.keys():
-#             if not data[i]["label"] in label_color.keys():
-#                 label_color[data[i]["label"]] = "#"+''.join([random.choice('0123456789ABCDEF') for j in range(6)])
-#             data[i]["color"] = label_color[data[i]["label"]]
-#         with open('data_with_colors.json', 'w') as output:
-#             json.dump(data, output, ensure_ascii=False, indent = 4)
-
 
 def get_character_features(features, characters):
     """
@@ -213,62 +189,3 @@ def get_character_features(features, characters):
         features_of_characters.append(features_data)
         features_data = []
     return features_of_characters
-
-
-
-def pre_process_image(image):
-    gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-    thresh_image = cv.threshold(gray_image, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
-    contours = cv.findContours(thresh_image, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-    contours = contours[0] if len(contours) == 2 else contours[1]
-    max_area = 0
-    current_variables =  (0,0,0,0)
-    dim = (WIDTH, HEIGHT)
-    # choose bounding rectangle for character with biggest area
-    letters = []
-    all_contours = []
-    for countour in contours:
-        x,y,w,h = cv.boundingRect(countour)
-        # if w*h > max_area:
-        #     max_area = w*h
-        current_variables = (x,y,x+w,y+h)
-        all_contours.append(current_variables)
-        # if current_variables != (0,0,0,0):
-        # # change image dimensions to minimum bounding rectangle
-        #     current_image = image[current_variables[1]:current_variables[3], current_variables[0]:current_variables[2]]
-        #     current_image = cv.resize(current_image, dim, interpolation = cv.INTER_AREA)
-        #     current_image = gray_to_black(current_image)
-        #     letters.append(current_image)
-    new_countours = []
-    for i in range(len(all_contours)):
-        if i >= len(all_contours):
-            break
-        x1,y1, x1_, y1_ = all_contours[i]
-        found = False
-        print(i)
-        for j in range(i+1, len(all_contours)):
-            x2, y2, x2_, y2_ = all_contours[j]
-            print(x1, x1_)
-            print(x2, x2_)
-            print('---------------------')
-            if (x1 >x2 and x1 < x2_) or (x1_<x2_ and x1_ >x2) or (x2 > x1 and x2 < x1_) or (x2_ < x1_ and x2_ > x1):
-                new_countours.append((min(x1,x2), min(y1, y2), max(x1_, x2_), max(y1_, y2_)))
-                found = True
-                print('found one')
-                all_contours.pop(j)
-                break
-        if not found:
-            new_countours.append(all_contours[i])
-    # current_variables = new_countours[0]
-    # cv.imshow('image', image[current_variables[1]:current_variables[3], current_variables[0]:current_variables[2]])
-    # cv.waitKey(0)
-    # # resize image
-    new_countours.sort(key=lambda x: x[0], reverse=False)
-    for contour in new_countours: 
-        current_variables = contour
-        current_image = image[current_variables[1]:current_variables[3], current_variables[0]:current_variables[2]]
-        current_image = cv.resize(current_image, dim, interpolation = cv.INTER_AREA)
-        current_image = gray_to_black(current_image)
-        letters.append(current_image)
-
-    return letters
