@@ -2,6 +2,8 @@ features:
 - nb_of_pixels_per_segment
 - horizontal_line_intersection
 - vertical_line_intersection
+name: svm
+prediction_model: pretrained_svm_model.pkl
 svm:
   conf_rep:
   - '0':
@@ -243,6 +245,4 @@ svm:
   eval_accuracy: 0.8021023738424878
   test_score: 0.8015503875968992
   weight: 1
-name: svm
-prediction_model: pretrained_svm_model.pkl
 training: completed
