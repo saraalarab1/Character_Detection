@@ -152,4 +152,4 @@ def get_info(conf_rep):
 
     return label_data
 
-train_svm(['nb_of_pixels_per_segment','aspect_ratio'])
+# train_svm(['nb_of_pixels_per_segment','aspect_ratio'])
