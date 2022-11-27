@@ -24,11 +24,6 @@ def train(X, Y, testing_size, for_ensemble,model_version):
     # Reshaping the data in csv file so that it can be displayed as an image...
 
     X0_train, X_test, Y0_train, Y_test = train_test_split(X, Y, test_size = testing_size)
-    #Scaler is needed to scale all the inputs to a similar range
-    scaler = StandardScaler()
-    scaler = scaler.fit(X0_train)
-    X0_train = scaler.transform(X0_train)
-    X_test = scaler.transform(X_test)
 
 
   # print("TRAIN:", train_index, "Validation:", test_index)
@@ -42,7 +37,7 @@ def train(X, Y, testing_size, for_ensemble,model_version):
 
     model = Sequential()
 
-    model.add(Conv2D(filters=32, kernel_size=(3, 3), activation='relu', input_shape=(28,28,1)))
+    model.add(Conv2D(filters=32, kernel_size=(3, 3), activation='relu',  input_shape=X0_train.shape[1:]))
     model.add(MaxPool2D(pool_size=(2, 2), strides=2))
 
     model.add(Conv2D(filters=64, kernel_size=(3, 3), activation='relu', padding = 'same'))
@@ -69,25 +64,25 @@ def train(X, Y, testing_size, for_ensemble,model_version):
 
 
     model.summary()
-    model.save(r'model_hand.h5')
 
     print("The validation accuracy is :", history.history['val_accuracy'])
     print("The training accuracy is :", history.history['accuracy'])
     print("The validation loss is :", history.history['val_loss'])
     print("The training loss is :", history.history['loss'])
 
-    test_loss, test_accuracy = model.evaluate(X_test, Y_test)
-
     #save the pretrained model:
-    model_name='pretrained_cnn_model.pkl'
+    model_name=r'cnn_model.h5'
     if model_version:
-        pickle.dump(model, open(f"models/{model_version}/{model_name}", 'wb'))
+        model.save(r'cnn_model.h5')
+        # pickle.dump(model, open(f"models/{model_version}/{model_name}", 'wb'))
     elif for_ensemble:
-        pickle.dump(model, open(f"models/cnn_ensemble/{model_name}", 'wb'))
+        model.save(r'cnn_model.h5')
+        # pickle.dump(model, open(f"models/cnn_ensemble/{model_name}", 'wb'))
     else:
-        pickle.dump(model, open(f"models/cnn/{model_name}", 'wb'))
+        model.save(r'cnn_model.h5')
+        # pickle.dump(model, open(f"models/cnn/{model_name}", 'wb'))
 
-    return test_accuracy, model, X_test, Y_test
+    return model, history.history['val_accuracy'], history.history['accuracy']
 
 def test(X_test, Y_test, model_version, for_ensemble):
 
@@ -136,14 +131,14 @@ def train_cnn(features, model_version=None, for_ensemble = False):
     print('training')
     x,y = get_input_output_labels(features)
     y_enc = prepare_targets(y)
-    eval_accuracy, model, X_test, Y_test = train(x, y_enc, testing_size=0.2,model_version = model_version, for_ensemble=for_ensemble)
-    # test_score, conf_rep = test(X_test, Y_test, model_version=model_version,for_ensemble = for_ensemble)
+    model, eval_accuracy, test_score,  = train(x, y_enc, testing_size=0.2,model_version = model_version, for_ensemble=for_ensemble)
+    conf_rep = False
     # print(conf_rep)
-    # print("Evaluation Score: {}".format(eval_accuracy))
-    # print("Test Score: {}".format(test_score))
-    # if model_version is None:
-    #     save_model(eval_accuracy, test_score, conf_rep,for_ensemble ,features)
-    # return eval_accuracy, model, test_score, conf_rep
+    print("Evaluation Score: {}".format(eval_accuracy))
+    print("Test Score: {}".format(test_score))
+    if model_version is None:
+        save_model(eval_accuracy, test_score, conf_rep,for_ensemble ,features)
+    return eval_accuracy, model, test_score, conf_rep
 
 def prepare_targets(y):
     le = LabelEncoder()
@@ -151,19 +146,11 @@ def prepare_targets(y):
     return y_enc
 
 def get_input_output_labels(features):
+    x = np.load('cnn_data.npy')
     with open('data.json', 'r') as f: 
         data = json.load(f)
-        x = []
         y = []
         for i in data.keys():
-            for feature in features:
-                features_arr = []
-                for feature in features:
-                    arr = data[i][feature]
-                    if type(arr) != list:
-                        arr = [arr]
-                    features_arr.extend(arr)
-            x.append(features_arr)
             y.append(data[i]['label'])
     return (x,y)
 

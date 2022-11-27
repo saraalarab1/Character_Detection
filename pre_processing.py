@@ -8,6 +8,19 @@ WIDTH = 80
 HEIGHT = 80
 import numpy as np
 
+def get_cnn_data():
+    training_dataset = dict()
+    images_dir = os.listdir('Img')
+    cnn_data = []
+    # open file in read mode
+    with open('english.csv', 'r') as read_obj:
+        csv_reader = reader(read_obj)
+        for row in csv_reader:
+            if os.path.exists('processed_images/' + row[0]):
+                image = cv.imread(os.path.join('processed_images/' + row[0]))
+                cnn_data.append([np.array(image)])
+    np.save('cnn_data.npy', cnn_data)
+
 def convert_csv_to_json():
     training_dataset = dict()
     # open file in read mode
@@ -212,8 +225,8 @@ def gray_to_black(image):
 # get_total_nb_of_pixels()
 # convert_csv_to_json()
 # post_skeletonization()
-# create_json()
 # assign_random_colors()
 # plot()
+get_cnn_data()
 
 
