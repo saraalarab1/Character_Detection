@@ -1,5 +1,5 @@
 ann:
-  eval_accuracy: 0.7922480702400208
+  eval_accuracy: 0.7829457521438599
   test_score: 0.0
   weight: 1
 features:
