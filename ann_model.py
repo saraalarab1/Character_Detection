@@ -14,6 +14,7 @@ from tensorflow.keras import layers
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.utils import to_categorical
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import LabelEncoder, OrdinalEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -26,6 +27,11 @@ from sklearn.preprocessing import StandardScaler
 def train(X, Y, testing_size, for_ensemble,model_version):
     
     X0_train, X_test, Y0_train, Y_test = train_test_split(X,Y,test_size=testing_size, random_state=7)
+    #Scaler is needed to scale all the inputs to a similar range
+    scaler = StandardScaler()
+    scaler = scaler.fit(X0_train)
+    X0_train = scaler.transform(X0_train)
+    X_test = scaler.transform(X_test)
 
   # print("TRAIN:", train_index, "Validation:", test_index)
     X0_train = pd.DataFrame(X0_train)
@@ -70,12 +76,10 @@ def test(X_test, Y_test, model_version, for_ensemble):
         model = pickle.load(open('models/ann_ensemble/pretrained_ann_model.pkl', 'rb' ))
     else:
         model = pickle.load(open('models/ann/pretrained_ann_model.pkl', 'rb' ))
-        
+
     y_pred = model.predict(X_test)
     classification_rep = 0
     test_score = 0
-    print(Y_test)
-    print(y_pred)
     # classification_rep = classification_report(Y_test, y_pred,zero_division=True)
     # test_score = metrics.accuracy_score(Y_test, y_pred)
 
@@ -101,7 +105,7 @@ def save_model(eval_accuracy, test_score, conf_rep, for_ensemble, features ):
         yaml_info['ann'] = dict()
         yaml_info['ann']['eval_accuracy'] = float(eval_accuracy)
         yaml_info['ann']['test_score'] = float(test_score)
-        yaml_info['ann']['conf_rep'] = get_info(conf_rep)
+        # yaml_info['ann']['conf_rep'] = get_info(conf_rep)
         yaml_info['ann']['weight'] = 1
 
     with open(yaml_path, 'w') as output:
@@ -112,25 +116,19 @@ def train_ann(features, model_version=None, for_ensemble = False):
     print('training')
     x,y = get_input_output_labels(features)
     y_enc = prepare_targets(y)
-    x_enc = prepare_inputs(x)
-    eval_accuracy, model, X_test, Y_test = train(x_enc, y_enc, testing_size=0.2,model_version = model_version, for_ensemble=for_ensemble)
+    eval_accuracy, model, X_test, Y_test = train(x, y_enc, testing_size=0.2,model_version = model_version, for_ensemble=for_ensemble)
     test_score, conf_rep = test(X_test, Y_test, model_version=model_version,for_ensemble = for_ensemble)
-    # print(conf_rep)
+    print(conf_rep)
     print("Evaluation Score: {}".format(eval_accuracy))
     print("Test Score: {}".format(test_score))
-    # if model_version is None:
-    #     save_model(eval_accuracy, test_score, conf_rep,for_ensemble ,features)
-    # return eval_accuracy, model, test_score, conf_rep
+    if model_version is None:
+        save_model(eval_accuracy, test_score, conf_rep,for_ensemble ,features)
+    return eval_accuracy, model, test_score, conf_rep
+
 def prepare_targets(y):
     le = LabelEncoder()
     y_enc = le.fit_transform(y)
     return y_enc
-
-def prepare_inputs(x):
-    oe = OrdinalEncoder()
-    oe.fit(x)
-    x_enc = oe.transform(x)
-    return x_enc
 
 def get_input_output_labels(features):
     with open('data.json', 'r') as f: 
