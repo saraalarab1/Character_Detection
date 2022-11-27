@@ -1,5 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+/arabic_data
+/arabic_data_processed
+/processed_images_arabic
 env
 __pycache__
 flask

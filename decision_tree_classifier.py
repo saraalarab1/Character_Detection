@@ -12,7 +12,7 @@ from sklearn.preprocessing import StandardScaler
 import os
 import yaml
 
-def train(x, y, testing_size, model_version,for_ensemble):
+def train(x, y, testing_size, model_version,for_ensemble, arabic):
 
     X0_train, X_test, Y0_train, Y_test = train_test_split(x,y,test_size=testing_size, random_state=7)
     #Scaler is needed to scale all the inputs to a similar range
@@ -44,9 +44,11 @@ def train(x, y, testing_size, model_version,for_ensemble):
         accuracys.append(score)
 
     eval_accuracy = np.mean(accuracys)
-
+    model_language = 'english'
+    if arabic: 
+        model_language = 'arabic'
     #save the pretrained model:
-    model_name='pretrained_dtree_model.pkl'
+    model_name=f'pretrained_dtree_{model_language}_model.pkl'
     if model_version:
         pickle.dump(model, open(f"models/{model_version}/{model_name}", 'wb'))
     elif for_ensemble:
@@ -57,13 +59,16 @@ def train(x, y, testing_size, model_version,for_ensemble):
     return eval_accuracy, model, X_test, Y_test
 
 
-def test(X_test, Y_test, model_version,for_ensemble):
+def test(X_test, Y_test, model_version,for_ensemble, arabic):
+    model_language = 'english'
+    if arabic: 
+        model_language = 'arabic'
     if model_version: 
-        model = pickle.load(open(f'models/{model_version}/pretrained_dtree_model.pkl', 'rb' ))
+        model = pickle.load(open(f'models/{model_version}/pretrained_dtree_{model_language}_model.pkl', 'rb' ))
     elif for_ensemble:
-        model = pickle.load(open('modelsd_tree_ensemble/pretrained_dtree_model.pkl', 'rb' ))
+        model = pickle.load(open('modelsd_tree_ensemble/pretrained_dtree_{model_language}_model.pkl', 'rb' ))
     else:
-        model = pickle.load(open('models/d_tree/pretrained_dtree_model.pkl', 'rb' ))
+        model = pickle.load(open('models/d_tree/pretrained_dtree_{model_language}_model.pkl', 'rb' ))
 
     y_pred = model.predict(X_test)
     print("Text Prediction: {}".format(y_pred.shape))
@@ -73,21 +78,24 @@ def test(X_test, Y_test, model_version,for_ensemble):
 
     return test_score, classification_rep
 
-def train_dt(features, model_version=None, for_ensemble = False):
+def train_dt(features, model_version=None, for_ensemble = False, arabic =False):
     print('training')
-    x,y = get_input_output_labels(features)
-    eval_accuracy, model, X_test, Y_test = train(x, y, testing_size=0.05, model_version = model_version , for_ensemble=for_ensemble)
-    test_score, conf_rep = test(X_test, Y_test, model_version = model_version,for_ensemble=for_ensemble)
+    x,y = get_input_output_labels(features, arabic)
+    eval_accuracy, model, X_test, Y_test = train(x, y, testing_size=0.05, model_version = model_version , for_ensemble=for_ensemble, arabic= arabic)
+    test_score, conf_rep = test(X_test, Y_test, model_version = model_version,for_ensemble=for_ensemble, arabic= arabic)
     print("Evaluation Score: {}".format(eval_accuracy))
     print("Test Score: {}".format(test_score))
     print(conf_rep)
     if model_version is None:
-        save_model(eval_accuracy, test_score, conf_rep,for_ensemble ,features)
+        save_model(eval_accuracy, test_score, conf_rep,for_ensemble ,features, arabic)
     return eval_accuracy, model, test_score, conf_rep
 
 
-def get_input_output_labels(features):
-    with open('data.json', 'r') as f: 
+def get_input_output_labels(features, arabic):
+    data_file = 'data.json'
+    if arabic:
+        data_file = 'arabic_data.json'
+    with open(data_file, 'r') as f: 
         data = json.load(f)
         x = []
         y = []
@@ -103,13 +111,16 @@ def get_input_output_labels(features):
             y.append(data[i]['label'])
     return (x,y)
 
-def save_model(eval_accuracy, test_score, conf_rep, for_ensemble, features ):
+def save_model(eval_accuracy, test_score, conf_rep, for_ensemble, features, arabic):
+    model_language = 'english'
+    if arabic: 
+        model_language = 'arabic'
     yaml_info = dict()
 
-    yaml_info['prediction_model'] = "pretrained_dtree_model.pkl"
+    yaml_info['prediction_model'] = "pretrained_dtree_{model_language}_model.pkl"
     yaml_info['features'] = features
     yaml_info['training'] = 'completed'
-    yaml_info['name'] = 'pretrained_dtree_model.pkl'
+    yaml_info['name'] = 'pretrained_dtree_{model_language}_model.pkl'
 
     model_version="d_tree"
     if for_ensemble:
@@ -138,7 +149,7 @@ def get_info(conf_rep):
         label_information = " ".join(label_information.split())
         label_information = label_information.split(" ")
         if len(label_information) < 4:
-            continue
+            break
         label_data.append({label_information[0]:[float(label_information[1]),float(label_information[2]),float(label_information[3])]})
 
     return label_data

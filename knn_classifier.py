@@ -18,16 +18,20 @@ from sklearn import model_selection
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import LeavePOut #for P-cross validation
 from sklearn.metrics import classification_report, accuracy_score
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.model_selection import StratifiedKFold
 
 
 sc = StandardScaler()
 
 
-def train(X, Y, testing_size, for_ensemble,model_version, optimal_k=True, max_range_k=100, ):
+def train(X, Y, testing_size, for_ensemble,model_version, optimal_k=True, max_range_k=100, arabic = False):
     
     X0_train, X_test, Y0_train, Y_test = train_test_split(X,Y,test_size=testing_size, random_state=7)
+    scaling = MinMaxScaler(feature_range=(-1,1)).fit(X0_train)
+    pickle.dump(scaling, open(f"models/{model_version}/scaler.pkl", 'wb'))
+    X0_train = scaling.transform(X0_train)
+    X_test = scaling.transform(X_test)
     #Scaler is needed to scale all the inputs to a similar range
     # scaler = StandardScaler()
     # scaler = scaler.fit(X0_train)
@@ -71,9 +75,11 @@ def train(X, Y, testing_size, for_ensemble,model_version, optimal_k=True, max_ra
         accuracys.append(score)
 
     eval_accuracy = np.mean(accuracys)
-
+    model_language = 'english'
+    if arabic: 
+        model_language = 'arabic'
     #save the pretrained model:
-    model_name='pretrained_knn_model.pkl'
+    model_name=f'pretrained_knn_{model_language}_model.pkl'
     if model_version:
         pickle.dump(model, open(f"models/{model_version}/{model_name}", 'wb'))
     elif for_ensemble:
@@ -84,14 +90,16 @@ def train(X, Y, testing_size, for_ensemble,model_version, optimal_k=True, max_ra
     return eval_accuracy, model, X0_train, Y0_train, X_test, Y_test
 
 
-def test(X_train, Y_train, X_test, Y_test, model_version, for_ensemble):
-
+def test(X_train, Y_train, X_test, Y_test, model_version, for_ensemble, arabic):
+    model_language = 'english'
+    if arabic: 
+        model_language = 'arabic'
     if model_version: 
-        model = pickle.load(open(f'models/{model_version}/pretrained_knn_model.pkl', 'rb' ))
+        model = pickle.load(open(f'models/{model_version}/pretrained_knn_{model_language}_model.pkl', 'rb' ))
     elif for_ensemble:
-        model = pickle.load(open('models/knn_ensemble/pretrained_knn_model.pkl', 'rb' ))
+        model = pickle.load(open('models/knn_ensemble/pretrained_knn_{model_language}_model.pkl', 'rb' ))
     else:
-        model = pickle.load(open('models/knn/pretrained_knn_model.pkl', 'rb' ))
+        model = pickle.load(open('models/knn/pretrained_knn_{model_language}_model.pkl', 'rb' ))
         
     model.fit(X_train, Y_train)
     y_pred = model.predict(X_test)
@@ -100,20 +108,23 @@ def test(X_train, Y_train, X_test, Y_test, model_version, for_ensemble):
 
     return test_score, classification_rep
 
-def train_knn(features, model_version=None, for_ensemble = False):
+def train_knn(features, model_version=None, for_ensemble = False, arabic = False):
     print('training')
-    x,y = get_input_output_labels(features)
-    eval_accuracy, model, X_train, Y_train, X_test, Y_test = train(x, y, testing_size=0.2, max_range_k=50, model_version = model_version, for_ensemble=for_ensemble)
-    test_score, conf_rep = test(X_train, Y_train, X_test, Y_test, model_version=model_version,for_ensemble = for_ensemble)
+    x,y = get_input_output_labels(features, arabic)
+    eval_accuracy, model, X_train, Y_train, X_test, Y_test = train(x, y, testing_size=0.2, max_range_k=50, model_version = model_version, for_ensemble=for_ensemble, arabic= arabic)
+    test_score, conf_rep = test(X_train, Y_train, X_test, Y_test, model_version=model_version,for_ensemble = for_ensemble, arabic= arabic)
     print(conf_rep)
     print("Evaluation Score: {}".format(eval_accuracy))
     print("Test Score: {}".format(test_score))
     if model_version is None:
-        save_model(eval_accuracy, test_score, conf_rep,for_ensemble ,features)
+        save_model(eval_accuracy, test_score, conf_rep,for_ensemble ,features, arabic)
     return eval_accuracy, model, test_score, conf_rep
     
-def get_input_output_labels(features):
-    with open('data.json', 'r') as f: 
+def get_input_output_labels(features, arabic):
+    data_file = 'data.json'
+    if arabic: 
+        data_file = 'arabic_data.json'
+    with open(data_file, 'r') as f: 
         data = json.load(f)
         x = []
         y = []
@@ -130,13 +141,15 @@ def get_input_output_labels(features):
             y.append(data[i]['label'])
     return (x,y)
 
-def save_model(eval_accuracy, test_score, conf_rep, for_ensemble, features ):
+def save_model(eval_accuracy, test_score, conf_rep, for_ensemble, features, arabic):
     yaml_info = dict()
-
-    yaml_info['prediction_model'] = "pretrained_knn_model.pkl"
+    model_language = 'english'
+    if arabic: 
+        model_language = 'arabic'
+    yaml_info['prediction_model'] = "pretrained_knn_{model_language}_model.pkl"
     yaml_info['features'] = features
     yaml_info['training'] = 'completed'
-    yaml_info['name'] = 'pretrained_knn_model.pkl'
+    yaml_info['name'] = 'pretrained_knn_{model_language}_model.pkl'
 
     model_version="knn"
     if for_ensemble:
@@ -165,7 +178,7 @@ def get_info(conf_rep):
         label_information = " ".join(label_information.split())
         label_information = label_information.split(" ")
         if len(label_information) < 4:
-            continue
+            break
         label_data.append({label_information[0]:[float(label_information[1]),float(label_information[2]),float(label_information[3])]})
 
     return label_data

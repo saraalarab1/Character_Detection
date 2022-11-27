@@ -22,27 +22,38 @@ from sklearn import metrics
 from sklearn import model_selection
 from sklearn.model_selection import LeavePOut #for P-cross validation
 from sklearn.metrics import classification_report, accuracy_score
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, plot_confusion_matrix
 
-def train(X, y, estimators, weights, model_version, testing_size):
-
+def train(X, y, estimators, weights, model_version, testing_size, arabic):
+    model_language = 'english'
+    if arabic: 
+        model_language = 'arabic'
     X0_train, X_test, Y0_train, y_test = train_test_split(X,y,test_size=testing_size, random_state=7)
+    scaling = MinMaxScaler(feature_range=(-1,1)).fit(X0_train)
+    pickle.dump(scaling, open(f"models/{model_version}/scaler.pkl", 'wb'))
+    X0_train = scaling.transform(X0_train)
+    X_test = scaling.transform(X_test)
 
     ensemble=VotingClassifier(estimators=estimators, voting='soft', weights=weights)
+    print(X0_train)
+    print(Y0_train)
     ensemble.fit(X0_train, Y0_train)
     
     Y_pred = ensemble.predict(X_test)
     eval_accuracy = accuracy_score(Y_pred, y_test)
 
     cm = confusion_matrix(Y_pred, y_test)
-    labels=['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']   
+    if not arabic:
+        labels=['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']   
+    else:
+        labels = ['ا', 'ب', 'ت', 'ث', 'ج', 'ح', 'خ', 'د', 'ذ', 'ر', 'ز', 'س', 'ش', 'ص', 'ض', 'ط', 'ظ', 'ع', 'غ', 'ف', 'ق', 'ك', 'ل', 'م', 'ن', 'ه', 'و', 'ي']
     cmd = ConfusionMatrixDisplay(confusion_matrix=cm,display_labels=labels)
     cmd.plot()
 
     #save the pretrained model:
-    model_name='pretrained_ensemble_model.pkl'
+    model_name=f'pretrained_ensemble_{model_language}_model.pkl'
     if model_version:
         pickle.dump(ensemble, open(f"models/{model_version}/{model_name}", 'wb'))
     else:
@@ -50,12 +61,14 @@ def train(X, y, estimators, weights, model_version, testing_size):
 
     return eval_accuracy, ensemble, X0_train, Y0_train, X_test, y_test
 
-def test(X_train, Y_train, X_test, Y_test,model_version):
-
+def test(X_train, Y_train, X_test, Y_test,model_version, arabic):
+    model_language = 'english'
+    if arabic: 
+        model_language = 'arabic'
     if model_version:
-        model = pickle.load(open(f'models/{model_version}/pretrained_ensemble_model.pkl', 'rb' ))
+        model = pickle.load(open(f'models/{model_version}/pretrained_ensemble_{model_language}_model.pkl', 'rb' ))
     else:
-        model = pickle.load(open(f'models/ensemble/pretrained_ensemble_model.pkl', 'rb' ))
+        model = pickle.load(open(f'models/ensemble/pretrained_ensemble_{model_language}_model.pkl', 'rb' ))
         
     model.fit(X_train, Y_train)
     y_pred = model.predict(X_test)
@@ -67,11 +80,12 @@ def test(X_train, Y_train, X_test, Y_test,model_version):
 
     return test_score, classification_rep
 
-def train_ensemble(estimators, weights,features, model_version=None):
+def train_ensemble(estimators, weights,features, model_version=None, arabic= False):
+
     print('training')
-    X,y = get_input_output_labels(features)
-    eval_accuracy, model, X_train, Y_train, X_test, Y_test = train(X, y, estimators, weights,model_version= model_version, testing_size=0.1,)
-    test_score, conf_rep = test(X_train, Y_train, X_test, Y_test, model_version)
+    X,y = get_input_output_labels(features, arabic)
+    eval_accuracy, model, X_train, Y_train, X_test, Y_test = train(X, y, estimators, weights,model_version= model_version, testing_size=0.1, arabic= arabic)
+    test_score, conf_rep = test(X_train, Y_train, X_test, Y_test, model_version, arabic)
     print(conf_rep)
     print("Evaluation Score: {}".format(eval_accuracy))
     print("Test Score: {}".format(test_score))
@@ -80,8 +94,11 @@ def train_ensemble(estimators, weights,features, model_version=None):
     return eval_accuracy, model, test_score, conf_rep
 
 
-def get_input_output_labels(features):
-    with open('data.json', 'r') as f: 
+def get_input_output_labels(features, arabic):
+    data_file = 'data.json'
+    if arabic: 
+        data_file = 'arabic_data.json'
+    with open(data_file, 'r') as f: 
         data = json.load(f)
         x = []
         y = []
@@ -97,13 +114,16 @@ def get_input_output_labels(features):
             y.append(data[i]['label'])
     return (x,y)
 
-def save_model(eval_accuracy, test_score, conf_rep, features ):
-    yaml_info = dict()
+def save_model(eval_accuracy, test_score, conf_rep, features, arabic ):
 
-    yaml_info['prediction_model'] = "pretrained_ensemble_model.pkl"
+    yaml_info = dict()
+    model_language = 'english'
+    if arabic: 
+        model_language = 'arabic'
+    yaml_info['prediction_model'] = "pretrained_ensemble_{model_language}_model.pkl"
     yaml_info['features'] = features
     yaml_info['training'] = 'completed'
-    yaml_info['name'] = 'pretrained_ensemble_model.pkl'
+    yaml_info['name'] = 'pretrained_ensemble_{model_language}_model.pkl'
 
     model_version="ensemble"
 
@@ -130,7 +150,7 @@ def get_info(conf_rep):
         label_information = " ".join(label_information.split())
         label_information = label_information.split(" ")
         if len(label_information) < 4:
-            continue
+            break
         label_data.append({label_information[0]:[float(label_information[1]),float(label_information[2]),float(label_information[3])]})
 
     return label_data
