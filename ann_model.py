@@ -44,44 +44,53 @@ def train(X, Y, testing_size, for_ensemble,model_version):
         Dense(62, activation='sigmoid')
     ])
 
+    if model_version:
+        path_checkpoint = f"models/{model_version}/cp.ckpt"
+    elif for_ensemble:
+        path_checkpoint = f"models/ann_ensemble/cp.ckpt"
+    else:
+        path_checkpoint = f"models/ann/cp.ckpt"
+
+    callback = keras.callbacks.ModelCheckpoint(filepath=path_checkpoint,save_weights_only=True,verbose=1)
+
     # Compiling the model
     model.compile(optimizer='adam',loss=keras.losses.SparseCategoricalCrossentropy(),metrics=['accuracy'])
 
-    history = model.fit(X0_train, Y0_train, epochs=10, batch_size=8, validation_data = (X_test,Y_test))
-    model.summary()
-    model.save(r'model_hand.h5')
-    print("The validation accuracy is :", history.history['val_accuracy'])
-    print("The training accuracy is :", history.history['accuracy'])
-    print("The validation loss is :", history.history['val_loss'])
-    print("The training loss is :", history.history['loss'])
-    test_loss, test_accuracy = model.evaluate(X_test, Y_test)
+    history = model.fit(X0_train, Y0_train, epochs=10, batch_size=8,callbacks=[callback])
+
+    # model.summary()
+ 
+    eval_accuracy = np.mean(history.history['accuracy'])
+
+    # print("The validation loss is :", history.history['val_loss'])
+    # print("The training loss is :", history.history['loss'])
 
     #save the pretrained model:
-    model_name='pretrained_ann_model.pkl'
+    model_name=r'pretrained_ann_model.h5'
     if model_version:
-        pickle.dump(model, open(f"models/{model_version}/{model_name}", 'wb'))
+        model.save(f"models/{model_version}/{model_name}")
     elif for_ensemble:
-        pickle.dump(model, open(f"models/ann_ensemble/{model_name}", 'wb'))
+        model.save(f"models/ann_ensemble/{model_name}")
     else:
-        pickle.dump(model, open(f"models/ann/{model_name}", 'wb'))
+        model.save(f"models/ann/{model_name}")
 
-    return test_accuracy, model, X_test, Y_test
+    return eval_accuracy, model, X_test, Y_test
 
 
 def test(X_test, Y_test, model_version, for_ensemble):
 
     if model_version: 
-        model = pickle.load(open(f'models/{model_version}/pretrained_ann_model.pkl', 'rb' ))
+        model = keras.models.load_model(f'models/{model_version}/pretrained_ann_model.h5')
     elif for_ensemble:
-        model = pickle.load(open('models/ann_ensemble/pretrained_ann_model.pkl', 'rb' ))
+        model = keras.models.load_model(f'models/ann_ensemble/pretrained_ann_model.h5')    
     else:
-        model = pickle.load(open('models/ann/pretrained_ann_model.pkl', 'rb' ))
-
-    y_pred = model.predict(X_test)
+        model = keras.models.load_model(f'models/ann/pretrained_ann_model.h5')
+ 
+    score = model.evaluate(X_test, Y_test, batch_size=8)
+    test_score = score[1]
+    test_loss = score[0]
     classification_rep = 0
-    test_score = 0
     # classification_rep = classification_report(Y_test, y_pred,zero_division=True)
-    # test_score = metrics.accuracy_score(Y_test, y_pred)
 
     return test_score, classification_rep
 
@@ -89,7 +98,7 @@ def test(X_test, Y_test, model_version, for_ensemble):
 def save_model(eval_accuracy, test_score, conf_rep, for_ensemble, features ):
     yaml_info = dict()
 
-    yaml_info['prediction_model'] = "pretrained_ensemble_model.pkl"
+    yaml_info['prediction_model'] = "pretrained_ensemble_model.h5"
     yaml_info['features'] = features
     yaml_info['training'] = 'completed'
     yaml_info['name'] = 'ann'
