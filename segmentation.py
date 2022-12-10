@@ -52,7 +52,6 @@ import cv2
 import numpy as np
 
 def word_segmentation(image):
-    
     image = resize_image(image, new_height= 100)
     # Finding Contours
     # Use a copy of the image e.g. edged.copy()
@@ -106,6 +105,7 @@ def word_segmentation(image):
         if letter.shape[1] >16:
             cv.imshow('image', letter)
             cv.waitKey(0)
+    return letters
 
 image = cv2.imread('segmentation_hello.png')
 word_segmentation(image)

@@ -88,4 +88,4 @@ def paragraph_seg(img, folder_path):
 
 img = cv2.imread('newimage.png')
 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-words = paragraph_seg(img)
+words = paragraph_seg(img, 'predictions')
