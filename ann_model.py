@@ -34,36 +34,32 @@ def train(X, Y,activation_functions, testing_size, for_ensemble,model_version):
     Y0_train = pd.DataFrame(Y0_train)
     X_test = pd.DataFrame(X_test)
     Y_test = pd.DataFrame(Y_test)
-    
+
+    # Build the ANN model
     model = Sequential()
+    # Dense(100, input_shape=(146,), activation='relu'),
 
-    # Defining the model
-    model = Sequential([
-        Dense(100, input_shape=(146,), activation='relu'),
-        Dense(85, activation='sigmoid'),
-        Dense(62, activation='sigmoid')
-    ])
+    # Add the input layer
+    model.add(Dense(100, input_dim=X0_train.shape[1], activation=activation_functions[0]))
 
-    if model_version:
-        path_checkpoint = f"models/{model_version}/cp.ckpt"
-    elif for_ensemble:
-        path_checkpoint = f"models/ann_ensemble/cp.ckpt"
-    else:
-        path_checkpoint = f"models/ann/cp.ckpt"
+    # Add the hidden layers
+    for i in range(1, len(activation_functions)-1):
+        model.add(Dense(88-i*3, activation=activation_functions[i]))
 
-    callback = keras.callbacks.ModelCheckpoint(filepath=path_checkpoint,save_weights_only=True,verbose=1)
+    # Add the output layer
+    model.add(Dense(62, activation=activation_functions[-1]))
 
-    # Compiling the model
-    model.compile(optimizer='adam',loss=keras.losses.SparseCategoricalCrossentropy(),metrics=['accuracy'])
+    # Compile the model
+    # model.compile(optimizer='adam',loss=keras.losses.SparseCategoricalCrossentropy(),metrics=['accuracy'])
+    model.compile(optimizer='adam', loss=keras.losses.SparseCategoricalCrossentropy(), metrics=['accuracy'])
 
-    history = model.fit(X0_train, Y0_train, epochs=10, batch_size=8,callbacks=[callback])
+    # Train the model on the training set
+    # history = model.fit(X0_train, Y0_train, epochs=10, batch_size=8)
+    history =  model.fit(X0_train, Y0_train, epochs=10, batch_size=8)
 
-    # model.summary()
- 
     eval_accuracy = np.mean(history.history['accuracy'])
 
-    # print("The validation loss is :", history.history['val_loss'])
-    # print("The training loss is :", history.history['loss'])
+    # model.summary()
 
     #save the pretrained model:
     model_name=r'pretrained_ann_model.h5'
@@ -85,7 +81,7 @@ def test(X_test, Y_test, model_version, for_ensemble):
         model = keras.models.load_model(f'models/ann_ensemble/pretrained_ann_model.h5')    
     else:
         model = keras.models.load_model(f'models/ann/pretrained_ann_model.h5')
- 
+
     score = model.evaluate(X_test, Y_test, batch_size=8)
     test_score = score[1]
     test_loss = score[0]

@@ -108,12 +108,12 @@ def train_new_model():
 
             estimators.append((model['name'],model_classifier))
             weights.append(int(model['weight']))
-            label_data= get_info(conf_rep)
+            # label_data= get_info(conf_rep)
 
             yaml_info[model['name']] = dict()
             yaml_info[model['name']]['eval_accuracy'] = float(eval_accuracy)
             yaml_info[model['name']]['test_score'] = float(test_score)
-            yaml_info[model['name']]['conf_rep'] = label_data
+            # yaml_info[model['name']]['conf_rep'] = label_data
             yaml_info[model['name']]['weight'] = model['weight']
 
         if yaml_info['prediction_model'] == 'pretrained_ensemble_model.pkl':
