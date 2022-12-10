@@ -38,19 +38,13 @@ def resize_image(image, new_height):
   return resized_image
 
 def divide_image(columns, image):
-      # Initialize empty list to store sub-images
   sub_images = []
   columns = [0] + columns
-  # Iterate over column indices and divide image
   for i in range(len(columns) - 1):
-    # Slice image along columns to get sub-image
-    print(columns[i], columns[i+1])
     sub_image = image[:, columns[i]:columns[i+1]]
 
-    # Append sub-image to list
     sub_images.append(sub_image)
 
-  # Return list of sub-images
   return sub_images
 
 
@@ -110,7 +104,6 @@ def word_segmentation(image):
     letters = divide_image(seperation, old_image)
     for letter in letters:
         if letter.shape[1] >16:
-            print(letter.shape)
             cv.imshow('image', letter)
             cv.waitKey(0)
 
