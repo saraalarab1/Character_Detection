@@ -5,8 +5,9 @@ import numpy as np
 import json
 import yaml
 import os
+from tensorflow import keras
 from keras.models import Sequential
-from keras.layers import Dense, Flatten, Conv2D, MaxPool2D, Dropout
+from keras.layers import Dense, Flatten, Conv2D, MaxPool2D, Dropout, Reshape
 from keras.optimizers import SGD, Adam
 from keras.callbacks import ReduceLROnPlateau, EarlyStopping
 from keras.utils import to_categorical, np_utils
@@ -18,93 +19,107 @@ from sklearn.utils import shuffle
 from sklearn.preprocessing import StandardScaler
 
 
-def train(X, Y, testing_size, for_ensemble,model_version):
-
-
-    # Reshaping the data in csv file so that it can be displayed as an image...
+def train(X, Y,activation_functions,testing_size, for_ensemble,model_version):
 
     X0_train, X_test, Y0_train, Y_test = train_test_split(X, Y, test_size = testing_size)
 
-
   # print("TRAIN:", train_index, "Validation:", test_index)
-    X0_train = pd.DataFrame(X0_train)
-    Y0_train = pd.DataFrame(Y0_train)
-    X_test = pd.DataFrame(X_test)
-    Y_test = pd.DataFrame(Y_test)
+    # X0_train = pd.DataFrame(X0_train)
+    # Y0_train = pd.DataFrame(Y0_train)
+    # X_test = pd.DataFrame(X_test)
+    # Y_test = pd.DataFrame(Y_test)
 
 
     # CNN model...
 
     model = Sequential()
 
-    model.add(Conv2D(filters=32, kernel_size=(3, 3), activation='relu',  input_shape=X0_train.shape[1:]))
-    model.add(MaxPool2D(pool_size=(2, 2), strides=2))
+    # Add the convolutional layers using a for loop
+    for i in range(len(activation_functions)):
+        # If this is the first convolutional layer, specify the input shape
+        if i == 0:
+            model.add(Conv2D(filters=32, kernel_size=(3, 3), activation=activation_functions[i], input_shape=X0_train.shape[1:]))
+        else:
+            # For subsequent convolutional layers, do not specify the input shape
+            model.add(Conv2D(filters=64*i, kernel_size=(3, 3), activation=activation_functions[i], padding = 'valid'))
 
-    model.add(Conv2D(filters=64, kernel_size=(3, 3), activation='relu', padding = 'same'))
-    model.add(MaxPool2D(pool_size=(2, 2), strides=2))
+        # Add a max pooling layer
+        model.add(MaxPool2D(pool_size=(2, 2),strides=2))
 
-    model.add(Conv2D(filters=128, kernel_size=(3, 3), activation='relu', padding = 'valid'))
-    model.add(MaxPool2D(pool_size=(2, 2), strides=2))
-
+    # Add a flatten layer
     model.add(Flatten())
 
-    model.add(Dense(64,activation ="relu"))
-    model.add(Dense(128,activation ="relu"))
+    # Add the dense layers using a for loop
+    for i in range(len(activation_functions)):
+        # If this is the first dense layer, specify the number of units
+        if i == 0:
+            model.add(Dense(128, activation=activation_functions[i]))
+        else:
+            # For subsequent dense layers, do not specify the number of units
+            model.add(Dense(32*i,activation_functions[i]))
 
-    model.add(Dense(26,activation ="softmax"))
+    # model.add(Conv2D(filters=32, kernel_size=(3, 3), activation='relu',  input_shape=X0_train.shape[1:]))
+    # model.add(MaxPool2D(pool_size=(2, 2), strides=2))
 
+    # model.add(Conv2D(filters=64, kernel_size=(3, 3), activation='relu', padding = 'same'))
+    # model.add(MaxPool2D(pool_size=(2, 2), strides=2))
 
+    # model.add(Conv2D(filters=128, kernel_size=(3, 3), activation='relu', padding = 'valid'))
+    # model.add(MaxPool2D(pool_size=(2, 2), strides=2))
+
+    # model.add(Flatten())
+
+    # model.add(Dense(64,activation ="relu"))
+    # model.add(Dense(128,activation ="relu"))
+
+    # model.add(Dense(26,activation ="softmax"))
 
     model.compile(optimizer = Adam(learning_rate=0.001), loss='categorical_crossentropy', metrics=['accuracy'])
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=1, min_lr=0.0001)
     early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=2, verbose=0, mode='auto')
 
 
-    history = model.fit(X0_train, Y0_train, epochs=1, callbacks=[reduce_lr, early_stop],  validation_data = (X_test,Y_test))
+    history = model.fit(X0_train, Y0_train, epochs=1, callbacks=[reduce_lr, early_stop])
 
+    # model.summary()
 
-    model.summary()
+    eval_accuracy = np.mean(history.history['accuracy'])
 
-    print("The validation accuracy is :", history.history['val_accuracy'])
-    print("The training accuracy is :", history.history['accuracy'])
-    print("The validation loss is :", history.history['val_loss'])
-    print("The training loss is :", history.history['loss'])
+    # print("The validation loss is :", history.history['val_loss'])
+    # print("The training loss is :", history.history['loss'])
 
     #save the pretrained model:
-    model_name=r'cnn_model.h5'
+    model_name=r'pretrained_cnn_model.h5'
     if model_version:
-        model.save(r'cnn_model.h5')
-        # pickle.dump(model, open(f"models/{model_version}/{model_name}", 'wb'))
+        model.save(f"models/{model_version}/{model_name}")
     elif for_ensemble:
-        model.save(r'cnn_model.h5')
-        # pickle.dump(model, open(f"models/cnn_ensemble/{model_name}", 'wb'))
+        model.save(f"models/cnn_ensemble/{model_name}")
     else:
-        model.save(r'cnn_model.h5')
-        # pickle.dump(model, open(f"models/cnn/{model_name}", 'wb'))
+        model.save(f"models/cnn/{model_name}")
 
-    return model, history.history['val_accuracy'], history.history['accuracy']
+    return eval_accuracy, model, X_test, Y_test
 
 def test(X_test, Y_test, model_version, for_ensemble):
 
     if model_version: 
-        model = pickle.load(open(f'models/{model_version}/pretrained_cnn_model.pkl', 'rb' ))
+        model = keras.models.load_model(f'models/{model_version}/pretrained_cnn_model.h5')
     elif for_ensemble:
-        model = pickle.load(open('models/cnn_ensemble/pretrained_cnn_model.pkl', 'rb' ))
+        model = keras.models.load_model(f'models/ann_ensemble/pretrained_cnn_model.h5')    
     else:
-        model = pickle.load(open('models/cnn/pretrained_cnn_model.pkl', 'rb' ))
+        model = keras.models.load_model(f'models/ann/pretrained_cnn_model.h5')
 
-    y_pred = model.predict(X_test)
+    score = model.evaluate(X_test, Y_test, batch_size=8)
+    test_score = score[1]
+    test_loss = score[0]
     classification_rep = 0
-    test_score = 0
     # classification_rep = classification_report(Y_test, y_pred,zero_division=True)
-    # test_score = metrics.accuracy_score(Y_test, y_pred)
 
     return test_score, classification_rep
 
 def save_model(eval_accuracy, test_score, conf_rep, for_ensemble, features ):
     yaml_info = dict()
 
-    yaml_info['prediction_model'] = "pretrained_ensemble_model.pkl"
+    yaml_info['prediction_model'] = "pretrained_ensemble_model.h5"
     yaml_info['features'] = features
     yaml_info['training'] = 'completed'
     yaml_info['name'] = 'cnn'
@@ -127,13 +142,15 @@ def save_model(eval_accuracy, test_score, conf_rep, for_ensemble, features ):
         yaml.dump(yaml_info, output)
 
 ## test accuracy
-def train_cnn(features, model_version=None, for_ensemble = False):
+def train_cnn(activation_functions,features, model_version=None, for_ensemble = False):
     print('training')
     x,y = get_input_output_labels(features)
     y_enc = prepare_targets(y)
-    model, eval_accuracy, test_score,  = train(x, y_enc, testing_size=0.2,model_version = model_version, for_ensemble=for_ensemble)
+    print(len(x))
+    print(len(y))
+    model, eval_accuracy, test_score,  = train(x, y_enc,activation_functions,testing_size=0.2,model_version = model_version, for_ensemble=for_ensemble)
     conf_rep = False
-    # print(conf_rep)
+    print(conf_rep)
     print("Evaluation Score: {}".format(eval_accuracy))
     print("Test Score: {}".format(test_score))
     if model_version is None:
@@ -167,4 +184,4 @@ def get_info(conf_rep):
     return label_data
 
 
-train_cnn(['nb_of_pixels_per_segment','horizontal_line_intersection','vertical_line_intersection'])
+# train_cnn(['relu','relu','relu'],['nb_of_pixels_per_segment','horizontal_line_intersection','vertical_line_intersection'])

@@ -19,6 +19,8 @@ from PIL import Image
 import io
 import numpy as np
 from ensemble_classifier import train_ensemble
+from ann_model import train_ann
+from cnn_model import train_cnn
 
 app = Flask(__name__)
 CORS(app, resources={r"*": {"origins": "*"}})
@@ -84,6 +86,7 @@ def train_new_model():
 
         estimators=[]
         weights = []
+        activation_functions = []
         ensemble = False
         if yaml_info['prediction_model'] == 'pretrained_ensemble_model.pkl':
             ensemble = True
@@ -96,6 +99,12 @@ def train_new_model():
                 eval_accuracy, model_classifier, test_score, conf_rep = train_svm(features, model_version,for_ensemble=ensemble)
             if model['name'] == 'dt':
                 eval_accuracy, model_classifier, test_score, conf_rep = train_dt(features, model_version,for_ensemble=ensemble)
+            if model['name'] == 'ann':
+                activation_functions = model['activation_functions']
+                eval_accuracy, model_classifier, test_score, conf_rep = train_ann(activation_functions,features, model_version,for_ensemble=ensemble)
+            if model['name'] == 'cnn':
+                activation_functions = model['activation_functions']
+                eval_accuracy, model_classifier, test_score, conf_rep = train_cnn(activation_functions, model_version,for_ensemble=ensemble)
 
             estimators.append((model['name'],model_classifier))
             weights.append(int(model['weight']))

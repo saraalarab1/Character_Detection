@@ -20,7 +20,7 @@ from sklearn import metrics
 from sklearn.metrics import classification_report
 
 
-def train(X, Y, testing_size, for_ensemble,model_version):
+def train(X, Y,activation_functions, testing_size, for_ensemble,model_version):
     
     X0_train, X_test, Y0_train, Y_test = train_test_split(X,Y,test_size=testing_size, random_state=7)
     #Scaler is needed to scale all the inputs to a similar range
@@ -121,11 +121,11 @@ def save_model(eval_accuracy, test_score, conf_rep, for_ensemble, features ):
         yaml.dump(yaml_info, output)
 
 ## test accuracy
-def train_ann(features, model_version=None, for_ensemble = False):
+def train_ann(activation_functions,features, model_version=None, for_ensemble = False):
     print('training')
     x,y = get_input_output_labels(features)
     y_enc = prepare_targets(y)
-    eval_accuracy, model, X_test, Y_test = train(x, y_enc, testing_size=0.2,model_version = model_version, for_ensemble=for_ensemble)
+    eval_accuracy, model, X_test, Y_test = train(x, y_enc,activation_functions, testing_size=0.2,model_version = model_version, for_ensemble=for_ensemble)
     test_score, conf_rep = test(X_test, Y_test, model_version=model_version,for_ensemble = for_ensemble)
     print(conf_rep)
     print("Evaluation Score: {}".format(eval_accuracy))
@@ -169,4 +169,4 @@ def get_info(conf_rep):
     return label_data
 
 
-train_ann(['nb_of_pixels_per_segment','horizontal_line_intersection','vertical_line_intersection'])
+# train_ann(['nb_of_pixels_per_segment','horizontal_line_intersection','vertical_line_intersection'])

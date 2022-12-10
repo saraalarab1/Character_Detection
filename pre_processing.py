@@ -9,16 +9,15 @@ HEIGHT = 80
 import numpy as np
 
 def get_cnn_data():
-    training_dataset = dict()
-    images_dir = os.listdir('Img')
     cnn_data = []
-    # open file in read mode
-    with open('english.csv', 'r') as read_obj:
-        csv_reader = reader(read_obj)
-        for row in csv_reader:
-            if os.path.exists('processed_images/' + row[0]):
-                image = cv.imread(os.path.join('processed_images/' + row[0]))
-                cnn_data.append([np.array(image)])
+    data = dict()
+    with open('data.json', 'r') as f:
+        data = json.load(f)
+        for i in data.keys():
+            if not os.path.exists('processed_images_2/' + i) or i not in data:
+                continue
+            image= cv.imread(os.path.join('processed_images_2/' + i))
+            cnn_data.append([np.array(image)])
     np.save('cnn_data.npy', cnn_data)
 
 def convert_csv_to_json():
