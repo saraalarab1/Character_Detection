@@ -221,6 +221,14 @@ def gray_to_black(image):
     return image
 
 
+def convert_dark_to_black_and_light_to_white(image):
+    # Convert all dark pixels (less than 128) to black
+    image[image < 128] = 0
+
+    # Convert all light pixels (greater than or equal to 128) to white
+    image[image >= 128] = 255
+
+    return image
 
 def create_json_arabic():
     images = os.listdir('arabic_data')
