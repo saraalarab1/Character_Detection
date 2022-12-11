@@ -1,4 +1,4 @@
-eval_accuracy: 0.7144353946670889
+eval_accuracy: 0.7155025240965187
 features:
 - nb_of_pixels_per_segment
 - horizontal_line_intersection
@@ -6,6 +6,6 @@ features:
 name: cnn
 prediction_model:
 - pretrained_cnn_model.h5
-test_score: 0.7751938104629517
+test_score: 0.7627906799316406
 training: completed
 weight: 1

@@ -17,6 +17,7 @@ from sklearn.preprocessing import LabelEncoder, OrdinalEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
 from sklearn.preprocessing import StandardScaler
+from keras.models import Model
 
 
 def train(X, Y,activation_functions,testing_size, for_ensemble,model_version):
@@ -63,17 +64,17 @@ def train(X, Y,activation_functions,testing_size, for_ensemble,model_version):
 
     eval_accuracy = np.mean(history.history['accuracy'])
 
-    # print("The validation loss is :", history.history['val_loss'])
-    # print("The training loss is :", history.history['loss'])
-
+    inputs = model.input
+    outputs = model.output
+    exported_model = Model(inputs=inputs, outputs=outputs)
     #save the pretrained model:
     model_name=r'pretrained_cnn_model.h5'
     if model_version:
-        model.save(f"models/{model_version}/{model_name}")
+        exported_model.save(f"models/{model_version}/{model_name}")
     elif for_ensemble:
-        model.save(f"models/cnn_ensemble/{model_name}")
+        exported_model.save(f"models/cnn_ensemble/{model_name}")
     else:
-        model.save(f"models/cnn/{model_name}")
+        exported_model.save(f"models/cnn/{model_name}")
 
     return eval_accuracy, model, X_test, Y_test
 
@@ -86,6 +87,7 @@ def test(X_test, Y_test, model_version, for_ensemble):
     else:
         model = keras.models.load_model(f'models/cnn/pretrained_cnn_model.h5')
 
+    model.compile(optimizer = Adam(learning_rate=0.001), loss=keras.losses.SparseCategoricalCrossentropy(), metrics=['accuracy'])
     score = model.evaluate(X_test, Y_test, batch_size=8)
     test_score = score[1]
     test_loss = score[0]

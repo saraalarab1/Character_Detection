@@ -27,6 +27,7 @@ from segmentation import word_segmentation
 from paragraph_segmentation import paragraph_seg
 from keras import backend as K
 import sklearn
+from keras.optimizers import SGD, Adam
 
 labels=['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']   
 
@@ -170,7 +171,7 @@ def train_new_model():
             yaml_info['test_score'] = float(test_score)
             yaml_info['weights'] = weights
             yaml_info['ensemble_models'] = ensemble_models
-            yaml_info['conf_rep'] = label_data
+            # yaml_info['conf_rep'] = label_data
 
         yaml_info['training'] = 'completed'
         with open(yaml_path, 'w') as output:
@@ -221,41 +222,49 @@ def predict():
             else:
                 probability = 0
                 for model_name in model_names:
-                    current_words = ''
-                    current_prediction = ''
-                    current_probability = 0
-                    if '.pkl' in model_name:
-                        model = pickle.load(open(os.path.join(f"models/{model_version}", model_name), 'rb' ))
-                    elif '.h5' in model_name:
+                    if 'cnn' in model_name:
                         model = keras.models.load_model(f"models/{model_version}/{model_name}")
-                        model.compile(optimizer='adam', loss=keras.losses.SparseCategoricalCrossentropy(), metrics=['accuracy'])
-
-                    for i in range(len(character_features)):
-                        for j in range(len(character_features[i])):
-                            scaler_path = os.path.join(f"models/{model_version}/scaler.pkl")
-                            character_feature = character_features[i][j]
-                            if os.path.exists(scaler_path):
-                                scaling = pickle.load(open(scaler_path, 'rb'))
-                                character_feature = scaling.transform(character_features[i][j])
-                            if 'ann' in model_name or 'cnn' in model_name:
-                                probabilities = model.predict(character_feature)[0]
-                                ann_probability = max(probabilities)
-                                current_probability = current_probability + max(probabilities)
-                                current_prediction = [f"{labels[np.argwhere(probabilities == ann_probability).squeeze()]}"]
-                            else:
-                                current_prediction = model.predict(character_feature)
-                                current_probability = current_probability + max(model.predict_proba(character_feature)[0])
-                            if model_name.__contains__('arabic'):
-                                current_words = current_prediction[0] + current_words
-                            else:
-                                current_words = current_words + current_prediction[0]
-                    current_words = current_words + " "
-                    print(current_words)
-                    if current_probability > probability:
-                        probability = current_probability
-                        output = current_words
-                    current_prediction = ''
-                    current_probability = 0
+                        model.compile(optimizer = Adam(learning_rate=0.001), loss=keras.losses.SparseCategoricalCrossentropy(), metrics=['accuracy'])
+                        print("entering")
+                        for letter in letters:
+                            print(letter)
+                            prediction = model.predict([letter])
+                            print(prediction)
+                    else:
+                        current_words = ''
+                        current_prediction = ''
+                        current_probability = 0
+                        if '.pkl' in model_name:
+                            model = pickle.load(open(os.path.join(f"models/{model_version}", model_name), 'rb' ))
+                        elif 'ann' in model_name:
+                            model = keras.models.load_model(f"models/{model_version}/{model_name}")
+                            model.compile(optimizer='adam', loss=keras.losses.SparseCategoricalCrossentropy(), metrics=['accuracy'])
+                        for i in range(len(character_features)):
+                            for j in range(len(character_features[i])):
+                                scaler_path = os.path.join(f"models/{model_version}/scaler.pkl")
+                                character_feature = character_features[i][j]
+                                if os.path.exists(scaler_path):
+                                    scaling = pickle.load(open(scaler_path, 'rb'))
+                                    character_feature = scaling.transform(character_features[i][j])
+                                if 'ann' in model_name:
+                                    probabilities = model.predict(character_feature)[0]
+                                    ann_probability = max(probabilities)
+                                    current_probability = current_probability + max(probabilities)
+                                    current_prediction = [f"{labels[np.argwhere(probabilities == ann_probability).squeeze()]}"]
+                                else:
+                                    current_prediction = model.predict(character_feature)
+                                    current_probability = current_probability + max(model.predict_proba(character_feature)[0])
+                                if model_name.__contains__('arabic'):
+                                    current_words = current_prediction[0] + current_words
+                                else:
+                                    current_words = current_words + current_prediction[0]
+                        current_words = current_words + " "
+                        print(current_words)
+                        if current_probability > probability:
+                            probability = current_probability
+                            output = current_words
+                        current_prediction = ''
+                        current_probability = 0
     response = jsonify(word = output)
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response
