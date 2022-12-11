@@ -41,17 +41,17 @@ def train(X, Y,activation_functions, testing_size, for_ensemble,model_version):
     model.add(Dense(100, input_dim=X0_train.shape[1], activation=activation_functions[0]))
 
     # Add the hidden layers
-    for i in range(1, len(activation_functions)-1):
+    for i in range(2, len(activation_functions)):
         model.add(Dense(88-i*3, activation=activation_functions[i]))
 
     # Add the output layer
-    model.add(Dense(62, activation=activation_functions[-1]))
+    model.add(Dense(62, activation=activation_functions[1]))
 
     # Compile the model
     model.compile(optimizer='adam', loss=keras.losses.SparseCategoricalCrossentropy(), metrics=['accuracy'])
 
     # Train the model on the training set
-    history =  model.fit(X0_train, Y0_train, epochs=10, batch_size=8)
+    history =  model.fit(X0_train, Y0_train, epochs=50, batch_size=8)
 
     eval_accuracy = np.mean(history.history['accuracy'])
 

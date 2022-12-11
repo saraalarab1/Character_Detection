@@ -1,0 +1,9 @@
+eval_accuracy: 0.9275746989250183
+features:
+- nb_of_pixels_per_segment
+- horizontal_line_intersection
+name: ann
+prediction_model: pretrained_ann_model.pkl
+test_score: 0.7813953757286072
+training: completed
+weight: 1
