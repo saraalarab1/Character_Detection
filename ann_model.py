@@ -159,4 +159,4 @@ def get_info(conf_rep):
     return label_data
 
 
-train_ann(['relu','softmax','sigmoid'],['nb_of_pixels_per_segment','horizontal_line_intersection','vertical_line_intersection'])
+# train_ann(['relu','softmax','sigmoid'],['nb_of_pixels_per_segment','horizontal_line_intersection','vertical_line_intersection'])

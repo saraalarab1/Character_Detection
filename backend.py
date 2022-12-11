@@ -201,11 +201,6 @@ def predict():
             for j in range(len(letters[i])):
                 letters[i][j] = pre_process_letter(letters[i][j])
 
-        for w in letters:
-            for letter in w:
-                print(letter)
-                cv.imshow('image', letter)
-                cv.waitKey(0)
         print(model_version)
         yaml_path = os.path.join(f"models/{model_version}", "model.yaml")
         with open(yaml_path, 'r') as f:
