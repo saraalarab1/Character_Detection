@@ -119,7 +119,7 @@ def test(X_test, Y_test, model_version, for_ensemble):
 def save_model(eval_accuracy, test_score, conf_rep, features ):
     yaml_info = dict()
 
-    yaml_info['prediction_model'] = "pretrained_ensemble_model.h5"
+    yaml_info['prediction_model'] = ["pretrained_ensemble_model.h5"]
     yaml_info['features'] = features
     yaml_info['training'] = 'completed'
     yaml_info['name'] = 'cnn'

@@ -3,7 +3,8 @@ features:
 - horizontal_line_intersection
 - vertical_line_intersection
 name: ann
-prediction_model: pretrained_ensemble_model.h5
+prediction_model:
+- pretrained_ann_model.h5
 training: completed
 eval_accuracy: 0.760069853067398
 test_score: 0.778294563293457

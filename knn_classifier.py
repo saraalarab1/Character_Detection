@@ -146,7 +146,7 @@ def save_model(eval_accuracy, test_score, conf_rep, features,arabic ):
     model_language = 'english'
     if arabic: 
         model_language = 'arabic'
-    yaml_info['prediction_model'] = f"pretrained_knn_{model_language}_model.pkl"
+    yaml_info['prediction_model'] = [f"pretrained_knn_{model_language}_model.pkl"]
     yaml_info['features'] = features
     yaml_info['training'] = 'completed'
     yaml_info['name'] = 'knn'

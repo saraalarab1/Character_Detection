@@ -117,7 +117,7 @@ def get_input_output_labels(features):
 def save_model(eval_accuracy, test_score, conf_rep, features ):
     yaml_info = dict()
 
-    yaml_info['prediction_model'] = "pretrained_svm_model.pkl"
+    yaml_info['prediction_model'] = ["pretrained_svm_model.pkl"]
     yaml_info['features'] = features
     yaml_info['training'] = 'completed'
     yaml_info['name'] = 'svm_case'
