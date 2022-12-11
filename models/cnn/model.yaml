@@ -5,7 +5,7 @@ features:
 - vertical_line_intersection
 name: cnn
 prediction_model:
-- pretrained_ensemble_model.h5
+- pretrained_cnn_model.h5
 test_score: 0.7751938104629517
 training: completed
 weight: 1
