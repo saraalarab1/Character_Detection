@@ -120,20 +120,14 @@ def save_model(eval_accuracy, test_score, conf_rep, features ):
     yaml_info['prediction_model'] = "pretrained_svm_model.pkl"
     yaml_info['features'] = features
     yaml_info['training'] = 'completed'
-    yaml_info['name'] = 'pretrained_svm_model.pkl'
+    yaml_info['name'] = 'svm_case'
+    yaml_info['eval_accuracy'] = float(eval_accuracy)
+    yaml_info['test_score'] = float(test_score)
+    yaml_info['weight'] = 1
+    # yaml_info['conf_rep'] = get_info(conf_rep)
 
     model_version="svm_case"
-
     yaml_path = os.path.join("models",model_version, 'model.yaml')
-    with open(yaml_path, 'w') as output:
-        yaml.dump(yaml_info, output)
-
-        yaml_info['svm'] = dict()
-        yaml_info['svm']['eval_accuracy'] = float(eval_accuracy)
-        yaml_info['svm']['test_score'] = float(test_score)
-        yaml_info['svm']['conf_rep'] = get_info(conf_rep)
-        yaml_info['svm']['weight'] = 1
-
     with open(yaml_path, 'w') as output:
         yaml.dump(yaml_info, output)
 

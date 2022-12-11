@@ -95,8 +95,8 @@ def train_svm(features, model_version=None, for_ensemble = False):
     print(conf_rep)
     print("Evaluation Score: {}".format(eval_accuracy))
     print("Test Score: {}".format(test_score))
-    if model_version is None:
-        save_model(eval_accuracy, test_score, conf_rep,for_ensemble ,features)
+    if model_version is None and not for_ensemble:
+        save_model(eval_accuracy, test_score, conf_rep ,features)
     return eval_accuracy, model, test_score, conf_rep
 
 def get_input_output_labels(features):
@@ -117,28 +117,20 @@ def get_input_output_labels(features):
             y.append(data[i]['label'])
     return (x,y)
 
-def save_model(eval_accuracy, test_score, conf_rep, for_ensemble, features ):
+def save_model(eval_accuracy, test_score, conf_rep, features ):
     yaml_info = dict()
 
     yaml_info['prediction_model'] = "pretrained_svm_model.pkl"
     yaml_info['features'] = features
     yaml_info['training'] = 'completed'
-    yaml_info['name'] = 'pretrained_svm_model.pkl'
+    yaml_info['name'] = 'svm'
+    yaml_info['eval_accuracy'] = float(eval_accuracy)
+    yaml_info['test_score'] = float(test_score)
+    yaml_info['weight'] = 1
+    # yaml_info['conf_rep'] = get_info(conf_rep)
 
     model_version="svm"
-    if for_ensemble:
-        model_version = "svm_ensemble"
-
     yaml_path = os.path.join("models",model_version, 'model.yaml')
-    with open(yaml_path, 'w') as output:
-        yaml.dump(yaml_info, output)
-
-        yaml_info['svm'] = dict()
-        yaml_info['svm']['eval_accuracy'] = float(eval_accuracy)
-        yaml_info['svm']['test_score'] = float(test_score)
-        yaml_info['svm']['conf_rep'] = get_info(conf_rep)
-        yaml_info['svm']['weight'] = 1
-
     with open(yaml_path, 'w') as output:
         yaml.dump(yaml_info, output)
 

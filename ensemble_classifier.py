@@ -77,7 +77,7 @@ def train_ensemble(estimators, weights,features, model_version=None):
     print("Test Score: {}".format(test_score))
     if model_version is None:
         save_model(eval_accuracy, test_score, conf_rep ,features)
-    return eval_accuracy, model, test_score, conf_rep
+    return eval_accuracy, test_score, conf_rep
 
 
 def get_input_output_labels(features):
@@ -103,20 +103,14 @@ def save_model(eval_accuracy, test_score, conf_rep, features ):
     yaml_info['prediction_model'] = "pretrained_ensemble_model.pkl"
     yaml_info['features'] = features
     yaml_info['training'] = 'completed'
-    yaml_info['name'] = 'pretrained_ensemble_model.pkl'
+    yaml_info['name'] = 'ensemble'
+    yaml_info['eval_accuracy'] = float(eval_accuracy)
+    yaml_info['test_score'] = float(test_score)
+    yaml_info['weight'] = 1
+    # yaml_info['conf_rep'] = get_info(conf_rep)
 
     model_version="ensemble"
-
     yaml_path = os.path.join("models",model_version, 'model.yaml')
-    with open(yaml_path, 'w') as output:
-        yaml.dump(yaml_info, output)
-
-        yaml_info['ensemble'] = dict()
-        yaml_info['ensemble']['eval_accuracy'] = float(eval_accuracy)
-        yaml_info['ensemble']['test_score'] = float(test_score)
-        yaml_info['ensemble']['conf_rep'] = get_info(conf_rep)
-        yaml_info['ensemble']['weight'] = 1
-
     with open(yaml_path, 'w') as output:
         yaml.dump(yaml_info, output)
 

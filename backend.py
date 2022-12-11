@@ -73,8 +73,10 @@ def train_new_model():
         model_version = str(datetime.now()).replace('-', '_').replace(' ','_').replace(':','_')
         makedirs("models/"+model_version)
         yaml_info = dict()
+        ensemble = False
         if len(models)> 1:
             yaml_info['prediction_model'] = 'pretrained_ensemble_model.pkl'
+            ensemble = True
         else:
             yaml_info['prediction_model'] = 'pretrained_'+models[0]['name']+'_model.pkl'
 
@@ -87,12 +89,8 @@ def train_new_model():
         estimators=[]
         weights = []
         activation_functions = []
-        ensemble = False
-        if yaml_info['prediction_model'] == 'pretrained_ensemble_model.pkl':
-            ensemble = True
 
         for model in models:
-            print(model)
             if model['name'] == 'knn':
                 eval_accuracy, model_classifier, test_score, conf_rep = train_knn(features, model_version,for_ensemble=ensemble)
             if model['name'] == 'svm':
@@ -108,17 +106,21 @@ def train_new_model():
 
             estimators.append((model['name'],model_classifier))
             weights.append(int(model['weight']))
-            # label_data= get_info(conf_rep)
 
-            yaml_info[model['name']] = dict()
-            yaml_info[model['name']]['eval_accuracy'] = float(eval_accuracy)
-            yaml_info[model['name']]['test_score'] = float(test_score)
-            # yaml_info[model['name']]['conf_rep'] = label_data
-            yaml_info[model['name']]['weight'] = model['weight']
+            if not ensemble:
+                yaml_info['name'] = model['name']
+                yaml_info['eval_accuracy'] = float(eval_accuracy)
+                yaml_info['test_score'] = float(test_score)
+                yaml_info['weight'] = model['weight']
+                # yaml_info['conf_rep'] = label_data
 
-        if yaml_info['prediction_model'] == 'pretrained_ensemble_model.pkl':
-            print(estimators,weights,features,model_version)
-            train_ensemble(estimators,weights,features,model_version)
+        if ensemble:
+            eval_accuracy, test_score, conf_rep = train_ensemble(estimators,weights,features,model_version)
+            yaml_info['name'] = 'ensemble'
+            yaml_info['eval_accuracy'] = float(eval_accuracy)
+            yaml_info['test_score'] = float(test_score)
+            yaml_info['weight'] = model['weight']
+            # yaml_info['conf_rep'] = label_data
 
         yaml_info['training'] = 'completed'
 
