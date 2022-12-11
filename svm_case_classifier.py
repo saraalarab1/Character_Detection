@@ -124,7 +124,7 @@ def save_model(eval_accuracy, test_score, conf_rep, features ):
     yaml_info['eval_accuracy'] = float(eval_accuracy)
     yaml_info['test_score'] = float(test_score)
     yaml_info['weight'] = 1
-    # yaml_info['conf_rep'] = get_info(conf_rep)
+    yaml_info['conf_rep'] = get_info(conf_rep)
 
     model_version="svm_case"
     yaml_path = os.path.join("models",model_version, 'model.yaml')

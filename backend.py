@@ -89,6 +89,7 @@ def train_new_model():
         estimators=[]
         weights = []
         activation_functions = []
+        ensemble_models = []
 
         for model in models:
             if model['name'] == 'knn':
@@ -105,6 +106,7 @@ def train_new_model():
                 eval_accuracy, model_classifier, test_score, conf_rep = train_cnn(activation_functions, model_version,for_ensemble=ensemble)
 
             estimators.append((model['name'],model_classifier))
+            ensemble_models.append(model['name'])
             weights.append(int(model['weight']))
 
             if not ensemble:
@@ -119,8 +121,10 @@ def train_new_model():
             yaml_info['name'] = 'ensemble'
             yaml_info['eval_accuracy'] = float(eval_accuracy)
             yaml_info['test_score'] = float(test_score)
-            yaml_info['weight'] = model['weight']
+            yaml_info['weights'] = weights
+            yaml_info['ensemble_models'] = ensemble_models
             # yaml_info['conf_rep'] = label_data
+
 
         yaml_info['training'] = 'completed'
 
