@@ -26,6 +26,7 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from segmentation import word_segmentation
 from paragraph_segmentation import paragraph_seg
 from keras import backend as K
+import sklearn
 
 labels=['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']   
 
@@ -229,7 +230,6 @@ def predict():
                         model = keras.models.load_model(f"models/{model_version}/{model_name}")
                         model.compile(optimizer='adam', loss=keras.losses.SparseCategoricalCrossentropy(), metrics=['accuracy'])
 
-
                     for i in range(len(character_features)):
                         for j in range(len(character_features[i])):
                             scaler_path = os.path.join(f"models/{model_version}/scaler.pkl")
@@ -237,10 +237,14 @@ def predict():
                             if os.path.exists(scaler_path):
                                 scaling = pickle.load(open(scaler_path, 'rb'))
                                 character_feature = scaling.transform(character_features[i][j])
-                            current_prediction = model.predict(character_feature)
-                            current_probability = current_probability + max(model.predict_proba(character_feature)[0])
-                            # cv.imshow('image', letters[i][j])
-                            # cv.waitKey(0)
+                            if 'ann' in model_name or 'cnn' in model_name:
+                                probabilities = model.predict(character_feature)[0]
+                                ann_probability = max(probabilities)
+                                current_probability = current_probability + max(probabilities)
+                                current_prediction = [f"{labels[np.argwhere(probabilities == ann_probability).squeeze()]}"]
+                            else:
+                                current_prediction = model.predict(character_feature)
+                                current_probability = current_probability + max(model.predict_proba(character_feature)[0])
                             if model_name.__contains__('arabic'):
                                 current_words = current_prediction[0] + current_words
                             else:
