@@ -175,21 +175,17 @@ def get_input_output_labels():
 def save_model(test_score, conf_rep, features):
     yaml_info = dict()
 
-    yaml_info['prediction_model'] = "pretrained_detection_model.pkl"
+    yaml_info['prediction_model'] = ["pretrained_detection_model.pkl"]
     yaml_info['features'] = features
     yaml_info['training'] = 'completed'
     yaml_info['name'] = 'our_model'
+    yaml_info['test_score'] = float(test_score)
+    yaml_info['weight'] = 1
+    yaml_info['conf_rep'] = get_info(conf_rep)
 
     model_version="our_model"
 
     yaml_path = os.path.join("models",model_version, 'model.yaml')
-    with open(yaml_path, 'w') as output:
-        yaml.dump(yaml_info, output)
-
-        yaml_info['our_model'] = dict()
-        yaml_info['our_model']['test_score'] = float(test_score)
-        yaml_info['our_model']['conf_rep'] = get_info(conf_rep)
-
     with open(yaml_path, 'w') as output:
         yaml.dump(yaml_info, output)
 

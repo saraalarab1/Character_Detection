@@ -19,7 +19,7 @@ def get_cnn_data():
             if not os.path.exists('processed_images_2/' + i) or i not in data:
                 continue
             image= cv.imread(os.path.join('processed_images_2/' + i))
-            cnn_data.append([np.array(image)])
+            cnn_data.append(np.array(image))
     np.save('cnn_data.npy', cnn_data)
 
 def convert_csv_to_json():

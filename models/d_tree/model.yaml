@@ -240,7 +240,8 @@ d_tree:
 features:
 - nb_of_pixels_per_segment
 name: d_tree
-prediction_model: pretrained_dtree_model.pkl
+prediction_model: 
+- pretrained_dtree_model.pkl
 training: completed
 eval_accuracy: 51.4
 test_score: 56.7

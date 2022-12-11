@@ -244,7 +244,8 @@ features:
 - horizontal_line_intersection
 - vertical_line_intersection
 name: ensemble
-prediction_model: pretrained_ensemble_model.pkl
+prediction_model:
+- pretrained_ensemble_model.pkl
 test_score: 0.7987616099071208
 training: completed
 weights:
