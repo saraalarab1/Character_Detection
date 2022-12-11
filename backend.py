@@ -21,6 +21,7 @@ import numpy as np
 from ensemble_classifier import train_ensemble
 from ann_model import train_ann
 from cnn_model import train_cnn
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 app = Flask(__name__)
 CORS(app, resources={r"*": {"origins": "*"}})
@@ -70,15 +71,26 @@ def train_new_model():
     if request.method == 'POST':
         models = request.json['models']
         features = request.json['features']
+        english = request.json['english']
+        arabic = request.json['arabic']
         model_version = str(datetime.now()).replace('-', '_').replace(' ','_').replace(':','_')
         makedirs("models/"+model_version)
         yaml_info = dict()
+        prediction_models =[]
         ensemble = False
         if len(models)> 1:
-            yaml_info['prediction_model'] = 'pretrained_ensemble_model.pkl'
             ensemble = True
+            if english:
+                prediction_models.append('pretrained_ensemble_english_model.pkl')
+            if arabic: 
+                prediction_models.append('pretrained_ensemble_arabic_model.pkl')
+            yaml_info['prediction_model'] = prediction_models
         else:
-            yaml_info['prediction_model'] = 'pretrained_'+models[0]['name']+'_model.pkl'
+            if english:
+                prediction_models.append('pretrained_'+models[0]['name']+'_english_model.pkl')
+            else:
+                prediction_models.append('pretrained_'+models[0]['name']+'_arabic_model.pkl')
+            yaml_info['prediction_model'] = prediction_models
 
         yaml_info['features'] = features
         yaml_info['training'] = 'running'
@@ -86,28 +98,51 @@ def train_new_model():
         with open(yaml_path, 'w') as output:
             yaml.dump(yaml_info, output)
 
-        estimators=[]
+        estimatorsEnglish=[]
+        estimatorsArabic = []
         weights = []
         activation_functions = []
         ensemble_models = []
 
         for model in models:
-            if model['name'] == 'knn':
-                eval_accuracy, model_classifier, test_score, conf_rep = train_knn(features, model_version,for_ensemble=ensemble)
-            if model['name'] == 'svm':
-                eval_accuracy, model_classifier, test_score, conf_rep = train_svm(features, model_version,for_ensemble=ensemble)
-            if model['name'] == 'dt':
-                eval_accuracy, model_classifier, test_score, conf_rep = train_dt(features, model_version,for_ensemble=ensemble)
-            if model['name'] == 'ann':
-                activation_functions = model['activation_functions']
-                eval_accuracy, model_classifier, test_score, conf_rep = train_ann(activation_functions,features, model_version,for_ensemble=ensemble)
-            if model['name'] == 'cnn':
-                activation_functions = model['activation_functions']
-                eval_accuracy, model_classifier, test_score, conf_rep = train_cnn(activation_functions, model_version,for_ensemble=ensemble)
+            if english:
+                if model['name'] == 'knn':
+                    eval_accuracy, model_classifier, test_score, conf_rep = train_knn(features, model_version,for_ensemble=ensemble)
+                if model['name'] == 'svm':
+                    eval_accuracy, model_classifier, test_score, conf_rep = train_svm(features, model_version,for_ensemble=ensemble)
+                if model['name'] == 'dt':
+                    eval_accuracy, model_classifier, test_score, conf_rep = train_dt(features, model_version,for_ensemble=ensemble)
+                if model['name'] == 'ann':
+                    activation_functions = model['activation_functions']
+                    eval_accuracy, model_classifier, test_score, conf_rep = train_ann(activation_functions,features, model_version,for_ensemble=ensemble)
+                if model['name'] == 'cnn':
+                    activation_functions = model['activation_functions']
+                    eval_accuracy, model_classifier, test_score, conf_rep = train_cnn(activation_functions, model_version,for_ensemble=ensemble)
 
-            estimators.append((model['name'],model_classifier))
-            ensemble_models.append(model['name'])
-            weights.append(int(model['weight']))
+                estimatorsEnglish.append((model['name'],model_classifier))
+                ensemble_models.append(model['name'])
+                label_data= get_info(conf_rep)
+                weights.append(int(model['weight']))
+
+            if arabic:
+                if model['name'] == 'knn':
+                    eval_accuracy, model_classifier, test_score, conf_rep = train_knn(features, model_version,for_ensemble=ensemble, arabic = True)
+                if model['name'] == 'svm':
+                    eval_accuracy, model_classifier, test_score, conf_rep = train_svm(features, model_version,for_ensemble=ensemble, arabic = True)
+                if model['name'] == 'dt':
+                    eval_accuracy, model_classifier, test_score, conf_rep = train_dt(features, model_version,for_ensemble=ensemble, arabic = True)
+                if model['name'] == 'ann':
+                    activation_functions = model['activation_functions']
+                    eval_accuracy, model_classifier, test_score, conf_rep = train_ann(activation_functions,features, model_version,for_ensemble=ensemble, arabic = True)
+                if model['name'] == 'cnn':
+                    activation_functions = model['activation_functions']
+                    eval_accuracy, model_classifier, test_score, conf_rep = train_cnn(activation_functions, model_version,for_ensemble=ensemble, arabic = True)
+
+                estimatorsArabic.append((model['name'],model_classifier)) 
+                ensemble_models.append(model['name'])
+                label_data= get_info(conf_rep)
+                if not english:
+                    weights.append(int(model['weight']))
 
             if not ensemble:
                 yaml_info['name'] = model['name']
@@ -115,19 +150,22 @@ def train_new_model():
                 yaml_info['test_score'] = float(test_score)
                 yaml_info['weight'] = model['weight']
                 # yaml_info['conf_rep'] = label_data
-
+            
         if ensemble:
-            eval_accuracy, test_score, conf_rep = train_ensemble(estimators,weights,features,model_version)
+            prediction_models = yaml_info['prediction_model']
+            for prediction_model in prediction_models:
+                if prediction_model == 'pretrained_ensemble_english_model.pkl':
+                    train_ensemble(estimatorsEnglish,weights,features,model_version)
+                if prediction_model == 'pretrained_ensemble_arabic_model.pkl':
+                    train_ensemble(estimatorsArabic, weights, features, model_version, arabic= True)
             yaml_info['name'] = 'ensemble'
             yaml_info['eval_accuracy'] = float(eval_accuracy)
             yaml_info['test_score'] = float(test_score)
             yaml_info['weights'] = weights
             yaml_info['ensemble_models'] = ensemble_models
-            # yaml_info['conf_rep'] = label_data
-
+            yaml_info['conf_rep'] = label_data
 
         yaml_info['training'] = 'completed'
-
         with open(yaml_path, 'w') as output:
             yaml.dump(yaml_info, output)
 
@@ -144,8 +182,11 @@ def predict():
         im_bytes = base64.b64decode(base64_image)
         im_arr = np.frombuffer(im_bytes, dtype=np.uint8)  # im_arr is one-dim Numpy array
         image = cv.imdecode(im_arr, flags=cv.IMREAD_COLOR)
+        # cv.imshow('image', image)
+        # cv.waitKey(0)
         model_version = request.json['model_version']
         letters = pre_process_image(image)
+
         # for letter in letters:
         #     cv.imshow('image', letter)
         #     cv.waitKey(0)
@@ -154,22 +195,42 @@ def predict():
         yaml_path = os.path.join(f"models/{model_version}", "model.yaml")
         with open(yaml_path, 'r') as f:
             yaml_info = yaml.safe_load(f)
+            print(model_version, yaml_info['prediction_model'])
             features = yaml_info['features']
             character_features = get_character_features(features, letters)
             case_features = get_case_features(letters)
             if model_version != 'topPerformer':
-                model_name = yaml_info['prediction_model']
-                model = pickle.load(open(os.path.join(f"models/{model_version}", model_name), 'rb' ))
+                model_names = yaml_info['prediction_model']
             word = ''
-            for i in range(len(character_features)):
-                if model_version == 'topPerformer':
+            if model_version == 'topPerformer':
+                for i in range(len(character_features)):
                     prediction = predict_model(character_features[i], case_features[i])
-                else:
-                    prediction = model.predict(character_features[i])
-                print(prediction)
-                word = word + prediction[0]
-            # print(prediction)
-        #     return render_template("predict.html")
+                    word = word + prediction[0]
+
+            else:
+                probability = 0
+                for model_name in model_names:
+                    current_word = ''
+                    current_prediction = ''
+                    current_probability = 0
+                    model = pickle.load(open(os.path.join(f"models/{model_version}", model_name), 'rb' ))
+                    for i in range(len(character_features)):
+                        scaler_path = os.path.join(f"models/{model_version}/scaler.pkl")
+                        character_feature = character_features[i]
+                        if os.path.exists(scaler_path):
+                            scaling = pickle.load(open(scaler_path, 'rb'))
+                            character_feature = scaling.transform(character_features[i])
+                        current_prediction = model.predict(character_feature)
+                        current_probability = current_probability + max(model.predict_proba(character_feature)[0])
+                        if model_name.__contains__('arabic'):
+                            current_word = current_prediction[0] + current_word
+                        else:
+                            current_word = current_word + current_prediction[0]
+                    if current_probability > probability:
+                        probability = current_probability
+                        word = current_word
+                    current_prediction = ''
+                    current_probability = 0
     response = jsonify(word = word)
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response
@@ -185,7 +246,7 @@ def get_info(conf_rep):
         label_information = " ".join(label_information.split())
         label_information = label_information.split(" ")
         if len(label_information) < 4:
-            continue
+            break
         label_data.append({label_information[0]:[float(label_information[1]),float(label_information[2]),float(label_information[3])]})
 
     return label_data

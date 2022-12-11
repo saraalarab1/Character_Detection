@@ -105,7 +105,7 @@ def save_model(eval_accuracy, test_score, conf_rep, features):
         yaml.dump(yaml_info, output)
 
 ## test accuracy
-def train_ann(activation_functions,features, model_version=None, for_ensemble = False):
+def train_ann(activation_functions,features, model_version=None, for_ensemble = False, arabic = False):
     print('training')
     x,y = get_input_output_labels(features)
     y_enc = prepare_targets(y)

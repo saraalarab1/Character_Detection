@@ -26,6 +26,8 @@ def skeletonize_image(image, image_name):
     image[white_pixels] = [0, 0, 0]
 
     # perform skeletonization
+    # cv2.imshow('image_skeelton', image)
+    # cv2.waitKey(0)
     image = skeletonize(image)
     green_pixels = np.where(
         (image[:, :, 0] == 0) & 
@@ -39,6 +41,7 @@ def skeletonize_image(image, image_name):
         )
     image[green_pixels] = [0, 0, 0]
     image[black_pixels] = [255, 255, 255]
+    return image
     # display results
     # fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(8, 4),
     #                         sharex=True, sharey=True)
@@ -55,8 +58,8 @@ def skeletonize_image(image, image_name):
 
     # fig.tight_layout()
     # plt.show()
-    print(image_name)
-    cv2.imwrite('skeletonized_images_2/'+image_name, image)
+    # print(image_name)
+    # cv2.imwrite('skeletonized_images_2/'+image_name, image)
 
 # skeletonize_image('image', 'sldkfjdl')
 
