@@ -37,8 +37,6 @@ def train(X, Y,activation_functions, testing_size, for_ensemble,model_version):
 
     # Build the ANN model
     model = Sequential()
-    # Dense(100, input_shape=(146,), activation='relu'),
-
     # Add the input layer
     model.add(Dense(100, input_dim=X0_train.shape[1], activation=activation_functions[0]))
 
@@ -50,11 +48,9 @@ def train(X, Y,activation_functions, testing_size, for_ensemble,model_version):
     model.add(Dense(62, activation=activation_functions[-1]))
 
     # Compile the model
-    # model.compile(optimizer='adam',loss=keras.losses.SparseCategoricalCrossentropy(),metrics=['accuracy'])
     model.compile(optimizer='adam', loss=keras.losses.SparseCategoricalCrossentropy(), metrics=['accuracy'])
 
     # Train the model on the training set
-    # history = model.fit(X0_train, Y0_train, epochs=10, batch_size=8)
     history =  model.fit(X0_train, Y0_train, epochs=10, batch_size=8)
 
     eval_accuracy = np.mean(history.history['accuracy'])
