@@ -3,6 +3,7 @@
 /arabic_data
 /arabic_data_processed
 /processed_images_arabic
+/predictions
 env
 venv
 __pycache__

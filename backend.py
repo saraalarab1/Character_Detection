@@ -8,7 +8,7 @@ from matplotlib.style import available
 import yaml
 import cv2 as cv
 from features import get_character_features, get_case_features
-from pre_processing import pre_process_image
+from pre_processing import pre_process_image, pre_process_letter
 from our_model import predict_model
 from knn_classifier import train_knn
 from svm_classifier import train_svm
@@ -22,7 +22,8 @@ from ensemble_classifier import train_ensemble
 from ann_model import train_ann
 from cnn_model import train_cnn
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
-
+from segmentation import word_segmentation
+from paragraph_segmentation import paragraph_seg
 app = Flask(__name__)
 CORS(app, resources={r"*": {"origins": "*"}})
 
@@ -182,15 +183,24 @@ def predict():
         im_bytes = base64.b64decode(base64_image)
         im_arr = np.frombuffer(im_bytes, dtype=np.uint8)  # im_arr is one-dim Numpy array
         image = cv.imdecode(im_arr, flags=cv.IMREAD_COLOR)
-        # cv.imshow('image', image)
-        # cv.waitKey(0)
         model_version = request.json['model_version']
-        letters = pre_process_image(image)
+        category = request.json['category']
+        if category == "letter":
+            letters = [[image]]
+        elif category == "word": 
+            letters = [word_segmentation(image)]
+        else:
+            letters = paragraph_seg(image)
 
-        # for letter in letters:
-        #     cv.imshow('image', letter)
-        #     cv.waitKey(0)
-        print('Number Of Letters: '+ str(len(letters)))
+        for i in range(len(letters)):
+            for j in range(len(letters[i])):
+                letters[i][j] = pre_process_letter(letters[i][j])
+
+        for w in letters:
+            for letter in w:
+                print(letter)
+                cv.imshow('image', letter)
+                cv.waitKey(0)
         print(model_version)
         yaml_path = os.path.join(f"models/{model_version}", "model.yaml")
         with open(yaml_path, 'r') as f:
@@ -201,37 +211,42 @@ def predict():
             case_features = get_case_features(letters)
             if model_version != 'topPerformer':
                 model_names = yaml_info['prediction_model']
-            word = ''
+            output = ''
             if model_version == 'topPerformer':
                 for i in range(len(character_features)):
                     prediction = predict_model(character_features[i], case_features[i])
-                    word = word + prediction[0]
+                    output = output + prediction[0]
 
             else:
                 probability = 0
                 for model_name in model_names:
-                    current_word = ''
+                    current_words = ''
                     current_prediction = ''
                     current_probability = 0
                     model = pickle.load(open(os.path.join(f"models/{model_version}", model_name), 'rb' ))
                     for i in range(len(character_features)):
-                        scaler_path = os.path.join(f"models/{model_version}/scaler.pkl")
-                        character_feature = character_features[i]
-                        if os.path.exists(scaler_path):
-                            scaling = pickle.load(open(scaler_path, 'rb'))
-                            character_feature = scaling.transform(character_features[i])
-                        current_prediction = model.predict(character_feature)
-                        current_probability = current_probability + max(model.predict_proba(character_feature)[0])
-                        if model_name.__contains__('arabic'):
-                            current_word = current_prediction[0] + current_word
-                        else:
-                            current_word = current_word + current_prediction[0]
+                        for j in range(len(character_features[i])):
+                            scaler_path = os.path.join(f"models/{model_version}/scaler.pkl")
+                            character_feature = character_features[i][j]
+                            if os.path.exists(scaler_path):
+                                scaling = pickle.load(open(scaler_path, 'rb'))
+                                character_feature = scaling.transform(character_features[i][j])
+                            current_prediction = model.predict(character_feature)
+                            current_probability = current_probability + max(model.predict_proba(character_feature)[0])
+                            # cv.imshow('image', letters[i][j])
+                            # cv.waitKey(0)
+                            if model_name.__contains__('arabic'):
+                                current_words = current_prediction[0] + current_words
+                            else:
+                                current_words = current_words + current_prediction[0]
+                    current_words = current_words + " "
+                    print(current_words)
                     if current_probability > probability:
                         probability = current_probability
-                        word = current_word
+                        output = current_words
                     current_prediction = ''
                     current_probability = 0
-    response = jsonify(word = word)
+    response = jsonify(word = output)
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response
 

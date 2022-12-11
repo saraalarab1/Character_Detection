@@ -154,53 +154,60 @@ def percentage_of_pixels_on_vertical_center(image):
         image[i][int(HEIGHT/2)] = (255, 0, 0)
     return nb_of_pixels_at_vertical/(total_nb_of_black_pixels if total_nb_of_black_pixels > 0 else 0.1)
 
-def get_case_features(characters):
+def get_case_features(words):
     features= ['nb_of_pixels_per_segment', 'aspect_ratio']
     features_data = []
     features_of_characters = []
-    for character in characters:
-        for feature in features:
-            if feature == 'nb_of_pixels_per_segment':
-                features_data.extend(nb_of_pixels_per_segment(character, 7))
-            elif feature == 'aspect_ratio':
-                features_data.extend([aspect_ratio(character)])
-        features_of_characters.append([features_data])
-        features_data = []
-    return features_of_characters
+    features_of_words = []
+    for word in words:
+        for character in word:
+            for feature in features:
+                if feature == 'nb_of_pixels_per_segment':
+                    features_data.extend(nb_of_pixels_per_segment(character, 7))
+                elif feature == 'aspect_ratio':
+                    features_data.extend([aspect_ratio(character)])
+            features_of_characters.append([features_data])
+            features_data = []
+        features_of_words.append(features_of_characters)
+        features_of_characters = []
+    return features_of_words
 
-def get_character_features(features, characters):
+def get_character_features(features, words):
     """
     This function gets required features of a certain character
     """
     features_data = []
-    features_of_characters = []
-    for character in characters: 
-        for feature in features:
-            if feature == 'nb_of_pixels_per_segment':
-                features_data.extend(nb_of_pixels_per_segment(character, 7))
-            elif feature == 'aspect_ratio':
-                features_data.extend([aspect_ratio(character)])
-            elif feature == 'vertical_ratio':
-                features_data.extend([vertical_ratio(character)])
-            elif feature == 'horizontal_ratio':
-                features_data.extend([horizontal_ratio(character)])
-            elif feature == 'vertical_symmetry':
-                features_data.extend([vertical_symmetry(character)])
-            elif feature == 'horizontal_symmetry':
-                features_data.extend([horizontal_symmetry(character)])
-            elif feature == 'horizontal_line_intersection':
-                features_data.extend([horizontal_line_intersection(character)])
-            elif feature == 'vertical_line_intersection':
-                features_data.extend([vertical_line_intersection(character)])
-            elif feature == 'vertical_histogram_projection':
-                features_data.extend(vertical_histogram_projection(character))
-            elif feature == 'horizontal_histogram_projection':
-                features_data.extend(horizontal_histogram_projection(character))
-            elif feature == 'percentage_of_pixels_on_horizontal_center':
-                features_data.extend([percentage_of_pixels_on_horizontal_center(character)])
-            elif feature == 'percentage_of_pixels_on_vertical_center':
-                features_data.extend([percentage_of_pixels_on_vertical_center(character)])
-            
-        features_of_characters.append([features_data])
-        features_data = []
-    return features_of_characters
+    features_of_words = []
+    for word in words:
+        features_of_characters = []
+        for character in word: 
+            for feature in features:
+                if feature == 'nb_of_pixels_per_segment':
+                    features_data.extend(nb_of_pixels_per_segment(character, 7))
+                elif feature == 'aspect_ratio':
+                    features_data.extend([aspect_ratio(character)])
+                elif feature == 'vertical_ratio':
+                    features_data.extend([vertical_ratio(character)])
+                elif feature == 'horizontal_ratio':
+                    features_data.extend([horizontal_ratio(character)])
+                elif feature == 'vertical_symmetry':
+                    features_data.extend([vertical_symmetry(character)])
+                elif feature == 'horizontal_symmetry':
+                    features_data.extend([horizontal_symmetry(character)])
+                elif feature == 'horizontal_line_intersection':
+                    features_data.extend([horizontal_line_intersection(character)])
+                elif feature == 'vertical_line_intersection':
+                    features_data.extend([vertical_line_intersection(character)])
+                elif feature == 'vertical_histogram_projection':
+                    features_data.extend(vertical_histogram_projection(character))
+                elif feature == 'horizontal_histogram_projection':
+                    features_data.extend(horizontal_histogram_projection(character))
+                elif feature == 'percentage_of_pixels_on_horizontal_center':
+                    features_data.extend([percentage_of_pixels_on_horizontal_center(character)])
+                elif feature == 'percentage_of_pixels_on_vertical_center':
+                    features_data.extend([percentage_of_pixels_on_vertical_center(character)])
+                
+            features_of_characters.append([features_data])
+            features_data = []
+        features_of_words.append(features_of_characters)
+    return features_of_words

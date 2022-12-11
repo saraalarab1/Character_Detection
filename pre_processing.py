@@ -36,6 +36,33 @@ def convert_csv_to_json():
     with open('data.json', 'w', encoding='utf-8') as f:
         json.dump(training_dataset, f, ensure_ascii=False, indent=4)
 
+def pre_process_letter(image):
+    # convert image to grayscale and apply threshold to create a binary image
+    gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+    thresh_image = cv.threshold(gray_image, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
+    
+    # find contours in the image
+    contours = cv.findContours(thresh_image, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    contours = contours[0] if len(contours) == 2 else contours[1]
+    
+    # find the contour with the biggest area
+    max_area = 0
+    biggest_contour = None
+    for countour in contours:
+        x,y,w,h = cv.boundingRect(countour)
+        area = w*h
+        if area > max_area:
+            max_area = area
+            biggest_contour = (x,y,x+w,y+h)
+            
+    # resize the image to the dimensions of the biggest contour
+    dim = (WIDTH, HEIGHT)
+    biggest_image = image[biggest_contour[1]:biggest_contour[3], biggest_contour[0]:biggest_contour[2]]
+    biggest_image = cv.resize(biggest_image, dim, interpolation = cv.INTER_AREA)
+    biggest_image = convert_dark_to_black_and_light_to_white(biggest_image)
+    
+    return biggest_image
+
 def pre_process_image(image):
     gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
     thresh_image = cv.threshold(gray_image, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
@@ -68,13 +95,9 @@ def pre_process_image(image):
         print(i)
         for j in range(i+1, len(all_contours)):
             x2, y2, x2_, y2_ = all_contours[j]
-            print(x1, x1_)
-            print(x2, x2_)
-            print('---------------------')
             if (x1 >x2 and x1 < x2_) or (x1_<x2_ and x1_ >x2) or (x2 > x1 and x2 < x1_) or (x2_ < x1_ and x2_ > x1):
                 new_countours.append((min(x1,x2), min(y1, y2), max(x1_, x2_), max(y1_, y2_)))
                 found = True
-                print('found one')
                 all_contours.pop(j)
                 break
         if not found:
@@ -236,10 +259,10 @@ def gray_to_black(image):
 
 def convert_dark_to_black_and_light_to_white(image):
     # Convert all dark pixels (less than 128) to black
-    image[image < 128] = 0
+    image[image < 240] = 0
 
     # Convert all light pixels (greater than or equal to 128) to white
-    image[image >= 128] = 255
+    image[image >= 240] = 255
 
     return image
 
@@ -284,7 +307,7 @@ def black_to_white():
 # post_skeletonization()
 # assign_random_colors()
 # plot()
-get_cnn_data()
+# get_cnn_data()
 
 # create_json_arabic()
 

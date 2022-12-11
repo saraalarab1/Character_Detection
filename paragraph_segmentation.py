@@ -2,8 +2,9 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import itertools
-
-
+from segmentation import word_segmentation
+from datetime import datetime
+import os
 def thresholding(image, folder_path):
     img_gray = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
     ret,thresh = cv2.threshold(img_gray,80,255,cv2.THRESH_BINARY_INV)
@@ -13,7 +14,9 @@ def thresholding(image, folder_path):
 def get_area(word):
     return (word[2] - word[0]) * (word[3] - word[1])
 
-def paragraph_seg(img, folder_path):
+def paragraph_seg(img):
+    folder_path = 'predictions/' + str(datetime.now()).replace(':', '_').replace(' ', '_').replace('.', '_')+'/'
+    os.makedirs(folder_path)
     h, w, c = img.shape
 
     if w > 1000:
@@ -83,9 +86,11 @@ def paragraph_seg(img, folder_path):
         current_image = img[current_word[1]:current_word[3], current_word[0]:current_word[2]]
         words.append(current_image)
         cv2.imwrite(folder_path+'image_'+str(i)+'.png', current_image)
-    return words
+    letters = []
+    for word in words:
+        letters.append(word_segmentation(word))
+    return letters
 
 
 img = cv2.imread('newimage.png')
 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-words = paragraph_seg(img, 'predictions')

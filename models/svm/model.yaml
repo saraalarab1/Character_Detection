@@ -3,7 +3,9 @@ features:
 - horizontal_line_intersection
 - vertical_line_intersection
 name: pretrained_svm_arabic_model.pkl
-prediction_model: pretrained_svm_arabic_model.pkl
+prediction_model: 
+- pretrained_svm_model.pkl
+- pretrained_svm_arabic_model.pkl
 svm:
   conf_rep:
   - "\u0627":

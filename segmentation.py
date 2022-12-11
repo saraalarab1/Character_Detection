@@ -4,7 +4,6 @@ import cv2 as cv
 from skeletonize import skeletonize_image
 import more_itertools as mit
 from pre_processing import gray_to_black, convert_dark_to_black_and_light_to_white
-from paragraph_segmentation import paragraph_seg
 image = cv.imread('predictions/current2/image_2.png')
 import cv2
 
@@ -58,8 +57,6 @@ def word_segmentation(image):
     # since findContours alters the image
     old_image = image.copy()
     image = convert_dark_to_black_and_light_to_white(image)
-    cv.imshow('image converted', image)
-    cv.waitKey(0)
     image = skeletonize_image(image, 'image')
     transposed_image = cv.transpose(image)
 
@@ -101,11 +98,11 @@ def word_segmentation(image):
     seperation.sort() 
     rows, cols, _ = image.shape
     letters = divide_image(seperation, old_image)
-    for letter in letters:
-        if letter.shape[1] >16:
-            cv.imshow('image', letter)
-            cv.waitKey(0)
+    # for letter in letters:
+    #     if letter.shape[1] >16:
+    #         cv.imshow('image', letter)
+    #         cv.waitKey(0)
     return letters
 
 image = cv2.imread('segmentation_hello.png')
-word_segmentation(image)
+# word_segmentation(image)

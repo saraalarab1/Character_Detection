@@ -24,7 +24,7 @@ from sklearn.model_selection import LeavePOut #for P-cross validation
 from sklearn.metrics import classification_report, accuracy_score
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, plot_confusion_matrix
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 def train(X, y, estimators, weights, model_version, testing_size, arabic):
     model_language = 'english'

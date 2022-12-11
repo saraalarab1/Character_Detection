@@ -244,5 +244,6 @@ eval_accuracy: 77.37
 test_score: 76.43
 weight: 1
 name: knn
-prediction_model: pretrained_knn_model.pkl
+prediction_model: 
+- pretrained_knn_model.pkl
 training: completed
