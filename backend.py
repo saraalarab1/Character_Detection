@@ -14,6 +14,7 @@ from knn_classifier import train_knn
 from svm_classifier import train_svm
 from decision_tree_classifier import train_dt
 from flask_cors import CORS
+from tensorflow import keras
 import base64
 from PIL import Image
 import io
@@ -24,6 +25,10 @@ from cnn_model import train_cnn
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from segmentation import word_segmentation
 from paragraph_segmentation import paragraph_seg
+from keras import backend as K
+
+labels=['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']   
+
 app = Flask(__name__)
 CORS(app, resources={r"*": {"origins": "*"}})
 
@@ -223,7 +228,13 @@ def predict():
                     current_words = ''
                     current_prediction = ''
                     current_probability = 0
-                    model = pickle.load(open(os.path.join(f"models/{model_version}", model_name), 'rb' ))
+                    if '.pkl' in model_name:
+                        model = pickle.load(open(os.path.join(f"models/{model_version}", model_name), 'rb' ))
+                    elif '.h5' in model_name:
+                        model = keras.models.load_model(f"models/{model_version}/{model_name}")
+                        model.compile(optimizer='adam', loss=keras.losses.SparseCategoricalCrossentropy(), metrics=['accuracy'])
+
+
                     for i in range(len(character_features)):
                         for j in range(len(character_features[i])):
                             scaler_path = os.path.join(f"models/{model_version}/scaler.pkl")

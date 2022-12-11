@@ -1,4 +1,4 @@
-eval_accuracy: 0.9276290243864059
+eval_accuracy: 0.9274505192041397
 features:
 - nb_of_pixels_per_segment
 - horizontal_line_intersection
@@ -6,6 +6,6 @@ features:
 name: ann
 prediction_model:
 - pretrained_ann_model.h5
-test_score: 0.7689922451972961
+test_score: 0.751937985420227
 training: completed
 weight: 1

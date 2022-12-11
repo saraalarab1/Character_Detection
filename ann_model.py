@@ -18,6 +18,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn import metrics
 from sklearn.metrics import classification_report
+from keras.models import Model
+from keras.layers import Input, Dense
 
 
 def train(X, Y,activation_functions, testing_size, for_ensemble,model_version):
@@ -42,7 +44,7 @@ def train(X, Y,activation_functions, testing_size, for_ensemble,model_version):
 
     # Add the hidden layers
     for i in range(2, len(activation_functions)):
-        model.add(Dense(88-i*3, activation=activation_functions[i]))
+        model.add(Dense(88-i*5, activation=activation_functions[i]))
 
     # Add the output layer
     model.add(Dense(62, activation=activation_functions[1]))
@@ -56,15 +58,17 @@ def train(X, Y,activation_functions, testing_size, for_ensemble,model_version):
     eval_accuracy = np.mean(history.history['accuracy'])
 
     # model.summary()
-
+    inputs = model.input
+    outputs = model.output
+    exported_model = Model(inputs=inputs, outputs=outputs)
     #save the pretrained model:
     model_name=r'pretrained_ann_model.h5'
     if model_version:
-        model.save(f"models/{model_version}/{model_name}")
+        exported_model.save(f"models/{model_version}/{model_name}")
     elif for_ensemble:
-        model.save(f"models/ann_ensemble/{model_name}")
+        exported_model.save(f"models/ann_ensemble/{model_name}")
     else:
-        model.save(f"models/ann/{model_name}")
+        exported_model.save(f"models/ann/{model_name}")
 
     return eval_accuracy, model, X_test, Y_test
 
@@ -78,6 +82,8 @@ def test(X_test, Y_test, model_version, for_ensemble):
     else:
         model = keras.models.load_model(f'models/ann/pretrained_ann_model.h5')
 
+    # Compile the model
+    model.compile(optimizer='adam', loss=keras.losses.SparseCategoricalCrossentropy(), metrics=['accuracy'])
     score = model.evaluate(X_test, Y_test, batch_size=8)
     test_score = score[1]
     test_loss = score[0]
@@ -153,4 +159,4 @@ def get_info(conf_rep):
     return label_data
 
 
-train_ann(['relu','sigmoid','sigmoid'],['nb_of_pixels_per_segment','horizontal_line_intersection','vertical_line_intersection'])
+train_ann(['relu','softmax','sigmoid'],['nb_of_pixels_per_segment','horizontal_line_intersection','vertical_line_intersection'])
