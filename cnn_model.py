@@ -23,64 +23,42 @@ def train(X, Y,activation_functions,testing_size, for_ensemble,model_version):
 
     X0_train, X_test, Y0_train, Y_test = train_test_split(X, Y, test_size = testing_size)
 
-  # print("TRAIN:", train_index, "Validation:", test_index)
-    # X0_train = pd.DataFrame(X0_train)
-    # Y0_train = pd.DataFrame(Y0_train)
-    # X_test = pd.DataFrame(X_test)
-    # Y_test = pd.DataFrame(Y_test)
-
-
-    # CNN model...
-
+    # CNN model
     model = Sequential()
 
-    # Add the convolutional layers using a for loop
-    for i in range(len(activation_functions)):
-        # If this is the first convolutional layer, specify the input shape
-        if i == 0:
-            model.add(Conv2D(filters=32, kernel_size=(3, 3), activation=activation_functions[i], input_shape=X0_train.shape[1:]))
-        else:
-            # For subsequent convolutional layers, do not specify the input shape
-            model.add(Conv2D(filters=64*i, kernel_size=(3, 3), activation=activation_functions[i], padding = 'valid'))
+    # first convolutional layer, specify the input shape
+    model.add(Conv2D(filters=32, kernel_size=(3, 3), activation=activation_functions[0], input_shape=X0_train.shape[1:]))
+    model.add(MaxPool2D(pool_size=(2, 2),strides=2))
 
+    # Add the convolutional layers using a for loop
+    for i in range(2,len(activation_functions)):
+
+        # For subsequent convolutional layers, do not specify the input shape
+        model.add(Conv2D(filters=32*i, kernel_size=(3, 3), activation=activation_functions[i], padding = 'valid'))
         # Add a max pooling layer
         model.add(MaxPool2D(pool_size=(2, 2),strides=2))
+
+    model.add(Conv2D(filters=128, kernel_size=(3, 3), activation=activation_functions[1], padding = 'valid'))
+    model.add(MaxPool2D(pool_size=(2, 2),strides=2))
 
     # Add a flatten layer
     model.add(Flatten())
 
+    # first dense layer, specify the number of units
+    model.add(Dense(128, activation=activation_functions[0]))
+
     # Add the dense layers using a for loop
-    for i in range(len(activation_functions)):
-        # If this is the first dense layer, specify the number of units
-        if i == 0:
-            model.add(Dense(128, activation=activation_functions[i]))
-        else:
-            # For subsequent dense layers, do not specify the number of units
-            model.add(Dense(32*i,activation_functions[i]))
+    for i in range(2,len(activation_functions)):
+        # For subsequent dense layers, do not specify the number of units
+        model.add(Dense(128-20*i,activation_functions[i]))
 
-    # model.add(Conv2D(filters=32, kernel_size=(3, 3), activation='relu',  input_shape=X0_train.shape[1:]))
-    # model.add(MaxPool2D(pool_size=(2, 2), strides=2))
+    model.add(Dense(64,activation_functions[1]))
 
-    # model.add(Conv2D(filters=64, kernel_size=(3, 3), activation='relu', padding = 'same'))
-    # model.add(MaxPool2D(pool_size=(2, 2), strides=2))
-
-    # model.add(Conv2D(filters=128, kernel_size=(3, 3), activation='relu', padding = 'valid'))
-    # model.add(MaxPool2D(pool_size=(2, 2), strides=2))
-
-    # model.add(Flatten())
-
-    # model.add(Dense(64,activation ="relu"))
-    # model.add(Dense(128,activation ="relu"))
-
-    # model.add(Dense(26,activation ="softmax"))
-
-    model.compile(optimizer = Adam(learning_rate=0.001), loss='categorical_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer = Adam(learning_rate=0.001), loss=keras.losses.SparseCategoricalCrossentropy(), metrics=['accuracy'])
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=1, min_lr=0.0001)
     early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=2, verbose=0, mode='auto')
 
-
-    history = model.fit(X0_train, Y0_train, epochs=1, callbacks=[reduce_lr, early_stop])
-
+    history = model.fit(X0_train, Y0_train, epochs=10)
     # model.summary()
 
     eval_accuracy = np.mean(history.history['accuracy'])
@@ -104,9 +82,9 @@ def test(X_test, Y_test, model_version, for_ensemble):
     if model_version: 
         model = keras.models.load_model(f'models/{model_version}/pretrained_cnn_model.h5')
     elif for_ensemble:
-        model = keras.models.load_model(f'models/ann_ensemble/pretrained_cnn_model.h5')    
+        model = keras.models.load_model(f'models/cnn_ensemble/pretrained_cnn_model.h5')    
     else:
-        model = keras.models.load_model(f'models/ann/pretrained_cnn_model.h5')
+        model = keras.models.load_model(f'models/cnn/pretrained_cnn_model.h5')
 
     score = model.evaluate(X_test, Y_test, batch_size=8)
     test_score = score[1]
@@ -138,10 +116,8 @@ def train_cnn(activation_functions,features, model_version=None, for_ensemble = 
     print('training')
     x,y = get_input_output_labels(features)
     y_enc = prepare_targets(y)
-    print(len(x))
-    print(len(y))
-    model, eval_accuracy, test_score,  = train(x, y_enc,activation_functions,testing_size=0.2,model_version = model_version, for_ensemble=for_ensemble)
-    conf_rep = False
+    eval_accuracy, model, X_test, Y_test = train(x, y_enc,activation_functions,testing_size=0.2,model_version = model_version, for_ensemble=for_ensemble)
+    test_score, conf_rep = test(X_test, Y_test, model_version=model_version,for_ensemble = for_ensemble)
     print(conf_rep)
     print("Evaluation Score: {}".format(eval_accuracy))
     print("Test Score: {}".format(test_score))
@@ -176,4 +152,4 @@ def get_info(conf_rep):
     return label_data
 
 
-# train_cnn(['relu','relu','relu'],['nb_of_pixels_per_segment','horizontal_line_intersection','vertical_line_intersection'])
+train_cnn(['relu','relu','sigmoid'],['nb_of_pixels_per_segment','horizontal_line_intersection','vertical_line_intersection'])
