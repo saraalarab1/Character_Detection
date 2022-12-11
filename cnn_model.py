@@ -28,37 +28,37 @@ def train(X, Y,activation_functions,testing_size, for_ensemble,model_version):
 
     # first convolutional layer, specify the input shape
     model.add(Conv2D(filters=32, kernel_size=(3, 3), activation=activation_functions[0], input_shape=X0_train.shape[1:]))
-    model.add(MaxPool2D(pool_size=(2, 2),strides=2))
+    model.add(MaxPool2D(pool_size=(2, 2)))
 
     # Add the convolutional layers using a for loop
     for i in range(2,len(activation_functions)):
 
         # For subsequent convolutional layers, do not specify the input shape
-        model.add(Conv2D(filters=32*i, kernel_size=(3, 3), activation=activation_functions[i], padding = 'valid'))
+        model.add(Conv2D(filters=32*i, kernel_size=(3, 3), activation=activation_functions[i]))
         # Add a max pooling layer
-        model.add(MaxPool2D(pool_size=(2, 2),strides=2))
+        model.add(MaxPool2D(pool_size=(2, 2)))
 
-    model.add(Conv2D(filters=128, kernel_size=(3, 3), activation=activation_functions[1], padding = 'valid'))
-    model.add(MaxPool2D(pool_size=(2, 2),strides=2))
+    model.add(Conv2D(filters=128, kernel_size=(3, 3), activation=activation_functions[1]))
+    model.add(MaxPool2D(pool_size=(2, 2)))
 
     # Add a flatten layer
     model.add(Flatten())
 
     # first dense layer, specify the number of units
-    model.add(Dense(128, activation=activation_functions[0]))
+    model.add(Dense(100, activation=activation_functions[0]))
 
     # Add the dense layers using a for loop
     for i in range(2,len(activation_functions)):
         # For subsequent dense layers, do not specify the number of units
-        model.add(Dense(128-20*i,activation_functions[i]))
+        model.add(Dense(88-i*5,activation_functions[i]))
 
-    model.add(Dense(64,activation_functions[1]))
+    model.add(Dense(62,activation_functions[1]))
 
     model.compile(optimizer = Adam(learning_rate=0.001), loss=keras.losses.SparseCategoricalCrossentropy(), metrics=['accuracy'])
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=1, min_lr=0.0001)
     early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=2, verbose=0, mode='auto')
 
-    history = model.fit(X0_train, Y0_train, epochs=10)
+    history = model.fit(X0_train, Y0_train, epochs=20)
     # model.summary()
 
     eval_accuracy = np.mean(history.history['accuracy'])
@@ -152,4 +152,4 @@ def get_info(conf_rep):
     return label_data
 
 
-# train_cnn(['relu','relu','sigmoid'],['nb_of_pixels_per_segment','horizontal_line_intersection','vertical_line_intersection'])
+train_cnn(['relu','sigmoid','sigmoid'],['nb_of_pixels_per_segment','horizontal_line_intersection','vertical_line_intersection'])

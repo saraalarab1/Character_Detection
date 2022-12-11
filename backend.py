@@ -128,7 +128,7 @@ def train_new_model():
 
                 estimatorsEnglish.append((model['name'],model_classifier))
                 ensemble_models.append(model['name'])
-                label_data= get_info(conf_rep)
+                # label_data= get_info(conf_rep)
                 weights.append(int(model['weight']))
 
             if arabic:
@@ -147,7 +147,7 @@ def train_new_model():
 
                 estimatorsArabic.append((model['name'],model_classifier)) 
                 ensemble_models.append(model['name'])
-                label_data= get_info(conf_rep)
+                # label_data= get_info(conf_rep)
                 if not english:
                     weights.append(int(model['weight']))
 
