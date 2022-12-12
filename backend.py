@@ -192,6 +192,7 @@ def predict():
         image = cv.imdecode(im_arr, flags=cv.IMREAD_COLOR)
         model_version = request.json['model_version']
         category = request.json['category']
+        print(category)
         if category == "letter":
             letters = [[image]]
         elif category == "word": 
@@ -218,22 +219,27 @@ def predict():
                 for i in range(len(character_features)):
                     prediction = predict_model(character_features[i], case_features[i])
                     output = output + prediction[0]
-
             else:
                 probability = 0
                 for model_name in model_names:
+                    current_words = ''
+                    current_prediction = ''
+                    current_probability = 0
                     if 'cnn' in model_name:
                         model = keras.models.load_model(f"models/{model_version}/{model_name}")
                         model.compile(optimizer = Adam(learning_rate=0.001), loss=keras.losses.SparseCategoricalCrossentropy(), metrics=['accuracy'])
-                        print("entering")
-                        for letter in letters:
-                            print(letter)
-                            prediction = model.predict([letter])
-                            print(prediction)
+                        for w in letters:
+                            for letter in w:
+                                letter = np.array([letter])
+                                probabilities = model.predict(letter)[0]
+                                cnn_probability = max(probabilities)
+                                current_probability = current_probability + max(probabilities)
+                                current_prediction = [f"{labels[np.argwhere(probabilities == cnn_probability).squeeze()]}"]
+                                if model_name.__contains__('arabic'):
+                                    current_words = current_prediction[0] + current_words
+                                else:
+                                    current_words = current_words + current_prediction[0]
                     else:
-                        current_words = ''
-                        current_prediction = ''
-                        current_probability = 0
                         if '.pkl' in model_name:
                             model = pickle.load(open(os.path.join(f"models/{model_version}", model_name), 'rb' ))
                         elif 'ann' in model_name:
@@ -247,6 +253,7 @@ def predict():
                                     scaling = pickle.load(open(scaler_path, 'rb'))
                                     character_feature = scaling.transform(character_features[i][j])
                                 if 'ann' in model_name:
+                                    print(character_feature)
                                     probabilities = model.predict(character_feature)[0]
                                     ann_probability = max(probabilities)
                                     current_probability = current_probability + max(probabilities)
@@ -258,13 +265,13 @@ def predict():
                                     current_words = current_prediction[0] + current_words
                                 else:
                                     current_words = current_words + current_prediction[0]
-                        current_words = current_words + " "
-                        print(current_words)
-                        if current_probability > probability:
-                            probability = current_probability
-                            output = current_words
-                        current_prediction = ''
-                        current_probability = 0
+                    current_words = current_words + " "
+                    print(current_words)
+                    if current_probability > probability:
+                        probability = current_probability
+                        output = current_words
+                    current_prediction = ''
+                    current_probability = 0
     response = jsonify(word = output)
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response
