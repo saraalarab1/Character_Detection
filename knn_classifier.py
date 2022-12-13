@@ -97,9 +97,9 @@ def test(X_train, Y_train, X_test, Y_test, model_version, for_ensemble, arabic):
     if model_version: 
         model = pickle.load(open(f'models/{model_version}/pretrained_knn_{model_language}_model.pkl', 'rb' ))
     elif for_ensemble:
-        model = pickle.load(open('models/knn_ensemble/pretrained_knn_{model_language}_model.pkl', 'rb' ))
+        model = pickle.load(open(f'models/knn_ensemble/pretrained_knn_{model_language}_model.pkl', 'rb' ))
     else:
-        model = pickle.load(open('models/knn/pretrained_knn_{model_language}_model.pkl', 'rb' ))
+        model = pickle.load(open(f'models/knn/pretrained_knn_{model_language}_model.pkl', 'rb' ))
         
     model.fit(X_train, Y_train)
     y_pred = model.predict(X_test)

@@ -18,12 +18,36 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn import metrics
 from sklearn.metrics import classification_report
-from keras.models import Model
 from keras.layers import Input, Dense
+from keras.wrappers.scikit_learn import KerasClassifier
+
+activation_functions = []
+shape = None
+
+def create_model():
+    global activation_functions
+    global shape
+  # Build the ANN model
+    model = Sequential()
+    # Add the input layer
+    model.add(Dense(100, input_dim=shape, activation=activation_functions[0]))
+
+    # Add the hidden layers
+    for i in range(2, len(activation_functions)):
+        model.add(Dense(88-i*5, activation=activation_functions[i]))
+
+    # Add the output layer
+    model.add(Dense(62, activation=activation_functions[1]))
+
+    # Compile the model
+    model.compile(optimizer='adam', loss=keras.losses.SparseCategoricalCrossentropy(), metrics=['accuracy'])
+
+    return model
 
 
-def train(X, Y,activation_functions, testing_size, for_ensemble,model_version):
-    
+def train(X, Y,activation_functions_model, testing_size, for_ensemble,model_version, arabic = False):
+    global activation_functions
+    global shape
     X0_train, X_test, Y0_train, Y_test = train_test_split(X,Y,test_size=testing_size, random_state=7)
     #Scaler is needed to scale all the inputs to a similar range
     scaler = StandardScaler()
@@ -37,73 +61,62 @@ def train(X, Y,activation_functions, testing_size, for_ensemble,model_version):
     X_test = pd.DataFrame(X_test)
     Y_test = pd.DataFrame(Y_test)
 
-    # Build the ANN model
-    model = Sequential()
-    # Add the input layer
-    model.add(Dense(100, input_dim=X0_train.shape[1], activation=activation_functions[0]))
-
-    # Add the hidden layers
-    for i in range(2, len(activation_functions)):
-        model.add(Dense(88-i*5, activation=activation_functions[i]))
-
-    # Add the output layer
-    model.add(Dense(62, activation=activation_functions[1]))
-
-    # Compile the model
-    model.compile(optimizer='adam', loss=keras.losses.SparseCategoricalCrossentropy(), metrics=['accuracy'])
-
+    activation_functions = activation_functions_model
+    shape = X0_train.shape[1]
+    classifier = KerasClassifier(build_fn=create_model, epochs=10, batch_size=8)
+    classifier._estimator_type = "classifier"
     # Train the model on the training set
-    history =  model.fit(X0_train, Y0_train, epochs=50, batch_size=8)
+    history =  classifier.fit(X0_train, Y0_train)
 
     eval_accuracy = np.mean(history.history['accuracy'])
 
-    # model.summary()
-    inputs = model.input
-    outputs = model.output
-    exported_model = Model(inputs=inputs, outputs=outputs)
+    model_language = 'english'
+    if arabic: 
+        model_language = 'arabic'
     #save the pretrained model:
-    model_name=r'pretrained_ann_model.h5'
+    model_name=f'pretrained_ann_{model_language}_model.pkl'
     if model_version:
-        exported_model.save(f"models/{model_version}/{model_name}")
+        pickle.dump(classifier, open(f"models/{model_version}/{model_name}", 'wb'))
     elif for_ensemble:
-        exported_model.save(f"models/ann_ensemble/{model_name}")
+        pickle.dump(classifier, open(f"models/ann_ensemble/{model_name}", 'wb'))
     else:
-        exported_model.save(f"models/ann/{model_name}")
+        pickle.dump(classifier, open(f"models/ann/{model_name}", 'wb'))
 
-    return eval_accuracy, model, X_test, Y_test
+    return eval_accuracy, classifier, X_test, Y_test
 
 
-def test(X_test, Y_test, model_version, for_ensemble):
-
+def test(X_test, Y_test, model_version, for_ensemble,arabic):
+    model_language = 'english'
+    if arabic: 
+        model_language = 'arabic'
     if model_version: 
-        model = keras.models.load_model(f'models/{model_version}/pretrained_ann_model.h5')
+        model = pickle.load(open(f'models/{model_version}/pretrained_ann_{model_language}_model.pkl', 'rb' ))
     elif for_ensemble:
-        model = keras.models.load_model(f'models/ann_ensemble/pretrained_ann_model.h5')    
+        model = pickle.load(open(f'models/ann_ensemble/pretrained_ann_{model_language}_model.pkl', 'rb' ))
     else:
-        model = keras.models.load_model(f'models/ann/pretrained_ann_model.h5')
+        model = pickle.load(open(f'models/ann/pretrained_ann_{model_language}_model.pkl', 'rb' ))
 
-    # Compile the model
-    model.compile(optimizer='adam', loss=keras.losses.SparseCategoricalCrossentropy(), metrics=['accuracy'])
-    score = model.evaluate(X_test, Y_test, batch_size=8)
-    test_score = score[1]
-    test_loss = score[0]
-    classification_rep = 0
-    # classification_rep = classification_report(Y_test, y_pred,zero_division=True)
+    model.fit(X_test, Y_test)
+    y_pred = model.predict(X_test)
+    classification_rep = classification_report(Y_test, y_pred,zero_division=True)
+    test_score = metrics.accuracy_score(Y_test, y_pred)
 
     return test_score, classification_rep
 
 
-def save_model(eval_accuracy, test_score, conf_rep, features):
+def save_model(eval_accuracy, test_score, conf_rep, features,arabic):
     yaml_info = dict()
-
-    yaml_info['prediction_model'] = ["pretrained_ann_model.h5"]
+    model_language = 'english'
+    if arabic: 
+        model_language = 'arabic'
+    yaml_info['prediction_model'] = [f"pretrained_ann_{model_language}_model.pkl"]
     yaml_info['features'] = features
     yaml_info['training'] = 'completed'
     yaml_info['name'] = 'ann'
     yaml_info['eval_accuracy'] = float(eval_accuracy)
     yaml_info['test_score'] = float(test_score)
     yaml_info['weight'] = 1
-    # yaml_info['conf_rep'] = get_info(conf_rep)
+    yaml_info['conf_rep'] = get_info(conf_rep)
 
     model_version="ann"
     yaml_path = os.path.join("models",model_version, 'model.yaml')
@@ -113,15 +126,15 @@ def save_model(eval_accuracy, test_score, conf_rep, features):
 ## test accuracy
 def train_ann(activation_functions,features, model_version=None, for_ensemble = False, arabic = False):
     print('training')
-    x,y = get_input_output_labels(features)
+    x,y = get_input_output_labels(features,arabic)
     y_enc = prepare_targets(y)
-    eval_accuracy, model, X_test, Y_test = train(x, y_enc,activation_functions, testing_size=0.2,model_version = model_version, for_ensemble=for_ensemble)
-    test_score, conf_rep = test(X_test, Y_test, model_version=model_version,for_ensemble = for_ensemble)
+    eval_accuracy, model, X_test, Y_test = train(x, y_enc,activation_functions, testing_size=0.2,model_version = model_version, for_ensemble=for_ensemble,arabic=arabic)
+    test_score, conf_rep = test(X_test, Y_test, model_version=model_version,for_ensemble = for_ensemble,arabic=arabic)
     print(conf_rep)
     print("Evaluation Score: {}".format(eval_accuracy))
     print("Test Score: {}".format(test_score))
     if model_version is None and not for_ensemble:
-        save_model(eval_accuracy, test_score, conf_rep ,features)
+        save_model(eval_accuracy, test_score, conf_rep ,features,arabic)
     return eval_accuracy, model, test_score, conf_rep
 
 def prepare_targets(y):
@@ -129,8 +142,11 @@ def prepare_targets(y):
     y_enc = le.fit_transform(y)
     return y_enc
 
-def get_input_output_labels(features):
-    with open('data.json', 'r') as f: 
+def get_input_output_labels(features,arabic):
+    data_file = 'data.json'
+    if arabic: 
+        data_file = 'arabic_data.json'
+    with open(data_file, 'r') as f: 
         data = json.load(f)
         x = []
         y = []

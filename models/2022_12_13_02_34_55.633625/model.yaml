@@ -1,0 +1,15 @@
+ensemble_models:
+- knn
+- ann
+eval_accuracy: 0.8018575851393189
+features:
+- nb_of_pixels_per_segment
+- horizontal_line_intersection
+name: ensemble
+prediction_model:
+- pretrained_ensemble_english_model.pkl
+test_score: 0.8235294117647058
+training: completed
+weights:
+- 1
+- 1
