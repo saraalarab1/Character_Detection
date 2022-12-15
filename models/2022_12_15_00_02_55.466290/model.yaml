@@ -1,0 +1,7 @@
+features:
+- nb_of_pixels_per_segment
+- horizontal_line_intersection
+- vertical_line_intersection
+prediction_model:
+- pretrained_ensemble_arabic_model.pkl
+training: running

@@ -18,7 +18,7 @@ SimilarLowerUpperCase = 'uUvVzZxXkKjJnNmM0OoPpSsCcYy'
 def test(X_test,Y_test, features):
 
     ensemble = pickle.load(open(f'models/topPerformer/pretrained_ensemble_model.pkl', 'rb' ))
-    svm_case = pickle.load(open(f'models/topPerformer/pretrained_svm_model.pkl', 'rb' ))
+    case = pickle.load(open(f'models/topPerformer/pretrained_svm_model.pkl', 'rb' ))
 
     X_test_features = get_features(X_test, Y_test, features)
     X_test_features_case = get_features(X_test, Y_test, features=['nb_of_pixels_per_segment','aspect_ratio'])
@@ -51,7 +51,7 @@ def test(X_test,Y_test, features):
                     continue
                 
                 # classify highest probability prediction to upper or lower based on svm model
-                new_prediction = svm_case.predict([X_test_features_case[i]])[0]
+                new_prediction = case.predict([X_test_features_case[i]])[0]
                 if new_prediction == 'lower':
                     print('new prediction: ' + Y_pred[i].lower())
                 else:
@@ -90,43 +90,51 @@ def test(X_test,Y_test, features):
 
 def predict_model(features, features_case):
     ensemble = pickle.load(open(f'models/topPerformer/pretrained_ensemble_model.pkl', 'rb' ))
-    svm_case = pickle.load(open(f'models/topPerformer/pretrained_svm_model.pkl', 'rb' ))
-
+    case = pickle.load(open(f'models/topPerformer/pretrained_svm_model.pkl', 'rb' ))
+    language = pickle.load(open('models/language_model/pretrained_language_model.pkl', 'rb'))
+    arabic_ensemble = pickle.load(open(f'models/topPerformer/pretrained_ensemble_arabic_model.pkl', 'rb' ))
+    scaling = pickle.load(open('models/language_model/scaler.pkl', 'rb'))
     Y_pred = ensemble.predict(features)
-    y_pred_proba = ensemble.predict_proba(features)    
-    for i in range(len(y_pred_proba)):
-        current_prediction_prob = max(y_pred_proba[i])
-        # check if probability of predicted y is less than 60%
-        if current_prediction_prob< 0.6:
-            # check if prediction belongs to similar lower/upper case characters
-            if Y_pred[i] in SimilarLowerUpperCase:
-                nb_of_possible_results = len([x for x in y_pred_proba[i] if x > 0]) # ['y, Y, q']
-                # get index of the highest three (or less) probabilities
-                indices = sort_index(y_pred_proba[i])[:min(nb_of_possible_results, 3)] # y 0.4 q 0.3 Y 0.3                 
-                labels = []
-                # get labels from index
-                for index in indices:
-                    labels.append(printable[index])
-                new_labels = []
-                # if highest probability is in upper/lower case, we want to check again
-                if labels[0] in SimilarLowerUpperCase:
-                    for label in labels: 
-                        if label in SimilarLowerUpperCase:
-                            new_labels.append(label)  # y Y
-                # if we only got one label belonging to similar upper/lower case characters, we don't need to proceed
-                if len(new_labels)<=1:
-                    continue
-                
-                # classify highest probability prediction to upper or lower based on svm model
-                new_prediction = svm_case.predict([features_case[i]])[0]
-                if new_prediction == 'lower':
-                    print('new prediction: ' + Y_pred[i].lower())
-                else:
-                    print('new prediction: ' + Y_pred[i].upper())
-                print('old prediction: ' + Y_pred[i])
-                Y_pred[i] = Y_pred[i].lower() if new_prediction == 'lower' else Y_pred[i].upper()
-                # Y_pred[i] = Y_test[i]
-        return Y_pred
+    y_pred_proba = ensemble.predict_proba(features)
+    features = scaling.transform(features)
+    Y_pred_language = language.predict(features)
+    Y_pred_arabic = arabic_ensemble.predict(features)
+    if Y_pred_language == 'english':
+        for i in range(len(y_pred_proba)):
+            current_prediction_prob = max(y_pred_proba[i])
+            # check if probability of predicted y is less than 60%
+            if current_prediction_prob< 0.6:
+                # check if prediction belongs to similar lower/upper case characters
+                if Y_pred[i] in SimilarLowerUpperCase:
+                    nb_of_possible_results = len([x for x in y_pred_proba[i] if x > 0]) # ['y, Y, q']
+                    # get index of the highest three (or less) probabilities
+                    indices = sort_index(y_pred_proba[i])[:min(nb_of_possible_results, 3)] # y 0.4 q 0.3 Y 0.3                 
+                    labels = []
+                    # get labels from index
+                    for index in indices:
+                        labels.append(printable[index])
+                    new_labels = []
+                    # if highest probability is in upper/lower case, we want to check again
+                    if labels[0] in SimilarLowerUpperCase:
+                        for label in labels: 
+                            if label in SimilarLowerUpperCase:
+                                new_labels.append(label)  # y Y
+                    # if we only got one label belonging to similar upper/lower case characters, we don't need to proceed
+                    if len(new_labels)<=1:
+                        continue
+                    
+                    # classify highest probability prediction to upper or lower based on svm model
+                    new_prediction = case.predict([features_case[i]])[0]
+                    if new_prediction == 'lower':
+                        print('new prediction: ' + Y_pred[i].lower())
+                    else:
+                        print('new prediction: ' + Y_pred[i].upper())
+                    print('old prediction: ' + Y_pred[i])
+                    Y_pred[i] = Y_pred[i].lower() if new_prediction == 'lower' else Y_pred[i].upper()
+                    # Y_pred[i] = Y_test[i]
+    else:
+        return Y_pred_arabic
+    return Y_pred
 
 def sort_index(lst, rev=True):
     index = range(len(lst))

@@ -30,17 +30,17 @@ def create_model():
   # CNN model
     model = Sequential()
     # first convolutional layer, specify the input shape
-    model.add(Conv2D(filters=32, kernel_size=(3, 3), activation=activation_functions[0], input_shape=shape))
+    model.add(Conv2D(filters=50, kernel_size=(2, 2), activation=activation_functions[0], input_shape=shape))
     model.add(MaxPool2D(pool_size=(2, 2)))
 
     # Add the convolutional layers using a for loop
     for i in range(2,len(activation_functions)):
         # For subsequent convolutional layers, do not specify the input shape
-        model.add(Conv2D(filters=32*i, kernel_size=(3, 3), activation=activation_functions[i]))
+        model.add(Conv2D(filters=62*i, kernel_size=(2, 2), activation=activation_functions[i]))
         # Add a max pooling layer
         model.add(MaxPool2D(pool_size=(2, 2)))
 
-    model.add(Conv2D(filters=128, kernel_size=(3, 3), activation=activation_functions[1]))
+    model.add(Conv2D(filters=138, kernel_size=(2, 2), activation=activation_functions[1]))
     model.add(MaxPool2D(pool_size=(2, 2)))
 
     # Add a flatten layer
@@ -71,6 +71,15 @@ def train(X, Y,activation_functions_model,testing_size, for_ensemble,model_versi
     history = classifier.fit(X0_train, Y0_train)
 
     eval_accuracy = np.mean(history.history['accuracy'])
+
+    # Access the loss values
+    loss = history.history['loss']
+
+    # Plot the loss over time
+    plt.plot(loss)
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.show()
 
     model_language = 'english'
     if arabic: 

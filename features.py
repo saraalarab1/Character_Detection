@@ -154,23 +154,16 @@ def percentage_of_pixels_on_vertical_center(image):
         image[i][int(HEIGHT/2)] = (255, 0, 0)
     return nb_of_pixels_at_vertical/(total_nb_of_black_pixels if total_nb_of_black_pixels > 0 else 0.1)
 
-def get_case_features(words):
-    features= ['nb_of_pixels_per_segment', 'aspect_ratio']
+def get_case_features(character):
+    features= ['aspect_ratio']
     features_data = []
-    features_of_characters = []
-    features_of_words = []
-    for word in words:
-        for character in word:
-            for feature in features:
-                if feature == 'nb_of_pixels_per_segment':
-                    features_data.extend(nb_of_pixels_per_segment(character, 7))
-                elif feature == 'aspect_ratio':
-                    features_data.extend([aspect_ratio(character)])
-            features_of_characters.append([features_data])
-            features_data = []
-        features_of_words.append(features_of_characters)
-        features_of_characters = []
-    return features_of_words
+    print(character)
+    for feature in features:
+        if feature == 'nb_of_pixels_per_segment':
+            features_data.extend(nb_of_pixels_per_segment(character, 7))
+        elif feature == 'aspect_ratio':
+            features_data.extend([aspect_ratio(character)])
+    return features_data
 
 def get_character_features(features, words):
     """

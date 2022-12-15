@@ -300,6 +300,29 @@ def black_to_white():
         image[white_pixels] = [0, 0, 0]
         print(image_name)
         cv.imwrite(os.path.join('arabic_data_processed', image_name), image)
+
+def update_aspect_ratio(filepath, target_value):
+    # Open the JSON file
+    with open(filepath, "r") as json_file:
+        # Load the data from the file
+        data = json.load(json_file)
+        
+    # Loop through the objects in the data
+    for obj in data:
+        # Check if the label_2 property is equal to the target value
+        print(data[obj])
+        if data[obj]["label_2"] == target_value:
+            # Multiply the aspect_ratio by 1.75
+            data[obj]["aspect_ratio"] *= 1.5
+    
+    # Open the file again to write the updated data
+    with open(filepath, "w") as json_file:
+        # Write the updated data to the file
+        json.dump(data, json_file)
+
+# Example usage
+# update_aspect_ratio("data.json", "upper")
+
 # extract_features_for_training_data()
 # pre_process_images()
 # get_total_nb_of_pixels()

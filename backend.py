@@ -50,7 +50,7 @@ def get_available_models():
     models = os.listdir('models')
     available_models = dict()
     for model in models:
-        if model == "svm_case" or model == "knn_ensemble" or model == "svm_ensemble":
+        if model == "svm_case" or model == "knn_ensemble" or model == "svm_ensemble" or model == "language_model":
             continue
         if len(os.listdir('models/'+model)) <2:
             continue
@@ -213,14 +213,21 @@ def predict():
             print(model_version, yaml_info['prediction_model'])
             features = yaml_info['features']
             character_features = get_character_features(features, letters)
-            case_features = get_case_features(letters)
+            case_features = []
+            for word in letters:
+                case_feature_word = []
+                for letter in word:
+                    case_feature_word.append(get_case_features(letter))
+                case_features.append(case_feature_word)
+            print(case_features)
             if model_version != 'topPerformer':
                 model_names = yaml_info['prediction_model']
             output = ''
             if model_version == 'topPerformer':
                 for i in range(len(character_features)):
-                    prediction = predict_model(character_features[i], case_features[i])
-                    output = output + prediction[0]
+                    for j in range(len(character_features[i])):
+                        prediction = predict_model(character_features[i][j], case_features[i][j])
+                        output = output + prediction[0]
             else:
                 probability = 0
                 for model_name in model_names:

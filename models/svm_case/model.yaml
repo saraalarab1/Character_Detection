@@ -1,27 +1,28 @@
+conf_rep:
+- arabic:
+  - '0.97'
+  - '0.99'
+  - '0.98'
+- english:
+  - '0.96'
+  - '0.86'
+  - '0.90'
+- macro:
+  - avg
+  - '0.96'
+  - '0.92'
+- weighted:
+  - avg
+  - '0.97'
+  - '0.97'
+eval_accuracy: 0.9607249373433582
 features:
 - nb_of_pixels_per_segment
-- aspect_ratio
+- horizontal_line_intersection
+- vertical_line_intersection
 name: svm_case
-prediction_model: pretrained_svm_model.pkl
-svm:
-  conf_rep:
-  - lower:
-    - '0.85'
-    - '0.83'
-    - '0.84'
-  - upper:
-    - '0.85'
-    - '0.87'
-    - '0.86'
-  - macro:
-    - avg
-    - '0.85'
-    - '0.85'
-  - weighted:
-    - avg
-    - '0.85'
-    - '0.85'
-  eval_accuracy: 0.8264588859416445
-  test_score: 0.8487972508591065
-  weight: 1
+prediction_model:
+- pretrained_svm_model.pkl
+test_score: 0.9655931186237248
 training: completed
+weight: 1

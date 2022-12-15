@@ -63,12 +63,21 @@ def train(X, Y,activation_functions_model, testing_size, for_ensemble,model_vers
 
     activation_functions = activation_functions_model
     shape = X0_train.shape[1]
-    classifier = KerasClassifier(build_fn=create_model, epochs=10, batch_size=8)
+    classifier = KerasClassifier(build_fn=create_model, epochs=20, batch_size=25)
     classifier._estimator_type = "classifier"
     # Train the model on the training set
     history =  classifier.fit(X0_train, Y0_train)
 
     eval_accuracy = np.mean(history.history['accuracy'])
+
+    # # Access the loss values
+    # loss = history.history['loss']
+
+    # # Plot the loss over time
+    # plt.plot(loss)
+    # plt.xlabel('Epoch')
+    # plt.ylabel('Loss')
+    # plt.show()
 
     model_language = 'english'
     if arabic: 
@@ -98,12 +107,14 @@ def test(X_test, Y_test, model_version, for_ensemble,arabic):
 
     model.fit(X_test, Y_test)
     y_pred = model.predict(X_test)
+    print(Y_test)
+    print(y_pred)
     classification_rep = classification_report(Y_test, y_pred,zero_division=True)
     test_score = metrics.accuracy_score(Y_test, y_pred)
 
     return test_score, classification_rep
 
-
+    
 def save_model(eval_accuracy, test_score, conf_rep, features,arabic):
     yaml_info = dict()
     model_language = 'english'
@@ -128,7 +139,7 @@ def train_ann(activation_functions,features, model_version=None, for_ensemble = 
     print('training')
     x,y = get_input_output_labels(features,arabic)
     y_enc = prepare_targets(y)
-    eval_accuracy, model, X_test, Y_test = train(x, y_enc,activation_functions, testing_size=0.2,model_version = model_version, for_ensemble=for_ensemble,arabic=arabic)
+    eval_accuracy, model, X_test, Y_test = train(x, y_enc,activation_functions, testing_size=0.15,model_version = model_version, for_ensemble=for_ensemble,arabic=arabic)
     test_score, conf_rep = test(X_test, Y_test, model_version=model_version,for_ensemble = for_ensemble,arabic=arabic)
     print(conf_rep)
     print("Evaluation Score: {}".format(eval_accuracy))
