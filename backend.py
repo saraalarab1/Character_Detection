@@ -226,8 +226,9 @@ def predict():
             if model_version == 'topPerformer':
                 for i in range(len(character_features)):
                     for j in range(len(character_features[i])):
-                        prediction = predict_model(character_features[i][j], case_features[i][j])
+                        prediction = predict_model(character_features[i][j], case_features[i][j], category)
                         output = output + prediction[0]
+                    output = output + " "
             else:
                 probability = 0
                 for model_name in model_names:

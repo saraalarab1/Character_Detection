@@ -88,7 +88,7 @@ def test(X_test,Y_test, features):
     return classification_rep, test_score
 
 
-def predict_model(features, features_case):
+def predict_model(features, features_case, category):
     ensemble = pickle.load(open(f'models/topPerformer/pretrained_ensemble_model.pkl', 'rb' ))
     case = pickle.load(open(f'models/topPerformer/pretrained_svm_model.pkl', 'rb' ))
     language = pickle.load(open('models/language_model/pretrained_language_model.pkl', 'rb'))
@@ -99,7 +99,7 @@ def predict_model(features, features_case):
     features = scaling.transform(features)
     Y_pred_language = language.predict(features)
     Y_pred_arabic = arabic_ensemble.predict(features)
-    if Y_pred_language == 'english':
+    if Y_pred_language == 'english' or category == 'paragraph':
         for i in range(len(y_pred_proba)):
             current_prediction_prob = max(y_pred_proba[i])
             # check if probability of predicted y is less than 60%
@@ -124,7 +124,8 @@ def predict_model(features, features_case):
                         continue
                     
                     # classify highest probability prediction to upper or lower based on svm model
-                    new_prediction = case.predict([features_case[i]])[0]
+                    print('feature case is: '+ str(features_case[i]))
+                    new_prediction = case.predict([[features_case[i]]])[0]
                     if new_prediction == 'lower':
                         print('new prediction: ' + Y_pred[i].lower())
                     else:
